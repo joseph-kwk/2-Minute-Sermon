@@ -422,7 +422,7 @@ function filterAndRenderSermons() {
   }
 }
 
-// ─── SERMON MODAL ─────────────────────────────────────────────────────────────
+// ─── SERMON MODAL — YouTube redirect (no iframe, keeps site fast) ─────────────
 export function openSermonModal(sermonId) {
   const s = sermons.find(x => x.id === sermonId);
   if (!s) return;
@@ -430,42 +430,61 @@ export function openSermonModal(sermonId) {
   const modalBody = document.getElementById('sermonModalBody');
   if (!modal || !modalBody) return;
 
+  const youtubeUrl = s.youtubeUrl || `https://www.youtube.com/watch?v=${s.youtubeEmbedId}`;
+
   modalBody.innerHTML = `
-    <div class="sermon-video-wrapper">
-      <iframe src="https://www.youtube.com/embed/${s.youtubeEmbedId}?autoplay=1"
-        title="${s.title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
+    <!-- Thumbnail with YouTube CTA — no iframe, site stays fast -->
+    <div class="sermon-thumb-hero" onclick="window.open('${youtubeUrl}','_blank')" role="button" tabindex="0" title="Watch on YouTube">
+      <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-hero-img" loading="eager">
+      <div class="sermon-thumb-hero-overlay">
+        <div class="sermon-yt-btn">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Watch on YouTube</span>
+        </div>
+        <span class="sermon-thumb-duration">${svgClock} ${s.duration}</span>
+      </div>
     </div>
-    <div class="carousel-badges" style="margin-bottom:12px;">
-      <span class="badge badge-season">${s.primarySeason}</span>
-      <span class="badge badge-scripture">${svgBook} ${s.scripture}</span>
-    </div>
-    <h2 class="sermon-modal-title">${s.title}</h2>
-    <div class="sermon-modal-meta">
-      By <strong>${s.preacherName}</strong>
-      &bull; Published ${s.publishDate}
-      &bull; ${svgClock} ${s.duration}
-    </div>
-    <p style="margin-bottom:24px;font-size:1.05rem;color:#333;line-height:1.7;">${s.summary}</p>
-    <div class="transcript-box">
-      <div class="transcript-header">Interactive Timestamped Transcript</div>
-      ${s.transcript ? s.transcript.map(l => `
-        <div class="transcript-line">
-          <span class="ts-tag" title="Jump to ${l.time}">${l.time}</span>
-          <span>${l.text}</span>
-        </div>`).join('') : '<p>No transcript available.</p>'}
-    </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="window.shareSermon('${s.title}','${s.id}')">
-        ${svgShare} Share Sermon
-      </button>
-      <button class="btn btn-outline" onclick="window.openPrayerFromSermon()">
-        Request Prayer for This Topic
-      </button>
+
+    <div class="sermon-modal-body-inner">
+      <div class="carousel-badges" style="margin-bottom:12px;">
+        <span class="badge badge-season">${s.primarySeason}</span>
+        <span class="badge badge-scripture">${svgBook} ${s.scripture}</span>
+      </div>
+      <h2 class="sermon-modal-title">${s.title}</h2>
+      <div class="sermon-modal-meta">
+        By <strong>${s.preacherName}</strong>
+        &bull; ${s.publishDate}
+        &bull; ${svgClock} ${s.duration}
+      </div>
+      <p style="margin-bottom:24px;font-size:1.02rem;color:#444;line-height:1.75;">${s.summary}</p>
+
+      ${s.transcript && s.transcript.length ? `
+      <div class="transcript-box">
+        <div class="transcript-header">Timestamped Transcript</div>
+        ${s.transcript.map(l => `
+          <div class="transcript-line">
+            <span class="ts-tag">${l.time}</span>
+            <span>${l.text}</span>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <a href="${youtubeUrl}" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Watch on YouTube
+        </a>
+        <button class="btn btn-outline" onclick="window.shareSermon('${s.title}','${s.id}')">
+          ${svgShare} Share
+        </button>
+        <button class="btn btn-outline" onclick="window.openPrayerFromSermon()">
+          🙏 Prayer Request
+        </button>
+      </div>
     </div>`;
 
   modal.hidden = false;
 }
+window.openSermonModal = openSermonModal;
 window.openSermonModal = openSermonModal;
 
 document.getElementById('closeSermonModalBtn')?.addEventListener('click', () => {
