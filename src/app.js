@@ -18,7 +18,7 @@ let pendingPrayers = [
 ];
 
 // Admin Auth (simple pin-based gate — replace with backend auth in production)
-const ADMIN_PASSWORD = 'sermon2026';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? '';
 let adminAuthenticated = false;
 
 // SVG helpers
@@ -592,7 +592,7 @@ function openAdminPortal() {
           🔐 Sign In to CMS
         </button>
       </form>
-      <p class="admin-auth-hint">Demo password: sermon2026</p>
+      <p class="admin-auth-hint">Enter your admin password to continue.</p>
     </div>`;
 
   document.body.appendChild(overlay);

@@ -1,17 +1,17 @@
-# 2-Minute Sermon 🕊️⏱️
+# 2-Minute Sermon 🕊️
 
 > **Short, scripture-rooted messages. Delivered worldwide in 120 seconds.**
 
-A modern, full-featured web platform for the 2-Minute Sermon ministry — delivering bite-sized, scripture-first sermons to a global audience with a pastoral, premium feel.
+A modern web platform for the 2-Minute Sermon ministry — delivering bite-sized, scripture-first sermons to a global audience with a pastoral, premium feel.
 
 [![Live Site](https://img.shields.io/badge/Live-2minutesermon.org-C62828?style=for-the-badge&logo=google-chrome&logoColor=white)](https://www.2minutesermon.org)
 [![Built with Vite](https://img.shields.io/badge/Built%20with-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
 
 ---
 
-## ✨ Features
+## Features
 
-### 📺 Public Site
+### Public Site
 - **Hero Section** — Featured sermon carousel with live stats (sermons, ministers, countries)
 - **Sermon Library** — Searchable, filterable grid by season, topic, preacher, and scripture book
 - **Interactive Sermon Modal** — YouTube embed with timestamped transcript for every message
@@ -26,8 +26,8 @@ A modern, full-featured web platform for the 2-Minute Sermon ministry — delive
 - **Newsletter Signup** — Email subscription for daily/weekly devotionals
 - **Share Integration** — Native Web Share API + clipboard fallback for every sermon
 
-### 🔐 Admin CMS Portal (`/admin.html`)
-Opens in a **dedicated browser tab** with full authentication:
+### Admin CMS Portal (`/admin.html`)
+Opens in a dedicated browser tab with full authentication:
 
 | Panel | Capability |
 |---|---|
@@ -96,9 +96,7 @@ Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Fi
 ├── vite.config.js          # Multi-page Vite config
 ├── public/
 │   └── assets/
-│       ├── logo-icon.jpg   # Icon mark (used in header — gold on white)
-│       ├── logo-dark.jpg   # Full logo for dark surfaces (footer, admin)
-│       ├── logo-full.jpg   # Full logo on white background
+│       ├── logo.png        # Ministry logo
 │       └── hero-bg.jpg     # Hero section background
 └── src/
     ├── app.js              # Main site logic (scroll-reveal, nav, CMS hooks)
@@ -117,7 +115,7 @@ Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Fi
 
 ---
 
-## 🎨 Design System
+## Design System
 
 ### Color Palette
 | Token | Value | Usage |
@@ -138,28 +136,30 @@ Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Fi
 
 ## 🔐 Admin Access
 
+> **Warning:** Never commit admin credentials to this repository. Store passwords in a `.env` file (already listed in `.gitignore`) or use a proper auth provider (Firebase Auth, NextAuth, etc.) before going live.
+
+The admin portal is protected by a password gate. See your `.env` or deployment environment for the configured credential.
+
 | Field | Value |
 |---|---|
 | URL | `/admin.html` (opens in new tab) |
-| Password | `sermon2026` |
-
-> ⚠️ **Production Note**: Replace the client-side password check with a proper backend authentication system (Firebase Auth, NextAuth, or similar) before going live.
+| Password | *(set via environment — not stored here)* |
 
 ---
 
-## 📖 Scripture Foundation
+## Scripture Foundation
 
 > *"Go into all the world and preach the gospel to every creature."*  
 > — **Mark 16:15**
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is an active ministry project. For partnership, content contributions, or technical collaboration, please reach out through [2minutesermon.org](https://www.2minutesermon.org).
 
 ---
 
-## 📄 License
+## License
 
 © 2-Minute Sermon Ministry. All rights reserved.
