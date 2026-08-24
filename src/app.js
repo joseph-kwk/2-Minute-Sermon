@@ -1,13 +1,16 @@
-import { sermons } from './data/sermons.js';
+import { getSermons } from './data/sermons.js';
+import { getEvents } from './data/events.js';
 import { preachers as initialPreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { topics } from './data/topics.js';
 import { scheduledDailyVerses } from './data/dailyVerse.js';
-import { events } from './data/events.js';
-import { conversations } from './data/conversations.js';
 
 // ─── Mutable runtime data arrays ─────────────────────────────────────────────
 const preachers = [...initialPreachers];
+// Helpers: always return fresh data from localStorage
+const sermons = () => getSermons();
+const events  = () => getEvents();
+
 
 let activeView = 'home';
 let activeSeasonChip = 'all';
@@ -56,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTopicsHub();
   renderPreachersHub();
   renderEventsGrid();
-  renderConversationsGrid();
   populateDropdownFilterOptions();
   renderAdminPrayerInbox();
   renderAdminVerseQueue();
@@ -211,26 +213,43 @@ function closeMobileDrawer() {
 // ─── HERO & CAROUSEL ──────────────────────────────────────────────────────────
 function setupHeroCtas() {
   document.getElementById('heroPrimaryCta')?.addEventListener('click', () => {
-    const featured = sermons.find(s => s.featured) || sermons[0];
+    const featured = sermons().find(s => s.featured) || sermons()[0];
     openSermonModal(featured.id);
   });
 
   document.getElementById('heroSecondaryCta')?.addEventListener('click', () => switchView('daily-verse'));
 
-  const featuredList = sermons.filter(s => s.featured);
+  const getFeatured = () => sermons().filter(s => s.featured);
+
   document.getElementById('carouselPrev')?.addEventListener('click', () => {
-    currentCarouselIndex = (currentCarouselIndex - 1 + featuredList.length) % featuredList.length;
+    const list = getFeatured();
+    if (!list.length) return;
+    currentCarouselIndex = (currentCarouselIndex - 1 + list.length) % list.length;
     renderFeaturedCarousel(true);
   });
   document.getElementById('carouselNext')?.addEventListener('click', () => {
-    currentCarouselIndex = (currentCarouselIndex + 1) % featuredList.length;
+    const list = getFeatured();
+    if (!list.length) return;
+    currentCarouselIndex = (currentCarouselIndex + 1) % list.length;
     renderFeaturedCarousel(true);
+  });
+
+  // Re-render when sermons or events are updated in localStorage from another tab / admin
+  window.addEventListener('storage', (e) => {
+    if (e.key === '2ms_sermons') {
+      renderFeaturedCarousel();
+      renderHomeSermons();
+      filterAndRenderSermons();
+    }
+    if (e.key === '2ms_events') {
+      renderEventsGrid();
+    }
   });
 }
 
 function renderFeaturedCarousel(animate = false) {
   const container = document.getElementById('featuredCarouselCard');
-  const featuredList = sermons.filter(s => s.featured);
+  const featuredList = sermons().filter(s => s.featured);
   if (!container || !featuredList.length) return;
 
   const s = featuredList[currentCarouselIndex];
@@ -238,7 +257,8 @@ function renderFeaturedCarousel(animate = false) {
 
   container.innerHTML = `
     <div class="carousel-media-container">
-      <img src="${s.thumbnailUrl}" alt="${s.title}" class="carousel-img" loading="lazy">
+      <img src="${s.thumbnailUrl}" alt="${s.title}" class="carousel-img" loading="lazy"
+        onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
       <div class="carousel-play-overlay">
         <button class="play-btn-circle" onclick="window.openSermonModal('${s.id}')" aria-label="Watch ${s.title}">
           ${svgPlay}
@@ -271,7 +291,7 @@ function renderFeaturedCarousel(animate = false) {
 function renderHomeSermons() {
   const container = document.getElementById('homeSermonsGrid');
   if (!container) return;
-  container.innerHTML = sermons.slice(0, 6).map(s => createSermonCardHtml(s)).join('');
+  container.innerHTML = sermons().slice(0, 6).map(s => createSermonCardHtml(s)).join('');
   observeNewCards(container);
 }
 
@@ -279,7 +299,8 @@ function createSermonCardHtml(s) {
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
-        <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-img" loading="lazy">
+        <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-img" loading="lazy"
+          onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
       </div>
       <div class="sermon-card-content">
@@ -383,7 +404,7 @@ function filterAndRenderSermons() {
   const scripture  = document.getElementById('filterScripture')?.value || 'all';
   const sort       = document.getElementById('filterSort')?.value || 'newest';
 
-  let results = sermons.filter(s => {
+  let results = sermons().filter(s => {
     if (activeSeasonChip !== 'all') {
       const primary   = s.primarySeason.toLowerCase().includes(activeSeasonChip);
       const secondary = s.secondarySeasons?.some(x => x.toLowerCase().includes(activeSeasonChip));
@@ -412,9 +433,13 @@ function filterAndRenderSermons() {
 
   if (!results.length) {
     grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:56px;background:#fff;border-radius:14px;border:1px solid #EAEAEA;">
-        <h3 style="margin-bottom:8px;">No sermons found</h3>
-        <p style="color:#777;">Try different keywords or clear the filters.</p>
+      <div class="sermons-empty-state" style="grid-column:1/-1;text-align:center;padding:56px 24px;background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 4px 20px rgba(0,0,0,0.04);">
+        <div style="font-size:2.8rem;margin-bottom:14px;">🔍</div>
+        <h3 style="margin-bottom:8px;font-family:var(--font-heading);font-size:1.4rem;">No Sermons Found</h3>
+        <p style="color:#666;max-width:380px;margin:0 auto 18px;font-size:0.95rem;line-height:1.5;">We couldn't find any sermons matching your active search keywords or filter criteria.</p>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('resetFiltersBtn')?.click()">
+          ↺ Reset All Filters
+        </button>
       </div>`;
   } else {
     grid.innerHTML = results.map(s => createSermonCardHtml(s)).join('');
@@ -424,7 +449,7 @@ function filterAndRenderSermons() {
 
 // ─── SERMON MODAL — YouTube redirect (no iframe, keeps site fast) ─────────────
 export function openSermonModal(sermonId) {
-  const s = sermons.find(x => x.id === sermonId);
+  const s = sermons().find(x => x.id === sermonId);
   if (!s) return;
   const modal     = document.getElementById('sermonModal');
   const modalBody = document.getElementById('sermonModalBody');
@@ -435,7 +460,8 @@ export function openSermonModal(sermonId) {
   modalBody.innerHTML = `
     <!-- Thumbnail with YouTube CTA — no iframe, site stays fast -->
     <div class="sermon-thumb-hero" onclick="window.open('${youtubeUrl}','_blank')" role="button" tabindex="0" title="Watch on YouTube">
-      <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-hero-img" loading="eager">
+      <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-hero-img" loading="eager"
+        onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
       <div class="sermon-thumb-hero-overlay">
         <div class="sermon-yt-btn">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -549,16 +575,38 @@ function setupDailyVerse() {
 function setupPrayerForm() {
   document.getElementById('prayerSubmissionForm')?.addEventListener('submit', e => {
     e.preventDefault();
-    const name    = document.getElementById('prayerName').value || 'Anonymous';
-    const email   = document.getElementById('prayerEmail').value;
-    const urgency = document.getElementById('prayerUrgency').value;
-    const msg     = document.getElementById('prayerMessage').value;
-    if (!email || !msg) return;
+    const name    = (document.getElementById('prayerName')?.value || '').trim() || 'Anonymous';
+    const email   = (document.getElementById('prayerEmail')?.value || '').trim();
+    const urgency = document.getElementById('prayerUrgency')?.value || 'General';
+    const msg     = (document.getElementById('prayerMessage')?.value || '').trim();
 
-    pendingPrayers.unshift({ id: `pr-${Date.now()}`, name, email, urgency, msg, status: 'New', date: 'Just now' });
+    if (!email) {
+      showToast('⚠️ Please provide an email address so we can confirm receipt.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast('⚠️ Please enter a valid email address.');
+      return;
+    }
+    if (!msg || msg.length < 5) {
+      showToast('⚠️ Please share a short description of your prayer need.');
+      return;
+    }
+
+    pendingPrayers.unshift({
+      id: `pr-${Date.now()}`,
+      name,
+      email,
+      urgency,
+      msg,
+      status: 'New',
+      date: new Date().toISOString().split('T')[0]
+    });
+
     e.target.reset();
     renderAdminPrayerInbox();
-    showToast('🙏 Your prayer request has been received!');
+    showToast('🙏 Your prayer request has been received with love.');
   });
 
   document.querySelectorAll('.copy-prayer-btn').forEach(btn => {
@@ -581,18 +629,18 @@ function openAdminPortal() {
   overlay.id = 'adminAuthOverlay';
   overlay.innerHTML = `
     <div class="admin-auth-card">
-      <img src="/assets/logo-full.jpg" alt="2-Minute Sermon" class="admin-auth-logo">
-      <h2 class="admin-auth-title">Admin Portal</h2>
-      <p class="admin-auth-subtitle">Enter your credentials to access the Content Management Suite.</p>
+      <img src="/assets/logo.png" alt="2-Minute Sermon" class="admin-auth-logo">
+      <h2 class="admin-auth-title">The Steward</h2>
+      <p class="admin-auth-subtitle">Faithful management of sermons, schedules &amp; ministry content.</p>
       <form class="admin-auth-form" id="adminAuthForm">
         <input type="text" class="admin-auth-input" id="adminAuthUser" placeholder="Username" autocomplete="username" required>
         <input type="password" class="admin-auth-input" id="adminAuthPass" placeholder="Password" autocomplete="current-password" required>
         <div class="admin-auth-error" id="adminAuthError"></div>
         <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:4px;">
-          🔐 Sign In to CMS
+          🔐 Enter The Steward
         </button>
       </form>
-      <p class="admin-auth-hint">Enter your admin password to continue.</p>
+      <p class="admin-auth-hint">Enter your password to continue.</p>
     </div>`;
 
   document.body.appendChild(overlay);
@@ -606,7 +654,7 @@ function openAdminPortal() {
       adminAuthenticated = true;
       overlay.style.animation = 'fadeOut 0.25s ease forwards';
       setTimeout(() => { overlay.remove(); switchView('admin'); }, 250); 
-      showToast('✅ Signed in to Admin CMS');
+      showToast('✅ Welcome to The Steward');
     } else {
       errEl.textContent = 'Incorrect password. Please try again.';
       document.getElementById('adminAuthPass').value = '';
@@ -909,36 +957,52 @@ window.filterByPreacherName = name => {
 function renderEventsGrid() {
   const c = document.getElementById('eventsGrid');
   if (!c) return;
-  c.innerHTML = events.map(ev => `
-    <div class="hub-card">
-      <img src="${ev.image}" alt="${ev.title}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:18px;" loading="lazy">
-      <span class="badge badge-season">${ev.date} &bull; ${ev.time}</span>
-      <h3 style="font-size:1.2rem;margin:10px 0 6px;">${ev.title}</h3>
-      <div style="font-size:0.85rem;color:#555;margin-bottom:12px;">📍 ${ev.location}</div>
-      <p style="font-size:0.85rem;color:#777;margin-bottom:18px;line-height:1.5;">${ev.description}</p>
-      <button class="btn btn-primary btn-sm btn-full" onclick="window.showToast('✨ Registered for ${ev.title}!')">
-        Register Free
-      </button>
+  const list = events();
+
+  if (!list.length) {
+    c.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:56px 24px;background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.06);">
+        <div style="font-size:2.5rem;margin-bottom:12px;">📅</div>
+        <h3 style="margin-bottom:8px;font-family:var(--font-heading);">No Upcoming Events Scheduled</h3>
+        <p style="color:#666;max-width:380px;margin:0 auto;font-size:0.95rem;">Check back soon or follow our online broadcasts for upcoming ministry gatherings.</p>
+      </div>`;
+    return;
+  }
+
+  c.innerHTML = list.map(ev => `
+    <div class="event-card">
+      <div class="event-card-header">
+        <span class="badge badge-season">${ev.category || 'Ministry Event'}</span>
+        <span class="event-date-pill">${ev.date}${ev.time ? ` · ${ev.time}` : ''}</span>
+      </div>
+      <h3 class="event-card-title">${ev.title}</h3>
+      <div class="event-card-location">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span>${ev.location}</span>
+      </div>
+      <p class="event-card-desc">${ev.description}</p>
+      <div class="event-card-footer">
+        <button class="btn btn-outline btn-sm btn-full" onclick="window.shareEvent('${encodeURIComponent(ev.title)}', '${encodeURIComponent(ev.date || '')}', '${encodeURIComponent(ev.location || '')}')">
+          ${svgShare} Share Event
+        </button>
+      </div>
     </div>`).join('');
   observeNewCards(c);
 }
 
-function renderConversationsGrid() {
-  const c = document.getElementById('conversationsGrid');
-  if (!c) return;
-  c.innerHTML = conversations.map(co => `
-    <div class="hub-card">
-      <img src="${co.thumbnail}" alt="${co.title}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:18px;" loading="lazy">
-      <span class="badge badge-scripture">Podcast &bull; ${co.duration}</span>
-      <h3 style="font-size:1.2rem;margin:10px 0 6px;">${co.title}</h3>
-      <div style="font-size:0.85rem;color:#777;margin-bottom:12px;">With: ${co.participants.join(', ')}</div>
-      <p style="font-size:0.85rem;color:#555;margin-bottom:18px;line-height:1.5;">${co.summary}</p>
-      <button class="btn btn-outline btn-sm btn-full" onclick="window.showToast('🎧 Playing episode…')">
-        ${svgPlay} Listen
-      </button>
-    </div>`).join('');
-  observeNewCards(c);
-}
+window.shareEvent = (titleEnc, dateEnc, locEnc) => {
+  const title = decodeURIComponent(titleEnc);
+  const date  = decodeURIComponent(dateEnc);
+  const loc   = decodeURIComponent(locEnc);
+  const text  = `Join us for "${title}" on ${date} (${loc}) — 2-Minute Sermon Ministry: ${window.location.origin}/#events`;
+
+  if (navigator.share) {
+    navigator.share({ title, text, url: `${window.location.origin}/#events` }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text);
+    showToast('📋 Event details copied to clipboard!');
+  }
+};
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 export function showToast(msg, duration = 4000) {

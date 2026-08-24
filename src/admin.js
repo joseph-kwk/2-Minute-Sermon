@@ -1,14 +1,14 @@
 // Admin CMS Portal — Standalone JS (admin.html)
-// Shared data is stored in sessionStorage so main site & admin can sync
-// In production, replace with real API/database calls.
+// Sermon data is persisted in localStorage via the CMS store in sermons.js.
 
-import { sermons as initialSermons } from './data/sermons.js';
+import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
+import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
 import { preachers as initialPreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { scheduledDailyVerses } from './data/dailyVerse.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
-const sermons   = [...initialSermons];
+// sermons live in localStorage — always read fresh via getSermons()
 const preachers = [...initialPreachers];
 let pendingPrayers = [
   { id:'pr-1', name:'Sarah M.', email:'sarah@example.com', urgency:'Health & Healing', msg:'Please pray for my mother recovering from surgery.', date:'2026-08-22' },
@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupVerseScheduler();
   setupSermonPublisher();
   setupPreachersManager();
+  setupEventsManager();
   setupBackupPanel();
   populateSelects();
 });
@@ -59,8 +60,9 @@ function setupAuthForm() {
         renderDashboardStats();
         renderVerseQueue();
         renderPreachersList();
+        renderEventsList();
         renderPrayerInbox();
-        toast('✅ Signed in to CMS Admin');
+        toast('✅ Welcome to The Steward');
       }, 280);
     } else {
       errEl.textContent = 'Incorrect password. Please try again.';
@@ -112,6 +114,7 @@ const PANEL_TITLES = {
   'daily-verse': 'Daily Verse Scheduler',
   sermons:     'Sermon Publisher',
   preachers:   'Preachers Manager',
+  events:      'Events Manager',
   prayers:     'Prayer Inbox',
   backup:      'Export & Backup'
 };
@@ -129,9 +132,10 @@ function switchPanel(panelId) {
 // ── DASHBOARD STATS ───────────────────────────────────────────────────────
 function renderDashboardStats() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('statSermons',   sermons.length);
+  set('statSermons',   getSermons().length);
   set('statVerses',    scheduledDailyVerses.length);
   set('statPreachers', preachers.length);
+  set('statEvents',    getEvents().length);
   set('statPrayers',   pendingPrayers.length);
   updatePrayerBadge();
 }
@@ -242,35 +246,152 @@ window.removeVerse = idx => {
 
 // ── SERMON PUBLISHER ──────────────────────────────────────────────────────
 function setupSermonPublisher() {
+  // ── YouTube preview button ──
+  const ytUrlInput    = document.getElementById('adminYoutubeUrl');
+  const ytPreviewBtn  = document.getElementById('adminYtPreviewBtn');
+  const ytPreviewBox  = document.getElementById('adminYtPreview');
+  const ytThumbImg    = document.getElementById('adminYtThumb');
+  const ytPreviewId   = document.getElementById('adminYtPreviewId');
+  const videoIdInput  = document.getElementById('adminVideoId');
+
+  function loadPreview() {
+    const vid = extractVideoId(ytUrlInput.value);
+    if (!vid) { ytPreviewBox.style.display = 'none'; videoIdInput.value = ''; return; }
+    videoIdInput.value = vid;
+    ytThumbImg.src     = ytThumb(vid);
+    ytPreviewId.textContent = vid;
+    ytPreviewBox.style.display = 'flex';
+  }
+
+  ytPreviewBtn?.addEventListener('click', loadPreview);
+  // Also auto-preview when user stops typing
+  let ytDebounce;
+  ytUrlInput?.addEventListener('input', () => {
+    clearTimeout(ytDebounce);
+    ytDebounce = setTimeout(loadPreview, 500);
+  });
+
+  // ── Publish form submit ──
   document.getElementById('adminQuickPublishForm')?.addEventListener('submit', e => {
     e.preventDefault();
-    const title    = document.getElementById('adminSermonTitle').value;
-    const preacher = document.getElementById('adminPreacher').value;
-    const scripture= document.getElementById('adminScripture').value;
-    const season   = document.getElementById('adminSeason').value;
-    const duration = document.getElementById('adminDuration').value;
-    const raw      = document.getElementById('adminYoutubeUrl').value;
-    const summary  = document.getElementById('adminSummary').value;
 
-    let embedId = raw.trim();
-    if (raw.includes('v=')) embedId = raw.split('v=')[1].split('&')[0];
-    else if (raw.includes('youtu.be/')) embedId = raw.split('youtu.be/')[1].split('?')[0];
+    const title      = document.getElementById('adminSermonTitle').value.trim();
+    const preacher   = document.getElementById('adminPreacher').value;
+    const scripture  = document.getElementById('adminScripture').value.trim();
+    const season     = document.getElementById('adminSeason').value;
+    const duration   = document.getElementById('adminDuration').value.trim();
+    const summary    = document.getElementById('adminSummary').value.trim();
+    const featured   = document.getElementById('adminFeatured').checked;
+    const sermonType = document.querySelector('input[name="sermonType"]:checked')?.value || 'Devotional';
+    const topics     = [...document.querySelectorAll('.admin-checkbox-group input:checked')].map(c => c.value);
 
-    sermons.unshift({
-      id:`sermon-${Date.now()}`, title,
-      slug: title.toLowerCase().replace(/[^a-z0-9]+/g,'-'),
-      preacherId:'p1', preacherName:preacher,
-      scripture, scriptureBook:scripture.split(' ')[0],
-      primarySeason:season, secondarySeasons:[], topics:['Faith'],
-      duration, durationSec:120, youtubeUrl:raw, youtubeEmbedId:embedId,
-      thumbnailUrl:`https://img.youtube.com/vi/${embedId}/hqdefault.jpg`,
-      summary, publishDate:new Date().toISOString().split('T')[0], views:1, featured:true,
-      transcript:[{ time:'0:00', text:summary },{ time:'1:00', text:"Walk boldly in God's promises." }]
-    });
+    const rawUrl = ytUrlInput.value.trim();
+    const embedId = videoIdInput.value || extractVideoId(rawUrl);
+    if (!embedId) { toast('⚠️ Please enter a valid YouTube URL or video ID.'); return; }
+    if (topics.length === 0) { toast('⚠️ Please select at least one topic.'); return; }
 
+    const sermon = {
+      id: `sermon-${Date.now()}`,
+      title,
+      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      preacherId: preachers.find(p => p.name === preacher)?.id || 'p1',
+      preacherName: preacher,
+      scripture,
+      scriptureBook: scripture.split(' ')[0],
+      primarySeason: season,
+      secondarySeasons: [],
+      topics,
+      sermonType,
+      duration,
+      durationSec: durationToSeconds(duration),
+      youtubeUrl: `https://www.youtube.com/watch?v=${embedId}`,
+      youtubeEmbedId: embedId,
+      thumbnailUrl: ytThumb(embedId),
+      summary,
+      publishDate: new Date().toISOString().split('T')[0],
+      views: 0,
+      featured,
+      transcript: []
+    };
+
+    upsertSermon(sermon);
     renderDashboardStats();
+    renderSermonsList();
     e.target.reset();
-    toast(`🚀 "${title}" published to the live feed!`);
+    ytPreviewBox.style.display = 'none';
+    videoIdInput.value = '';
+    // Reset checkboxes — re-check Faith as default
+    document.querySelectorAll('.admin-checkbox-group input').forEach((c, i) => c.checked = i === 0);
+    document.querySelector('input[name="sermonType"][value="Devotional"]').checked = true;
+    toast(`🚀 "${title}" published!`);
+  });
+
+  renderSermonsList();
+}
+
+/** Renders the live sermons list in the publisher panel right column. */
+function renderSermonsList() {
+  const list    = document.getElementById('adminSermonsList');
+  const counter = document.getElementById('sermonsCount');
+  if (!list) return;
+
+  const all = getSermons();
+  counter && (counter.textContent = all.length);
+
+  if (all.length === 0) {
+    list.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No sermons yet. Publish one!</p>';
+    return;
+  }
+
+  list.innerHTML = all.map(s => `
+    <div class="admin-sermon-row" id="srow-${s.id}">
+      <img class="admin-sermon-thumb"
+        src="${s.thumbnailUrl}"
+        onerror="this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg'"
+        alt="${s.title}">
+      <div class="admin-sermon-info">
+        <div class="admin-sermon-title" title="${s.title}">${s.title}</div>
+        <div class="admin-sermon-meta">
+          <span>${s.preacherName}</span>
+          <span>${s.duration}</span>
+          <span class="admin-sermon-type-badge">${s.sermonType || 'Devotional'}</span>
+        </div>
+      </div>
+      <div class="admin-sermon-actions">
+        <button class="feat-btn ${s.featured ? 'featured-on' : ''}" data-id="${s.id}" title="${s.featured ? 'Unfeature' : 'Feature'}">
+          ${s.featured ? '★' : '☆'}
+        </button>
+        <button class="del-btn" data-id="${s.id}" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Feature toggle
+  list.querySelectorAll('.feat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const all2 = getSermons();
+      const s    = all2.find(x => x.id === btn.dataset.id);
+      if (!s) return;
+      s.featured = !s.featured;
+      upsertSermon(s);
+      renderSermonsList();
+      renderDashboardStats();
+      toast(s.featured ? `⭐ "${s.title}" featured!` : `"${s.title}" unfeatured.`);
+    });
+  });
+
+  // Delete
+  list.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const all2 = getSermons();
+      const s    = all2.find(x => x.id === btn.dataset.id);
+      if (!s) return;
+      if (!confirm(`Delete "${s.title}"? This cannot be undone.`)) return;
+      deleteSermon(s.id);
+      renderSermonsList();
+      renderDashboardStats();
+      toast(`🗑️ "${s.title}" deleted.`);
+    });
   });
 }
 
@@ -332,6 +453,78 @@ window.removePreacher = idx => {
   toast(`${name} removed from directory.`);
 };
 
+// ── EVENTS MANAGER ────────────────────────────────────────────────────────
+function setupEventsManager() {
+  document.getElementById('adminAddEventForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const title       = document.getElementById('newEventTitle').value.trim();
+    const date        = document.getElementById('newEventDate').value;
+    const time        = document.getElementById('newEventTime').value.trim();
+    const category    = document.getElementById('newEventCategory').value;
+    const location    = document.getElementById('newEventLocation').value.trim();
+    const description = document.getElementById('newEventDesc').value.trim();
+
+    const ev = {
+      id: `ev-${Date.now()}`,
+      title,
+      date,
+      time,
+      category,
+      location,
+      description
+    };
+
+    upsertEvent(ev);
+    renderEventsList();
+    renderDashboardStats();
+    e.target.reset();
+    toast(`🗓️ "${title}" published!`);
+  });
+
+  renderEventsList();
+}
+
+function renderEventsList() {
+  const c = document.getElementById('adminEventsList');
+  const countEl = document.getElementById('eventsCount');
+  const all = getEvents();
+
+  if (countEl) countEl.textContent = all.length;
+  if (!c) return;
+
+  if (!all.length) {
+    c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No upcoming events. Add one!</p>';
+    return;
+  }
+
+  c.innerHTML = all.map(ev => `
+    <div class="admin-list-item" style="padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
+          <span class="admin-tag admin-tag-blue" style="font-size:0.7rem;">${ev.category || 'Event'}</span>
+          <span style="font-size:0.75rem;color:var(--admin-muted);">${ev.date}${ev.time ? ` · ${ev.time}` : ''}</span>
+        </div>
+        <strong style="color:var(--admin-text);display:block;font-size:0.9rem;margin-bottom:4px;">${ev.title}</strong>
+        <div style="font-size:0.78rem;color:var(--admin-muted);">${ev.location}</div>
+      </div>
+      <button class="admin-btn admin-btn-sm admin-btn-danger" data-id="${ev.id}" title="Delete Event">✕</button>
+    </div>
+  `).join('');
+
+  c.querySelectorAll('.admin-btn-danger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getEvents().find(x => x.id === id);
+      if (!target) return;
+      if (!confirm(`Delete event "${target.title}"?`)) return;
+      deleteEvent(id);
+      renderEventsList();
+      renderDashboardStats();
+      toast(`🗑️ "${target.title}" removed.`);
+    });
+  });
+}
+
 // ── PRAYER INBOX ──────────────────────────────────────────────────────────
 function renderPrayerInbox() {
   const c = document.getElementById('adminPrayerInboxList');
@@ -364,25 +557,113 @@ window.markPrayed = idx => {
   toast('✓ Prayer marked as prayed for!');
 };
 
-// ── BACKUP ────────────────────────────────────────────────────────────────
+// ── BACKUP & RESTORE ──────────────────────────────────────────────────────
 function setupBackupPanel() {
+  // Export
   document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
-    const data = {
-      exportedAt: new Date().toISOString(),
-      scheduledDailyVerses,
-      sermons,
-      preachers,
-      pendingPrayers
-    };
-    const url = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `2ms-cms-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
+    try {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        version: '1.0',
+        scheduledDailyVerses,
+        sermons: getSermons(),
+        preachers,
+        events: getEvents(),
+        pendingPrayers
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `2ms-cms-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
 
-    const label = document.getElementById('lastExportLabel');
-    if (label) label.textContent = `Last exported: ${new Date().toLocaleTimeString()}`;
-    toast('📥 CMS backup downloaded!');
+      const label = document.getElementById('lastExportLabel');
+      if (label) label.textContent = `Last exported: ${new Date().toLocaleTimeString()}`;
+      toast('📥 CMS backup downloaded!');
+    } catch (err) {
+      toast('⚠️ Failed to export backup. Please check browser permissions.');
+    }
+  });
+
+  // Import / Restore
+  const importBtn   = document.getElementById('importJsonBtn');
+  const importInput = document.getElementById('importJsonInput');
+
+  importBtn?.addEventListener('click', () => importInput?.click());
+
+  importInput?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const raw = evt.target?.result;
+        if (typeof raw !== 'string') throw new Error('Invalid file format');
+        const parsed = JSON.parse(raw);
+
+        // Validate structure
+        if (!parsed || typeof parsed !== 'object') throw new Error('Invalid JSON structure');
+
+        let restoredItems = [];
+
+        if (Array.isArray(parsed.sermons) && parsed.sermons.length) {
+          saveSermons(parsed.sermons);
+          restoredItems.push(`${parsed.sermons.length} sermons`);
+        }
+
+        if (Array.isArray(parsed.preachers) && parsed.preachers.length) {
+          preachers.length = 0;
+          preachers.push(...parsed.preachers);
+          restoredItems.push(`${parsed.preachers.length} ministers`);
+        }
+
+        if (Array.isArray(parsed.scheduledDailyVerses) && parsed.scheduledDailyVerses.length) {
+          scheduledDailyVerses.length = 0;
+          scheduledDailyVerses.push(...parsed.scheduledDailyVerses);
+          restoredItems.push(`${parsed.scheduledDailyVerses.length} verses`);
+        }
+
+        if (Array.isArray(parsed.events) && parsed.events.length) {
+          saveEvents(parsed.events);
+          restoredItems.push(`${parsed.events.length} events`);
+        }
+
+        if (Array.isArray(parsed.pendingPrayers)) {
+          pendingPrayers.length = 0;
+          pendingPrayers.push(...parsed.pendingPrayers);
+        }
+
+        if (!restoredItems.length) {
+          toast('⚠️ File parsed, but no recognizable CMS records were found.');
+          return;
+        }
+
+        // Re-render all views
+        renderDashboardStats();
+        renderSermonsList();
+        renderPreachersList();
+        renderEventsList();
+        renderVerseQueue();
+        renderPrayerInbox();
+        populateSelects();
+
+        toast(`✅ Successfully restored: ${restoredItems.join(', ')}!`);
+      } catch (err) {
+        toast(`⚠️ Backup import error: ${err.message || 'Corrupted or invalid JSON file.'}`);
+      } finally {
+        importInput.value = '';
+      }
+    };
+    reader.onerror = () => {
+      toast('⚠️ Could not read selected file.');
+      importInput.value = '';
+    };
+    reader.readAsText(file);
   });
 }
 

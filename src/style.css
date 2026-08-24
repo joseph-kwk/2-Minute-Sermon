@@ -499,7 +499,7 @@ textarea.text-input { resize: vertical; }
 /* ==========================================================================
    HUB GRIDS
    ========================================================================== */
-.seasons-hub-grid, .topics-hub-grid, .preachers-hub-grid, .events-grid, .conversations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+.seasons-hub-grid, .topics-hub-grid, .preachers-hub-grid, .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
 .hub-card {
   background: var(--color-white); border: 1px solid var(--color-lightgray); border-radius: var(--radius-lg);
   padding: 26px; transition: all var(--transition-normal);
@@ -507,6 +507,66 @@ textarea.text-input { resize: vertical; }
 .hub-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(198,40,40,0.2); }
 .preacher-card-img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; margin-bottom: 16px; border: 3px solid var(--color-lightgray); transition: border-color var(--transition-fast); }
 .hub-card:hover .preacher-card-img { border-color: var(--color-sermon-red); }
+
+/* Minimal Event Cards */
+.event-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-lightgray);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(198,40,40,0.25);
+}
+.event-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.event-date-pill {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-mediumgray);
+  background: var(--color-offwhite);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.event-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.35;
+  margin-bottom: 10px;
+  color: var(--color-black);
+}
+.event-card-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--color-sermon-red);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.event-card-desc {
+  font-size: 0.9rem;
+  color: var(--color-charcoal);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  flex: 1;
+}
+.event-card-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-lightgray);
+}
 
 /* ==========================================================================
    PRAYER SECTION

@@ -19,24 +19,24 @@ A modern web platform for the 2-Minute Sermon ministry — delivering bite-sized
 - **Liturgical Seasons Hub** — Browse sermons by Advent, Lent, Easter, Ordinary Time, and more
 - **Topics Hub** — Filter by Faith, Healing, Grace, Prayer, and other pastoral themes
 - **Preachers Directory** — Profile cards for all contributing ministers worldwide
-- **Events Calendar** — Upcoming ministry events with free registration
-- **Conversations** — Podcast-style theological dialogues
+- **Ministry Events** — Minimal upcoming gatherings view with one-click sharing (no registration barrier)
 - **Prayer Wall** — Submit personal prayer requests; written communal prayers
 - **About** — Mission, vision, impact metrics, and statement of faith
 - **Newsletter Signup** — Email subscription for daily/weekly devotionals
-- **Share Integration** — Native Web Share API + clipboard fallback for every sermon
+- **Share Integration** — Native Web Share API + clipboard fallback for every sermon & event
 
-### Admin CMS Portal (`/admin.html`)
+### The Steward Portal (`/admin.html`)
 Opens in a dedicated browser tab with full authentication:
 
 | Panel | Capability |
 |---|---|
-| **Dashboard** | Live stats: sermons, verses, ministers, pending prayers |
+| **Dashboard** | Live stats: sermons, verses, ministers, events, pending prayers |
 | **Daily Verse Scheduler** | Plan verses by date; 30-day auto-fill queue |
-| **Sermon Publisher** | Paste YouTube URL → publish instantly to the live feed |
+| **Sermon Publisher** | Paste YouTube URL → live preview → publish to library |
 | **Preachers Manager** | Add/remove minister profiles with photo, bio, denomination |
+| **Events Manager** | Create, manage, and publish upcoming ministry events |
 | **Prayer Inbox** | Review visitor prayer requests; mark as "Prayed For" |
-| **CMS Backup** | 1-click JSON export of all content data |
+| **CMS Backup** | JSON export & validated import to restore or sync CMS data |
 
 ---
 
@@ -75,7 +75,7 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) for the public site.  
-Open [http://localhost:5173/admin.html](http://localhost:5173/admin.html) for the Admin CMS.
+Open [http://localhost:5173/admin.html](http://localhost:5173/admin.html) for The Steward.
 
 ### Build for Production
 
@@ -92,7 +92,7 @@ Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Fi
 ```
 2-Minute-Sermon/
 ├── index.html              # Main public site
-├── admin.html              # Admin CMS Portal (separate page)
+├── admin.html              # The Steward Portal (separate page)
 ├── vite.config.js          # Multi-page Vite config
 ├── public/
 │   └── assets/
@@ -100,17 +100,16 @@ Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Fi
 │       └── hero-bg.jpg     # Hero section background
 └── src/
     ├── app.js              # Main site logic (scroll-reveal, nav, CMS hooks)
-    ├── admin.js            # Admin portal logic (auth, panels, CRUD)
+    ├── admin.js            # The Steward logic (auth, panels, CRUD)
     ├── style.css           # Public site design system
-    ├── admin.css           # Admin portal styles
+    ├── admin.css           # The Steward styles
     └── data/
         ├── sermons.js      # Sermon library data
         ├── preachers.js    # Minister profiles
         ├── dailyVerse.js   # Scheduled daily verse queue
         ├── seasons.js      # Liturgical seasons
         ├── topics.js       # Sermon topic categories
-        ├── events.js       # Upcoming events
-        └── conversations.js# Podcast episodes
+        └── events.js       # Upcoming ministry events store
 ```
 
 ---
@@ -134,11 +133,11 @@ Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Fi
 
 ---
 
-## 🔐 Admin Access
+## 🔐 The Steward Access
 
-> **Warning:** Never commit admin credentials to this repository. Store passwords in a `.env` file (already listed in `.gitignore`) or use a proper auth provider (Firebase Auth, NextAuth, etc.) before going live.
+> **Warning:** Never commit credentials to this repository. Store passwords in a `.env` file (already listed in `.gitignore`) or use a proper auth provider (Firebase Auth, NextAuth, etc.) before going live.
 
-The admin portal is protected by a password gate. See your `.env` or deployment environment for the configured credential.
+The Steward portal is protected by a password gate. See your `.env` or deployment environment for the configured credential.
 
 | Field | Value |
 |---|---|

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin CMS — 2-Minute Sermon</title>
+  <title>The Steward — 2-Minute Sermon</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="/assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,18 +19,18 @@
       <div class="admin-auth-logo-wrap">
         <img src="/assets/logo.png" alt="2-Minute Sermon" class="admin-auth-logo">
       </div>
-      <h2 class="admin-auth-title">CMS Admin Portal</h2>
-      <p class="admin-auth-subtitle">Sign in to manage content, schedules &amp; preachers.</p>
+      <h2 class="admin-auth-title">The Steward</h2>
+      <p class="admin-auth-subtitle">Faithful management of sermons, schedules &amp; ministry content.</p>
       <form class="admin-auth-form" id="adminAuthForm">
         <input type="text" class="admin-auth-input" id="adminAuthUser" placeholder="Username" autocomplete="username" required>
         <input type="password" class="admin-auth-input" id="adminAuthPass" placeholder="Password" autocomplete="current-password" required>
         <div class="admin-auth-error" id="adminAuthError"></div>
         <button type="submit" class="admin-btn admin-btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          Sign In to CMS
+          Enter The Steward
         </button>
       </form>
-      <p class="admin-auth-hint">Enter your admin password to continue.</p>
+      <p class="admin-auth-hint">Enter your password to continue.</p>
     </div>
   </div>
 
@@ -44,7 +44,7 @@
         </div>
         <div>
           <div class="admin-sidebar-title">2-Minute Sermon</div>
-          <div class="admin-sidebar-sub">CMS Admin</div>
+          <div class="admin-sidebar-sub">The Steward</div>
         </div>
       </div>
 
@@ -64,6 +64,10 @@
         <button class="admin-nav-item" data-panel="preachers">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
           Preachers Manager
+        </button>
+        <button class="admin-nav-item" data-panel="events">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Events Manager
         </button>
         <button class="admin-nav-item" data-panel="prayers">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -128,6 +132,15 @@
             </div>
           </div>
           <div class="admin-stat-card">
+            <div class="admin-stat-icon" style="background:rgba(46,125,50,0.1);color:#2E7D32;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div>
+              <div class="admin-stat-value" id="statEvents">0</div>
+              <div class="admin-stat-label">Upcoming Events</div>
+            </div>
+          </div>
+          <div class="admin-stat-card">
             <div class="admin-stat-icon" style="background:rgba(198,40,40,0.1);color:#C62828;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             </div>
@@ -144,6 +157,7 @@
             <button class="admin-quick-btn" data-panel="daily-verse">📅 Schedule Verse</button>
             <button class="admin-quick-btn" data-panel="sermons">🎬 Publish Sermon</button>
             <button class="admin-quick-btn" data-panel="preachers">🎙️ Add Preacher</button>
+            <button class="admin-quick-btn" data-panel="events">🗓️ Add Event</button>
             <button class="admin-quick-btn" data-panel="prayers">🙏 View Prayers</button>
           </div>
         </div>
@@ -193,48 +207,120 @@
 
       <!-- ── Panel: Sermon Publisher ── -->
       <div class="admin-panel" id="panel-sermons">
-        <div class="admin-card" style="max-width:720px;">
-          <h2 class="admin-card-title">Quick Sermon Publisher</h2>
-          <p class="admin-card-sub">Paste a YouTube link to instantly publish a sermon to the live feed.</p>
-          <form id="adminQuickPublishForm">
+        <div class="admin-panel-grid">
+
+          <!-- LEFT: Publish Form -->
+          <div class="admin-card">
+            <h2 class="admin-card-title">Publish a Sermon</h2>
+            <p class="admin-card-sub">Paste a YouTube link — the thumbnail auto-loads. Fill in the rest and publish.</p>
+
+            <!-- YouTube URL + Thumbnail Preview -->
             <div class="admin-form-group">
-              <label>Sermon Title</label>
-              <input type="text" id="adminSermonTitle" placeholder="e.g. Overcoming Doubt" class="admin-input" required>
-            </div>
-            <div class="admin-form-row">
-              <div class="admin-form-group">
-                <label>Preacher</label>
-                <select id="adminPreacher" class="admin-input" required></select>
+              <label>YouTube URL or Video ID</label>
+              <div class="admin-yt-input-row">
+                <input type="text" id="adminYoutubeUrl"
+                  placeholder="https://youtube.com/watch?v=... or video ID"
+                  class="admin-input" required>
+                <button type="button" id="adminYtPreviewBtn" class="admin-btn admin-btn-outline admin-btn-sm">
+                  Preview
+                </button>
               </div>
-              <div class="admin-form-group">
-                <label>Scripture Ref</label>
-                <input type="text" id="adminScripture" placeholder="e.g. John 14:6" class="admin-input" required>
-              </div>
-            </div>
-            <div class="admin-form-row">
-              <div class="admin-form-group">
-                <label>Liturgical Season</label>
-                <select id="adminSeason" class="admin-input" required></select>
-              </div>
-              <div class="admin-form-group">
-                <label>Duration</label>
-                <input type="text" id="adminDuration" value="1:55" class="admin-input" required>
+              <div class="admin-yt-preview" id="adminYtPreview" style="display:none;">
+                <img id="adminYtThumb" src="" alt="YouTube thumbnail" class="admin-yt-thumb">
+                <div class="admin-yt-preview-label">
+                  <span id="adminYtPreviewId" class="admin-yt-id"></span>
+                  <span class="admin-yt-ok">&#x2713; Video linked</span>
+                </div>
               </div>
             </div>
-            <div class="admin-form-group">
-              <label>YouTube URL or Embed ID</label>
-              <input type="text" id="adminYoutubeUrl" placeholder="e.g. dQw4w9WgXcQ or full youtube.com/watch?v= link" class="admin-input" required>
+
+            <form id="adminQuickPublishForm">
+              <input type="hidden" id="adminVideoId">
+
+              <div class="admin-form-group">
+                <label>Sermon Title</label>
+                <input type="text" id="adminSermonTitle" placeholder="e.g. Overcoming Doubt" class="admin-input" required>
+              </div>
+
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Preacher</label>
+                  <select id="adminPreacher" class="admin-input" required></select>
+                </div>
+                <div class="admin-form-group">
+                  <label>Duration <span style="color:var(--admin-muted);font-weight:400;">(M:SS)</span></label>
+                  <input type="text" id="adminDuration" placeholder="1:55" class="admin-input" required>
+                </div>
+              </div>
+
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Scripture Reference</label>
+                  <input type="text" id="adminScripture" placeholder="e.g. John 14:6" class="admin-input" required>
+                </div>
+                <div class="admin-form-group">
+                  <label>Liturgical Season</label>
+                  <select id="adminSeason" class="admin-input" required></select>
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Sermon Type</label>
+                <div class="admin-radio-group">
+                  <label class="admin-radio-label"><input type="radio" name="sermonType" value="Devotional" checked> Devotional</label>
+                  <label class="admin-radio-label"><input type="radio" name="sermonType" value="Teaching"> Teaching</label>
+                  <label class="admin-radio-label"><input type="radio" name="sermonType" value="Expository"> Expository</label>
+                  <label class="admin-radio-label"><input type="radio" name="sermonType" value="Evangelistic"> Evangelistic</label>
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Topics <span style="color:var(--admin-muted);font-weight:400;">(select all that apply)</span></label>
+                <div class="admin-checkbox-group">
+                  <label class="admin-check-label"><input type="checkbox" value="Faith" checked> Faith</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Hope"> Hope</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Grace"> Grace</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Prayer"> Prayer</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Healing"> Healing</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Forgiveness"> Forgiveness</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Salvation"> Salvation</label>
+                  <label class="admin-check-label"><input type="checkbox" value="Encouragement"> Encouragement</label>
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Pastoral Summary</label>
+                <textarea id="adminSummary" rows="2" placeholder="One or two sentences about the message..." class="admin-input" required></textarea>
+              </div>
+
+              <div class="admin-form-group admin-toggle-row">
+                <div>
+                  <div class="admin-toggle-label">Feature this sermon</div>
+                  <div class="admin-toggle-sub">Pin to the homepage hero section</div>
+                </div>
+                <label class="admin-toggle-switch">
+                  <input type="checkbox" id="adminFeatured">
+                  <span class="admin-toggle-track"></span>
+                </label>
+              </div>
+
+              <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;padding:14px;margin-top:8px;">
+                &#x1F680; Publish Sermon Live
+              </button>
+            </form>
+          </div>
+
+          <!-- RIGHT: Published Sermons List -->
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h2 class="admin-card-title" style="margin:0;">Live Sermons (<span id="sermonsCount">0</span>)</h2>
             </div>
-            <div class="admin-form-group">
-              <label>Pastoral Summary</label>
-              <input type="text" id="adminSummary" placeholder="One-line message excerpt..." class="admin-input" required>
-            </div>
-            <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;padding:14px;">
-              🚀 Publish Sermon Live
-            </button>
-          </form>
+            <div class="admin-scroll-list" id="adminSermonsList"></div>
+          </div>
+
         </div>
       </div>
+
 
       <!-- ── Panel: Preachers Manager ── -->
       <div class="admin-panel" id="panel-preachers">
@@ -280,6 +366,62 @@
         </div>
       </div>
 
+      <!-- ── Panel: Events Manager ── -->
+      <div class="admin-panel" id="panel-events">
+        <div class="admin-panel-grid">
+          <div class="admin-card">
+            <h2 class="admin-card-title">Schedule Ministry Event</h2>
+            <p class="admin-card-sub">Publish upcoming prayer summits, streams, or workshops.</p>
+            <form id="adminAddEventForm">
+              <div class="admin-form-group">
+                <label>Event Title</label>
+                <input type="text" id="newEventTitle" placeholder="e.g. Global 2-Minute Prayer Summit" class="admin-input" required>
+              </div>
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Date</label>
+                  <input type="date" id="newEventDate" class="admin-input" required>
+                </div>
+                <div class="admin-form-group">
+                  <label>Time</label>
+                  <input type="text" id="newEventTime" placeholder="7:00 PM EST" class="admin-input" required>
+                </div>
+              </div>
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Category / Type</label>
+                  <select id="newEventCategory" class="admin-input" required>
+                    <option value="Prayer & Worship">Prayer & Worship</option>
+                    <option value="Live Stream">Live Stream</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Conference">Conference</option>
+                    <option value="Special Service">Special Service</option>
+                  </select>
+                </div>
+                <div class="admin-form-group">
+                  <label>Location / Platform</label>
+                  <input type="text" id="newEventLocation" placeholder="e.g. Online Broadcast & YouTube Live" class="admin-input" required>
+                </div>
+              </div>
+              <div class="admin-form-group">
+                <label>Event Description</label>
+                <textarea id="newEventDesc" rows="3" placeholder="Brief outline of the event..." class="admin-input" required></textarea>
+              </div>
+              <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;padding:14px;">
+                ➕ Publish Event
+              </button>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h2 class="admin-card-title" style="margin:0;">Active Events (<span id="eventsCount">0</span>)</h2>
+            </div>
+            <div class="admin-scroll-list" id="adminEventsList"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Panel: Prayer Inbox ── -->
       <div class="admin-panel" id="panel-prayers">
         <div class="admin-card" style="max-width:720px;">
@@ -302,6 +444,7 @@
             <button class="admin-btn admin-btn-outline" id="importJsonBtn" style="padding:14px 28px;">
               📤 Import / Restore
             </button>
+            <input type="file" id="importJsonInput" accept=".json,application/json" style="display:none;">
           </div>
           <p style="font-size:0.8rem;color:#888;margin-top:24px;" id="lastExportLabel"></p>
         </div>
