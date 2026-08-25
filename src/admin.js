@@ -692,19 +692,29 @@ function setupBackupPanel() {
   });
 }
 
+import { isFirebaseConfigured, saveDocument, seedCollectionIfEmpty } from './firebase.js';
+
 // ── MINISTRY SETTINGS ─────────────────────────────────────────────────────
 const SETTINGS_KEY = '2ms_settings';
+const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
 
 export function getSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Auto-migrate generic or empty youtubeUrl to official channel
+      if (!parsed.youtubeUrl || parsed.youtubeUrl === 'https://youtube.com' || parsed.youtubeUrl === 'https://youtube.com/') {
+        parsed.youtubeUrl = DEFAULT_YT_CHANNEL;
+      }
+      return parsed;
+    }
   } catch (_) {}
   return {
     contactEmail: 'pastor@2minutesermon.org',
     newsletterEmail: 'newsletter@2minutesermon.org',
     endpointUrl: '',
-    youtubeUrl: 'https://youtube.com',
+    youtubeUrl: DEFAULT_YT_CHANNEL,
     facebookUrl: 'https://facebook.com',
     instagramUrl: 'https://instagram.com',
     twitterUrl: 'https://twitter.com',
@@ -714,9 +724,17 @@ export function getSettings() {
 
 export function saveSettings(s) {
   try {
+    // Ensure valid youtubeUrl
+    if (!s.youtubeUrl || s.youtubeUrl === 'https://youtube.com' || s.youtubeUrl === 'https://youtube.com/') {
+      s.youtubeUrl = DEFAULT_YT_CHANNEL;
+    }
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
     window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('2ms:settings:updated', { detail: s }));
   } catch (_) {}
+  if (isFirebaseConfigured()) {
+    saveDocument('settings', 'ministry', s);
+  }
 }
 
 function setupSettingsPanel() {
@@ -734,7 +752,7 @@ function setupSettingsPanel() {
   if (contactInput)    contactInput.value    = current.contactEmail || '';
   if (newsletterInput) newsletterInput.value = current.newsletterEmail || '';
   if (endpointInput)   endpointInput.value   = current.endpointUrl || '';
-  if (ytInput)         ytInput.value         = current.youtubeUrl || '';
+  if (ytInput)         ytInput.value         = current.youtubeUrl || DEFAULT_YT_CHANNEL;
   if (fbInput)         fbInput.value         = current.facebookUrl || '';
   if (igInput)         igInput.value         = current.instagramUrl || '';
   if (twInput)         twInput.value         = current.twitterUrl || '';
@@ -746,7 +764,7 @@ function setupSettingsPanel() {
       contactEmail: contactInput?.value.trim() || '',
       newsletterEmail: newsletterInput?.value.trim() || '',
       endpointUrl: endpointInput?.value.trim() || '',
-      youtubeUrl: ytInput?.value.trim() || 'https://youtube.com',
+      youtubeUrl: ytInput?.value.trim() || DEFAULT_YT_CHANNEL,
       facebookUrl: fbInput?.value.trim() || 'https://facebook.com',
       instagramUrl: igInput?.value.trim() || 'https://instagram.com',
       twitterUrl: twInput?.value.trim() || 'https://twitter.com',

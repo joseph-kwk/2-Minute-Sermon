@@ -234,6 +234,34 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .dropdown-item:hover .icon-svg { color: var(--color-white); }
 
 .header-actions { display: flex; align-items: center; gap: 12px; }
+.header-yt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-sermon-red);
+  color: var(--color-white);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.25);
+}
+.header-yt-btn:hover {
+  background-color: var(--color-sermon-red-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35);
+  color: var(--color-white);
+}
+.header-yt-btn .icon-svg {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 768px) {
+  .header-yt-btn { display: none; }
+}
+
 .mobile-toggle-btn { display: none; flex-direction: column; gap: 5px; width: 32px; padding: 4px; }
 .mobile-toggle-btn span { display: block; height: 2px; width: 100%; background-color: var(--color-charcoal); border-radius: 2px; transition: all var(--transition-normal); }
 .mobile-toggle-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }

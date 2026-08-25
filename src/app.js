@@ -702,17 +702,40 @@ function setupPrayerForm() {
   });
 }
 
+import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
+
+const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
+
+// Real-time Cloud Settings Sync
+if (isFirebaseConfigured()) {
+  subscribeCollection('settings', (remoteDocs) => {
+    const ministryDoc = remoteDocs.find(d => d.id === 'ministry');
+    if (ministryDoc) {
+      try {
+        localStorage.setItem('2ms_settings', JSON.stringify(ministryDoc));
+        updateFooterSocialLinks();
+      } catch (_) {}
+    }
+  });
+}
+
 // ─── SETTINGS HELPERS (reads from localStorage) ─────────────────────────────
 function getMinistrySettings() {
   try {
     const raw = localStorage.getItem('2ms_settings');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!parsed.youtubeUrl || parsed.youtubeUrl === 'https://youtube.com' || parsed.youtubeUrl === 'https://youtube.com/') {
+        parsed.youtubeUrl = DEFAULT_YT_CHANNEL;
+      }
+      return parsed;
+    }
   } catch (_) {}
   return {
-    contactEmail: '',
-    newsletterEmail: '',
+    contactEmail: 'pastor@2minutesermon.org',
+    newsletterEmail: 'newsletter@2minutesermon.org',
     endpointUrl: '',
-    youtubeUrl: 'https://youtube.com',
+    youtubeUrl: DEFAULT_YT_CHANNEL,
     facebookUrl: 'https://facebook.com',
     instagramUrl: 'https://instagram.com',
     twitterUrl: 'https://twitter.com',
@@ -722,14 +745,28 @@ function getMinistrySettings() {
 
 function updateFooterSocialLinks() {
   const s = getMinistrySettings();
+  const ytUrl = s.youtubeUrl || DEFAULT_YT_CHANNEL;
+
   const socialIcons = document.querySelectorAll('.social-icon');
   socialIcons.forEach(a => {
     const title = (a.getAttribute('title') || '').toLowerCase();
-    if (title.includes('youtube') && s.youtubeUrl) a.href = s.youtubeUrl;
-    else if (title.includes('facebook') && s.facebookUrl) a.href = s.facebookUrl;
-    else if (title.includes('instagram') && s.instagramUrl) a.href = s.instagramUrl;
-    else if (title.includes('twitter') && s.twitterUrl) a.href = s.twitterUrl;
-    else if (title.includes('spotify') && s.spotifyUrl) a.href = s.spotifyUrl;
+    const aria = (a.getAttribute('aria-label') || '').toLowerCase();
+    if ((title.includes('youtube') || aria.includes('youtube')) && ytUrl) {
+      a.href = ytUrl;
+    } else if ((title.includes('facebook') || aria.includes('facebook')) && s.facebookUrl) {
+      a.href = s.facebookUrl;
+    } else if ((title.includes('instagram') || aria.includes('instagram')) && s.instagramUrl) {
+      a.href = s.instagramUrl;
+    } else if ((title.includes('twitter') || aria.includes('twitter') || aria.includes('x profile')) && s.twitterUrl) {
+      a.href = s.twitterUrl;
+    } else if ((title.includes('spotify') || aria.includes('spotify')) && s.spotifyUrl) {
+      a.href = s.spotifyUrl;
+    }
+  });
+
+  // Also bind any direct data-social="youtube" buttons
+  document.querySelectorAll('[data-social="youtube"]').forEach(el => {
+    el.href = ytUrl;
   });
 }
 
