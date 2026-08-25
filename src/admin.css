@@ -70,12 +70,15 @@ html, body { height: 100%; font-family: var(--font-body); }
   padding: 11px 14px;
   border-radius: var(--radius);
   font-size: 0.88rem;
-  display: flex;
+  display: none;
   align-items: center;
   gap: 10px;
   margin-bottom: 20px;
   animation: fadeIn 0.3s ease;
   text-align: left;
+}
+.admin-auth-logout-notice.visible {
+  display: flex;
 }
 .admin-auth-logout-notice svg {
   flex-shrink: 0;

@@ -67,7 +67,10 @@ function setupAuthForm() {
   const noticeEl  = document.getElementById('adminLogoutNotice');
 
   passInput?.addEventListener('input', () => {
-    if (noticeEl) noticeEl.hidden = true;
+    if (noticeEl) {
+      noticeEl.hidden = true;
+      noticeEl.classList.remove('visible');
+    }
     if (errEl) errEl.textContent = '';
   });
 
@@ -77,6 +80,10 @@ function setupAuthForm() {
 
     if (pass === ADMIN_PASSWORD) {
       authenticated = true;
+      if (noticeEl) {
+        noticeEl.hidden = true;
+        noticeEl.classList.remove('visible');
+      }
       overlay.style.animation = 'fadeOut 0.3s ease forwards';
       setTimeout(() => {
         overlay.hidden = true;
@@ -131,6 +138,7 @@ document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
 
     if (noticeEl) {
       noticeEl.hidden = false;
+      noticeEl.classList.add('visible');
       noticeEl.style.animation = 'fadeIn 0.3s ease';
     }
 
