@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Open read for public sermon feed, preachers, verses, events
+    // Write access enabled for CMS operations
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
