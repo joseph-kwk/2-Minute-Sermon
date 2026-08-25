@@ -1,4 +1,6 @@
-export const preachers = [
+const STORAGE_KEY = '2ms_preachers';
+
+const seedPreachers = [
   {
     id: "p1",
     name: "Pastor John Doe",
@@ -40,3 +42,21 @@ export const preachers = [
     bio: "Minister David inspires young believers and families through dynamic, high-energy video devotions rooted in Psalms and the Gospels."
   }
 ];
+
+/** Read preachers from localStorage; seeds from static data on first run. */
+export function getPreachers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (_) { /* storage unavailable */ }
+  savePreachers(seedPreachers);
+  return [...seedPreachers];
+}
+
+/** Persist preachers array to localStorage. */
+export function savePreachers(arr) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+}
+
+export const preachers = seedPreachers;
+

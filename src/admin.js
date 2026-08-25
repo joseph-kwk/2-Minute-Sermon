@@ -3,13 +3,14 @@
 
 import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
-import { preachers as initialPreachers } from './data/preachers.js';
+import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
-import { scheduledDailyVerses } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
-// sermons live in localStorage — always read fresh via getSermons()
-const preachers = [...initialPreachers];
+// Data arrays are read from localStorage — persistent across all reloads
+const preachers = getPreachers();
+const scheduledDailyVerses = getDailyVerses();
 let pendingPrayers = [
   { id:'pr-1', name:'Sarah M.', email:'sarah@example.com', urgency:'Health & Healing', msg:'Please pray for my mother recovering from surgery.', date:'2026-08-22' },
   { id:'pr-2', name:'David K.', email:'david@example.com', urgency:'Family', msg:'Praying for guidance and peace during a difficult season.', date:'2026-08-23' }
@@ -171,6 +172,7 @@ function setupVerseScheduler() {
       scheduledDailyVerses.push(entry);
       scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
     }
+    saveDailyVerses(scheduledDailyVerses);
 
     e.target.reset();
     if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
@@ -198,6 +200,7 @@ function setupVerseScheduler() {
       added++;
     }
     scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
+    saveDailyVerses(scheduledDailyVerses);
     renderVerseQueue();
     renderDashboardStats();
     toast(`⚡ ${added} verses auto-added to queue!`);
@@ -206,6 +209,7 @@ function setupVerseScheduler() {
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
     if (!confirm('Clear all scheduled verses?')) return;
     scheduledDailyVerses.length = 0;
+    saveDailyVerses(scheduledDailyVerses);
     renderVerseQueue();
     renderDashboardStats();
     toast('Queue cleared.');
@@ -239,6 +243,7 @@ function renderVerseQueue() {
 
 window.removeVerse = idx => {
   scheduledDailyVerses.splice(idx, 1);
+  saveDailyVerses(scheduledDailyVerses);
   renderVerseQueue();
   renderDashboardStats();
   toast('Verse removed from queue.');
@@ -418,6 +423,7 @@ function setupPreachersManager() {
     const bio          = document.getElementById('newPreacherBio').value;
 
     preachers.push({ id:`p-${Date.now()}`, name, denomination, country, photoUrl, bio });
+    savePreachers(preachers);
     populateSelects();
     renderPreachersList();
     renderDashboardStats();
@@ -447,6 +453,7 @@ function renderPreachersList() {
 window.removePreacher = idx => {
   const name = preachers[idx]?.name;
   preachers.splice(idx, 1);
+  savePreachers(preachers);
   populateSelects();
   renderPreachersList();
   renderDashboardStats();

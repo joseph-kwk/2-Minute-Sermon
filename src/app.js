@@ -1,15 +1,15 @@
 import { getSermons } from './data/sermons.js';
 import { getEvents } from './data/events.js';
-import { preachers as initialPreachers } from './data/preachers.js';
+import { getPreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { topics } from './data/topics.js';
-import { scheduledDailyVerses } from './data/dailyVerse.js';
+import { getDailyVerses } from './data/dailyVerse.js';
 
-// ─── Mutable runtime data arrays ─────────────────────────────────────────────
-const preachers = [...initialPreachers];
-// Helpers: always return fresh data from localStorage
-const sermons = () => getSermons();
-const events  = () => getEvents();
+// ─── Dynamic store getters — always return fresh data from localStorage ─────────────
+const sermons  = () => getSermons();
+const events   = () => getEvents();
+const preachers = () => getPreachers();
+const scheduledDailyVerses = () => getDailyVerses();
 
 
 let activeView = 'home';
@@ -35,7 +35,8 @@ function getTodayDateStr() {
 }
 
 function getVerseForDate(dateStr) {
-  return scheduledDailyVerses.find(v => v.publishDate === dateStr) || scheduledDailyVerses[0];
+  const list = scheduledDailyVerses();
+  return list.find(v => v.publishDate === dateStr) || list[0];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -251,7 +252,7 @@ function setupHeroCtas() {
     renderFeaturedCarousel(true);
   });
 
-  // Re-render when sermons or events are updated in localStorage from another tab / admin
+  // Re-render when sermons, events, verses, or preachers are updated in localStorage from another tab / admin
   window.addEventListener('storage', (e) => {
     if (e.key === '2ms_sermons') {
       renderFeaturedCarousel();
@@ -260,6 +261,13 @@ function setupHeroCtas() {
     }
     if (e.key === '2ms_events') {
       renderEventsGrid();
+    }
+    if (e.key === '2ms_preachers') {
+      renderPreachersHub();
+      populateDropdownFilterOptions();
+    }
+    if (e.key === '2ms_verses') {
+      setupDailyVerse();
     }
   });
 }
@@ -404,10 +412,10 @@ function populateDropdownFilterOptions() {
 
   if (preachSel)
     preachSel.innerHTML = `<option value="all">All Preachers</option>` +
-      preachers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+      preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
 
   if (adminPre)
-    adminPre.innerHTML = preachers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    adminPre.innerHTML = preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
 
   if (adminSea)
     adminSea.innerHTML = seasons.filter(s => s.slug !== 'all')
@@ -995,7 +1003,7 @@ window.filterByTopicName = name => {
 function renderPreachersHub() {
   const c = document.getElementById('preachersHubGrid');
   if (!c) return;
-  c.innerHTML = preachers.map(p => `
+  c.innerHTML = preachers().map(p => `
     <div class="hub-card text-center">
       <img src="${p.photoUrl}" alt="${p.name}" class="preacher-card-img"
            onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=84'">

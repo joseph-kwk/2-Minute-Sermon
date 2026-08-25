@@ -1,5 +1,7 @@
+const STORAGE_KEY = '2ms_verses';
+
 // Scheduled Daily Verses Queue (Keyed by YYYY-MM-DD)
-export const scheduledDailyVerses = [
+const seedDailyVerses = [
   {
     id: "dv-2026-08-23",
     publishDate: "2026-08-23",
@@ -61,6 +63,24 @@ export const scheduledDailyVerses = [
     tags: ["Prayer", "Peace"]
   }
 ];
+
+/** Read verses from localStorage; seeds from static data on first run. */
+export function getDailyVerses() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (_) { /* storage unavailable */ }
+  saveDailyVerses(seedDailyVerses);
+  return [...seedDailyVerses];
+}
+
+/** Persist daily verses array to localStorage. */
+export function saveDailyVerses(arr) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+}
+
+export const scheduledDailyVerses = seedDailyVerses;
+
 
 export const dailyVerseToday = scheduledDailyVerses[0];
 export const dailyVerseArchive = scheduledDailyVerses;
