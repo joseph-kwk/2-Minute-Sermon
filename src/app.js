@@ -147,6 +147,19 @@ function setupNavigation() {
   }
 }
 
+const VIEW_TITLES = {
+  home: '2-Minute Sermon | Short, Scripture-Rooted Messages Worldwide',
+  sermons: 'All Sermons | 2-Minute Sermon',
+  seasons: 'Liturgical Seasons Hub | 2-Minute Sermon',
+  topics: 'Topics & Pastoral Themes | 2-Minute Sermon',
+  preachers: 'Preachers Directory | 2-Minute Sermon',
+  'daily-verse': "Today's Daily Verse | 2-Minute Sermon",
+  prayers: 'Prayer Requests & Community Wall | 2-Minute Sermon',
+  events: 'Upcoming Ministry Events | 2-Minute Sermon',
+  about: 'About Our Ministry | 2-Minute Sermon',
+  contact: 'Contact & Minister Submissions | 2-Minute Sermon'
+};
+
 export function switchView(viewId) {
   activeView = viewId;
   document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
@@ -154,6 +167,10 @@ export function switchView(viewId) {
   if (target) {
     target.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (VIEW_TITLES[viewId]) {
+      document.title = VIEW_TITLES[viewId];
+    }
 
     // Re-trigger scroll-reveal for elements inside newly-visible view
     setTimeout(() => {
@@ -509,13 +526,56 @@ export function openSermonModal(sermonId) {
     </div>`;
 
   modal.hidden = false;
+  document.title = `${s.title} — 2-Minute Sermon`;
+
+  // Inject VideoObject JSON-LD Schema for SEO
+  let schemaScript = document.getElementById('dynamicSermonSchema');
+  if (!schemaScript) {
+    schemaScript = document.createElement('script');
+    schemaScript.id = 'dynamicSermonSchema';
+    schemaScript.type = 'application/ld+json';
+    document.head.appendChild(schemaScript);
+  }
+  schemaScript.textContent = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "name": s.title,
+    "description": s.summary,
+    "thumbnailUrl": [s.thumbnailUrl],
+    "uploadDate": s.publishDate,
+    "duration": `PT${s.durationSec || 120}S`,
+    "contentUrl": youtubeUrl,
+    "embedUrl": `https://www.youtube.com/embed/${s.youtubeEmbedId}`
+  });
 }
 window.openSermonModal = openSermonModal;
-window.openSermonModal = openSermonModal;
 
-document.getElementById('closeSermonModalBtn')?.addEventListener('click', () => {
+function closeSermonModal() {
   const modal = document.getElementById('sermonModal');
-  if (modal) { modal.hidden = true; document.getElementById('sermonModalBody').innerHTML = ''; }
+  if (modal && !modal.hidden) {
+    modal.hidden = true;
+    document.getElementById('sermonModalBody').innerHTML = '';
+    const schemaScript = document.getElementById('dynamicSermonSchema');
+    if (schemaScript) schemaScript.remove();
+    if (VIEW_TITLES[activeView]) document.title = VIEW_TITLES[activeView];
+  }
+}
+window.closeSermonModal = closeSermonModal;
+
+document.getElementById('closeSermonModalBtn')?.addEventListener('click', closeSermonModal);
+
+// Modal backdrop click
+document.getElementById('sermonModal')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('sermonModal')) closeSermonModal();
+});
+
+// Keyboard Accessibility: Escape key closes modals and menus
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeSermonModal();
+    closeDropdown();
+    closeMobileDrawer();
+  }
 });
 
 // ─── DAILY VERSE ──────────────────────────────────────────────────────────────

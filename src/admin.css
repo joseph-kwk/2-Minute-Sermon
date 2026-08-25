@@ -474,3 +474,20 @@ select.admin-input option { background: #1e1e24; }
 .admin-sermon-actions button:hover { color: var(--admin-text); border-color: rgba(255,255,255,0.2); }
 .admin-sermon-actions button.featured-on { color: var(--admin-gold); border-color: var(--admin-gold); }
 .admin-sermon-actions .del-btn:hover { color: #ef5350; border-color: #ef5350; }
+
+/* ==========================================================================
+   ACCESSIBILITY (a11y) & REDUCED MOTION
+   ========================================================================== */
+:focus-visible {
+  outline: 2px solid var(--admin-red);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
