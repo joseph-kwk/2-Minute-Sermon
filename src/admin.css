@@ -63,10 +63,24 @@ html, body { height: 100%; font-family: var(--font-body); }
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 .admin-auth-input::placeholder { color: rgba(255,255,255,0.25); }
-.admin-auth-input:focus { border-color: var(--admin-red); box-shadow: 0 0 0 3px rgba(198,40,40,0.2); }
-.admin-auth-error { color: #ff7070; font-size: 0.85rem; min-height: 18px; text-align: left; }
-.admin-auth-hint { font-size: 0.78rem; color: rgba(255,255,255,0.25); margin-top: 20px; }
-.admin-auth-hint strong { color: rgba(255,255,255,0.5); }
+.admin-auth-logout-notice {
+  background: rgba(46, 125, 50, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  color: #81c784;
+  padding: 11px 14px;
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease;
+  text-align: left;
+}
+.admin-auth-logout-notice svg {
+  flex-shrink: 0;
+  stroke: #81c784;
+}
 
 /* ── Dashboard Layout ── */
 .admin-dashboard { display: grid; grid-template-columns: 260px 1fr; height: 100vh; overflow: hidden; }

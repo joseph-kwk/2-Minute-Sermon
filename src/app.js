@@ -719,6 +719,16 @@ if (isFirebaseConfigured()) {
   });
 }
 
+function normalizeUrl(url) {
+  if (!url) return '';
+  let trimmed = url.trim();
+  if (!trimmed) return '';
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return 'https://' + trimmed;
+  }
+  return trimmed;
+}
+
 // ─── SETTINGS HELPERS (reads from localStorage) ─────────────────────────────
 function getMinistrySettings() {
   try {
@@ -745,29 +755,33 @@ function getMinistrySettings() {
 
 function updateFooterSocialLinks() {
   const s = getMinistrySettings();
-  const ytUrl = s.youtubeUrl || DEFAULT_YT_CHANNEL;
+  
+  const map = {
+    youtube: normalizeUrl(s.youtubeUrl) || DEFAULT_YT_CHANNEL,
+    facebook: normalizeUrl(s.facebookUrl) || 'https://facebook.com',
+    instagram: normalizeUrl(s.instagramUrl) || 'https://instagram.com',
+    twitter: normalizeUrl(s.twitterUrl) || 'https://twitter.com',
+    spotify: normalizeUrl(s.spotifyUrl) || 'https://spotify.com'
+  };
 
   const socialIcons = document.querySelectorAll('.social-icon');
   socialIcons.forEach(a => {
-    const title = (a.getAttribute('title') || '').toLowerCase();
-    const aria = (a.getAttribute('aria-label') || '').toLowerCase();
-    if ((title.includes('youtube') || aria.includes('youtube')) && ytUrl) {
-      a.href = ytUrl;
-    } else if ((title.includes('facebook') || aria.includes('facebook')) && s.facebookUrl) {
-      a.href = s.facebookUrl;
-    } else if ((title.includes('instagram') || aria.includes('instagram')) && s.instagramUrl) {
-      a.href = s.instagramUrl;
-    } else if ((title.includes('twitter') || aria.includes('twitter') || aria.includes('x profile')) && s.twitterUrl) {
-      a.href = s.twitterUrl;
-    } else if ((title.includes('spotify') || aria.includes('spotify')) && s.spotifyUrl) {
-      a.href = s.spotifyUrl;
+    const key = (a.getAttribute('data-social') || a.getAttribute('title') || a.getAttribute('aria-label') || '').toLowerCase();
+    
+    for (const [platform, url] of Object.entries(map)) {
+      if (key.includes(platform) || (platform === 'twitter' && (key.includes('twitter') || key.includes('x profile')))) {
+        a.href = url;
+        break;
+      }
     }
   });
 
-  // Also bind any direct data-social="youtube" buttons
-  document.querySelectorAll('[data-social="youtube"]').forEach(el => {
-    el.href = ytUrl;
-  });
+  // Also bind any direct data-social="<platform>" elements anywhere on page
+  for (const [platform, url] of Object.entries(map)) {
+    document.querySelectorAll(`[data-social="${platform}"]`).forEach(el => {
+      el.href = url;
+    });
+  }
 }
 
 async function postToEndpoint(endpoint, payload) {

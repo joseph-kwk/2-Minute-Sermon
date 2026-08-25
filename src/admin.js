@@ -59,14 +59,21 @@ function updateTopbarDate() {
 
 // ── AUTH ─────────────────────────────────────────────────────────────────
 function setupAuthForm() {
-  const form    = document.getElementById('adminAuthForm');
-  const overlay = document.getElementById('adminAuthOverlay');
-  const dash    = document.getElementById('adminDashboard');
+  const form      = document.getElementById('adminAuthForm');
+  const overlay   = document.getElementById('adminAuthOverlay');
+  const dash      = document.getElementById('adminDashboard');
+  const passInput = document.getElementById('adminAuthPass');
+  const errEl     = document.getElementById('adminAuthError');
+  const noticeEl  = document.getElementById('adminLogoutNotice');
+
+  passInput?.addEventListener('input', () => {
+    if (noticeEl) noticeEl.hidden = true;
+    if (errEl) errEl.textContent = '';
+  });
 
   form?.addEventListener('submit', e => {
     e.preventDefault();
-    const pass  = document.getElementById('adminAuthPass').value;
-    const errEl = document.getElementById('adminAuthError');
+    const pass = passInput?.value || '';
 
     if (pass === ADMIN_PASSWORD) {
       authenticated = true;
@@ -83,12 +90,16 @@ function setupAuthForm() {
         toast('✅ Welcome to The Steward');
       }, 280);
     } else {
-      errEl.textContent = 'Incorrect password. Please try again.';
-      document.getElementById('adminAuthPass').value = '';
-      document.getElementById('adminAuthPass').focus();
+      if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
+      if (passInput) {
+        passInput.value = '';
+        passInput.focus();
+      }
       const card = document.querySelector('.admin-auth-card');
-      card.style.animation = 'none';
-      requestAnimationFrame(() => { card.style.animation = 'shake 0.4s ease'; });
+      if (card) {
+        card.style.animation = 'none';
+        requestAnimationFrame(() => { card.style.animation = 'shake 0.4s ease'; });
+      }
     }
   });
 
@@ -98,14 +109,35 @@ function setupAuthForm() {
   document.head.appendChild(st);
 }
 
-// Sign out
+// Sign out (Modernized & Smooth)
 document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
   authenticated = false;
-  document.getElementById('adminDashboard').hidden = true;
-  const overlay = document.getElementById('adminAuthOverlay');
-  overlay.hidden = false;
-  overlay.style.animation = 'fadeIn 0.25s ease';
-  document.getElementById('adminAuthPass').value = '';
+  const dash      = document.getElementById('adminDashboard');
+  const overlay   = document.getElementById('adminAuthOverlay');
+  const passInput = document.getElementById('adminAuthPass');
+  const errEl     = document.getElementById('adminAuthError');
+  const noticeEl  = document.getElementById('adminLogoutNotice');
+
+  dash.style.animation = 'fadeOut 0.25s ease forwards';
+  setTimeout(() => {
+    dash.hidden = true;
+    dash.style.animation = '';
+
+    if (errEl) errEl.textContent = '';
+    if (passInput) {
+      passInput.value = '';
+      passInput.focus();
+    }
+
+    if (noticeEl) {
+      noticeEl.hidden = false;
+      noticeEl.style.animation = 'fadeIn 0.3s ease';
+    }
+
+    overlay.hidden = false;
+    overlay.style.animation = 'fadeIn 0.25s ease forwards';
+    toast('🔒 Signed out. Session closed.');
+  }, 220);
 });
 
 // ── SIDEBAR NAV ─────────────────────────────────────────────────────────
@@ -698,6 +730,16 @@ import { isFirebaseConfigured, saveDocument, seedCollectionIfEmpty } from './fir
 const SETTINGS_KEY = '2ms_settings';
 const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
 
+export function normalizeUrl(url) {
+  if (!url) return '';
+  let trimmed = url.trim();
+  if (!trimmed) return '';
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return 'https://' + trimmed;
+  }
+  return trimmed;
+}
+
 export function getSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
@@ -724,10 +766,18 @@ export function getSettings() {
 
 export function saveSettings(s) {
   try {
-    // Ensure valid youtubeUrl
+    // Ensure valid youtubeUrl and normalized social links
     if (!s.youtubeUrl || s.youtubeUrl === 'https://youtube.com' || s.youtubeUrl === 'https://youtube.com/') {
       s.youtubeUrl = DEFAULT_YT_CHANNEL;
+    } else {
+      s.youtubeUrl = normalizeUrl(s.youtubeUrl);
     }
+    s.facebookUrl = normalizeUrl(s.facebookUrl) || 'https://facebook.com';
+    s.instagramUrl = normalizeUrl(s.instagramUrl) || 'https://instagram.com';
+    s.twitterUrl = normalizeUrl(s.twitterUrl) || 'https://twitter.com';
+    s.spotifyUrl = normalizeUrl(s.spotifyUrl) || 'https://spotify.com';
+    if (s.endpointUrl) s.endpointUrl = normalizeUrl(s.endpointUrl);
+
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
     window.dispatchEvent(new Event('storage'));
     window.dispatchEvent(new CustomEvent('2ms:settings:updated', { detail: s }));
@@ -763,12 +813,12 @@ function setupSettingsPanel() {
     const updated = {
       contactEmail: contactInput?.value.trim() || '',
       newsletterEmail: newsletterInput?.value.trim() || '',
-      endpointUrl: endpointInput?.value.trim() || '',
-      youtubeUrl: ytInput?.value.trim() || DEFAULT_YT_CHANNEL,
-      facebookUrl: fbInput?.value.trim() || 'https://facebook.com',
-      instagramUrl: igInput?.value.trim() || 'https://instagram.com',
-      twitterUrl: twInput?.value.trim() || 'https://twitter.com',
-      spotifyUrl: spInput?.value.trim() || 'https://spotify.com'
+      endpointUrl: normalizeUrl(endpointInput?.value),
+      youtubeUrl: normalizeUrl(ytInput?.value) || DEFAULT_YT_CHANNEL,
+      facebookUrl: normalizeUrl(fbInput?.value) || 'https://facebook.com',
+      instagramUrl: normalizeUrl(igInput?.value) || 'https://instagram.com',
+      twitterUrl: normalizeUrl(twInput?.value) || 'https://twitter.com',
+      spotifyUrl: normalizeUrl(spInput?.value) || 'https://spotify.com'
     };
     saveSettings(updated);
     toast('💾 Ministry settings & social channel links saved!');
