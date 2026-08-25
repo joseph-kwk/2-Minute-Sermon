@@ -6,6 +6,11 @@ A modern web platform for the 2-Minute Sermon ministry — delivering bite-sized
 
 [![Live Site](https://img.shields.io/badge/Live-2minutesermon.org-C62828?style=for-the-badge&logo=google-chrome&logoColor=white)](https://www.2minutesermon.org)
 [![Built with Vite](https://img.shields.io/badge/Built%20with-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Deployment Guide](https://img.shields.io/badge/Guide-Deployment%20%26%20Admin-059669?style=for-the-badge&logo=markdown&logoColor=white)](./DEPLOYMENT_AND_ADMIN_GUIDE.md)
+
+---
+
+> 📖 **Need deployment or domain setup instructions?** Read the detailed [**Deployment & Admin Guide**](./DEPLOYMENT_AND_ADMIN_GUIDE.md).
 
 ---
 
