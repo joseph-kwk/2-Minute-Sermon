@@ -296,13 +296,13 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
    ========================================================================== */
 .hero-section {
   position: relative;
-  background-image: url('/assets/hero-bg.jpg');
-  background-size: cover; background-position: center;
+  background-image: url('/assets/hero-bg-bible.jpg?v=2');
+  background-size: cover; background-position: center 35%;
   color: var(--color-white); padding: 110px 0 90px; text-align: center; overflow: hidden;
 }
 .hero-bg-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(160deg, rgba(22, 22, 22, 0.82) 0%, rgba(22, 22, 22, 0.95) 100%);
+  background: linear-gradient(180deg, rgba(15, 15, 18, 0.62) 0%, rgba(15, 15, 18, 0.80) 55%, rgba(15, 15, 18, 0.94) 100%);
   z-index: 1;
 }
 /* Subtle animated radial shimmer */
