@@ -1,4 +1,4 @@
-// Ministry Leadership & Organigram Store
+// Ministry Leadership & Who is Who Store
 // Persisted in localStorage ('2ms_leadership') and synced via Firestore when configured.
 
 import { isFirebaseConfigured, saveDocument } from '../firebase.js';
@@ -7,51 +7,111 @@ export const INITIAL_LEADERSHIP = [
   {
     id: 'lead-1',
     name: 'Pastor Anany Kasongo',
-    role: 'President & Executive Director',
-    tier: 'Executive Leadership',
+    role: "Board's President (Founder)",
+    tier: 'Executive Board',
     tierOrder: 1,
     photoUrl: 'https://ui-avatars.com/api/?name=Anany+Kasongo&background=C62828&color=fff&size=200',
-    bio: 'Founder and pastoral visionary spearheading the global mission of 2-Minute Sermon to deliver concise, scripture-rooted truth worldwide.',
+    bio: 'Assistant Pastor at Allington Baptist Church, Accredited Preacher in the Britain Methodist Church, Co-founder of Crossover Project UK. Served as a missionary in Brazil.',
     email: 'info2minutesermon@gmail.com'
   },
   {
     id: 'lead-2',
-    name: 'Pastoral Advisory & Theological Council',
-    role: 'Board of Theological Oversight',
-    tier: 'Advisory & Governance',
-    tierOrder: 2,
-    photoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80',
-    bio: 'Senior ordained ministers and biblical scholars ensuring strict doctrinal accuracy, christocentric focus, and liturgical harmony.',
+    name: 'Pastor Bellarmee Milosi',
+    role: 'Executive Coordinator (Co-Founder)',
+    tier: 'Executive Board',
+    tierOrder: 1,
+    photoUrl: 'https://ui-avatars.com/api/?name=Bellarmee+Milosi&background=C62828&color=fff&size=200',
+    bio: 'Local (Licensed) Pastor in the United Methodist Church. Gospel Singer/Songwriter & Worship Leader. Served as a missionary in the Philippines.',
     email: ''
   },
   {
     id: 'lead-3',
-    name: 'Global Preachers & Partner Relations',
-    role: 'Network Director',
-    tier: 'Advisory & Governance',
+    name: 'Brenda Massana',
+    role: 'Treasurer & Head of Intercession Department',
+    tier: 'Department Coordinators',
     tierOrder: 2,
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-    bio: 'Connecting, vetting, and coordinating contributing ministers from across North America, Europe, Africa, and Asia.',
+    photoUrl: 'https://ui-avatars.com/api/?name=Brenda+Massana&background=1565C0&color=fff&size=200',
+    bio: 'Overseeing financial stewardship and leading the platform intercessory prayer network.',
     email: ''
   },
   {
     id: 'lead-4',
-    name: 'Broadcast Media & Digital Stewardship',
-    role: 'Media & Production Lead',
-    tier: 'Department Directors',
-    tierOrder: 3,
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-    bio: 'Overseeing YouTube broadcasts, audio production, digital streaming, and multi-platform distribution channels.',
+    name: 'Lievin Nsuka',
+    role: "Senior Preacher's Network Coordinator",
+    tier: 'Department Coordinators',
+    tierOrder: 2,
+    photoUrl: 'https://ui-avatars.com/api/?name=Lievin+Nsuka&background=2E7D32&color=fff&size=200',
+    bio: 'Facilitating connection, theme discernment, and theological coordination across contributing network ministers.',
     email: ''
   },
   {
     id: 'lead-5',
-    name: 'Intercessory Prayer & Ministry Care',
-    role: 'Pastoral Care Coordinator',
-    tier: 'Department Directors',
+    name: 'Kerith Nsuka-Meya',
+    role: "Associate Preacher's Network Coordinator",
+    tier: 'Department Coordinators',
+    tierOrder: 2,
+    photoUrl: 'https://ui-avatars.com/api/?name=Kerith+Nsuka&background=6A1B9A&color=fff&size=200',
+    bio: 'Supporting preacher onboarding, sermon schedule management, and partner relations.',
+    email: ''
+  },
+  {
+    id: 'lead-6',
+    name: 'Falone Mbuyi',
+    role: 'Associate to the Office of Intercession',
+    tier: 'Department Coordinators',
+    tierOrder: 2,
+    photoUrl: 'https://ui-avatars.com/api/?name=Falone+Mbuyi&background=D84315&color=fff&size=200',
+    bio: 'Ministering to incoming prayer requests and coordinating daily intercession.',
+    email: ''
+  },
+  {
+    id: 'lead-7',
+    name: 'Evangelist Narcisse Kyakutala',
+    role: 'Associate to the Office of Intercession',
+    tier: 'Department Coordinators',
+    tierOrder: 2,
+    photoUrl: 'https://ui-avatars.com/api/?name=Narcisse+Kyakutala&background=00838F&color=fff&size=200',
+    bio: 'Passionate evangelist supporting the spiritual and prayer needs of our global community.',
+    email: ''
+  },
+  {
+    id: 'lead-8',
+    name: 'Pastor Charles Mutumpa',
+    role: 'Network Preacher',
+    tier: 'Network Preachers',
     tierOrder: 3,
-    photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
-    bio: 'Reviewing prayer submissions, leading global prayer initiatives, and ministering to submitted requests daily.',
+    photoUrl: 'https://ui-avatars.com/api/?name=Charles+Mutumpa&background=37474F&color=fff&size=200',
+    bio: 'Pastor in the United Methodist Church, contributing weekly scripture reflections and sermon messages.',
+    email: ''
+  },
+  {
+    id: 'lead-9',
+    name: 'Julien Myles',
+    role: 'Network Preacher',
+    tier: 'Network Preachers',
+    tierOrder: 3,
+    photoUrl: 'https://ui-avatars.com/api/?name=Julien+Myles&background=4E342E&color=fff&size=200',
+    bio: 'Contributing minister and speaker sharing concise, scripture-rooted devotions.',
+    email: ''
+  },
+  {
+    id: 'lead-10',
+    name: 'Nyasha Matswayi',
+    role: 'Network Preacher',
+    tier: 'Network Preachers',
+    tierOrder: 3,
+    photoUrl: 'https://ui-avatars.com/api/?name=Nyasha+Matswayi&background=00695C&color=fff&size=200',
+    bio: 'Contributing teacher and minister delivering biblically rich 2-minute sermon messages.',
+    email: ''
+  },
+  {
+    id: 'lead-11',
+    name: 'Merveille Bupe',
+    role: 'Network Preacher',
+    tier: 'Network Preachers',
+    tierOrder: 3,
+    photoUrl: 'https://ui-avatars.com/api/?name=Merveille+Bupe&background=AD1457&color=fff&size=200',
+    bio: 'Minister and contributor dedicated to preaching Christ across digital platforms.',
     email: ''
   }
 ];

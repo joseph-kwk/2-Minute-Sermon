@@ -7,6 +7,7 @@ import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
+import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSermonPublisher();
   setupPreachersManager();
   setupLeadershipManager();
+  setupPartnersManager();
   setupEventsManager();
   setupSettingsPanel();
   setupBackupPanel();
@@ -43,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderVerseQueue();
     renderPreachersList();
     renderLeadershipList();
+    renderPartnersList();
     renderEventsList();
     renderPrayerInbox();
   };
@@ -734,13 +737,13 @@ function setupLeadershipManager() {
     e.preventDefault();
     const name     = nameInput?.value.trim() || '';
     const role     = roleInput?.value.trim() || '';
-    const tier     = tierInput?.value || 'Executive Leadership';
+    const tier     = tierInput?.value || 'Executive Board';
     let photoUrl   = photoUrlInput?.value.trim();
     const bio      = bioInput?.value.trim() || '';
 
     let tierOrder = 1;
-    if (tier.includes('Advisory')) tierOrder = 2;
-    if (tier.includes('Department')) tierOrder = 3;
+    if (tier === 'Department Coordinators' || tier.includes('Department')) tierOrder = 2;
+    if (tier === 'Network Preachers' || tier.includes('Network') || tier.includes('Preacher')) tierOrder = 3;
 
     if (!photoUrl) {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
@@ -761,7 +764,7 @@ function setupLeadershipManager() {
     renderLeadershipList();
     form.reset();
     updateLeaderAvatarPreview();
-    toast(`👥 "${name}" added to ministry leadership!`);
+    toast(`👥 "${name}" added to Who is Who (Team)!`);
   });
 
   renderLeadershipList();
@@ -800,10 +803,119 @@ function renderLeadershipList() {
       const id = btn.dataset.id;
       const target = getLeadershipTeam().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Remove "${target.name}" from the leadership organigram?`)) return;
+      if (!confirm(`Remove "${target.name}" from the leadership roster?`)) return;
       deleteLeader(id);
       renderLeadershipList();
       toast(`🗑️ "${target.name}" removed from leadership.`);
+    });
+  });
+}
+
+// ── MINISTRY PARTNERS MANAGER ─────────────────────────────────────────────
+function setupPartnersManager() {
+  const form = document.getElementById('addPartnerForm');
+  const fileInput = document.getElementById('partnerLogoFile');
+  const uploadBtn = document.getElementById('btnTriggerPartnerLogoUpload');
+  const previewImg = document.getElementById('partnerLogoPreview');
+  const logoUrlInput = document.getElementById('newPartnerLogo');
+
+  uploadBtn?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        if (previewImg) previewImg.src = ev.target.result;
+        if (logoUrlInput) logoUrlInput.value = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  logoUrlInput?.addEventListener('input', () => {
+    if (logoUrlInput.value.trim() && previewImg) {
+      previewImg.src = logoUrlInput.value.trim();
+    }
+  });
+
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('newPartnerName')?.value.trim();
+    const category = document.getElementById('newPartnerCategory')?.value.trim() || 'Ministry Partner';
+    const scriptureAnchor = document.getElementById('newPartnerScripture')?.value.trim() || '';
+    const websiteUrl = document.getElementById('newPartnerWebsite')?.value.trim() || '';
+    const description = document.getElementById('newPartnerDesc')?.value.trim();
+    let logoUrl = logoUrlInput?.value.trim();
+
+    if (!name || !description) {
+      toast('⚠️ Please provide the partner name and description.');
+      return;
+    }
+
+    if (!logoUrl) {
+      logoUrl = `https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80`;
+    }
+
+    const partner = {
+      id: `partner-${Date.now()}`,
+      name,
+      category,
+      scriptureAnchor,
+      websiteUrl,
+      description,
+      logoUrl
+    };
+
+    upsertPartner(partner);
+    renderPartnersList();
+    form.reset();
+    if (previewImg) previewImg.src = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80';
+    toast(`🤝 "${name}" added to Ministry Partners!`);
+  });
+
+  renderPartnersList();
+}
+
+function renderPartnersList() {
+  const c = document.getElementById('adminPartnersList');
+  const countEl = document.getElementById('partnersCount');
+  const list = getPartners();
+
+  if (countEl) countEl.textContent = list.length;
+  if (!c) return;
+
+  if (!list.length) {
+    c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No ministry partners added yet.</p>';
+    return;
+  }
+
+  c.innerHTML = list.map(p => `
+    <div class="admin-list-item" style="display:flex;align-items:flex-start;gap:14px;padding:14px;">
+      <img src="${p.logoUrl}" alt="${p.name}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--admin-border);"
+           onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=D97706&color=fff&size=100'">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+          <strong style="color:#fff;font-size:0.95rem;">${p.name}</strong>
+          <span class="admin-tag" style="font-size:0.68rem;">${p.category || 'Partner'}</span>
+        </div>
+        ${p.scriptureAnchor ? `<span style="display:block;font-size:0.78rem;color:var(--admin-red);margin-bottom:4px;">📖 ${p.scriptureAnchor}</span>` : ''}
+        <p style="font-size:0.82rem;color:var(--admin-muted);line-height:1.5;margin:0 0 6px 0;">${p.description.substring(0, 110)}...</p>
+        ${p.websiteUrl ? `<a href="${p.websiteUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--admin-gold);text-decoration:none;">🌐 ${p.websiteUrl}</a>` : ''}
+      </div>
+      <button class="admin-btn admin-btn-sm admin-btn-danger" data-id="${p.id}" title="Remove partner">✕</button>
+    </div>
+  `).join('');
+
+  c.querySelectorAll('.admin-btn-danger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getPartners().find(x => x.id === id);
+      if (!target) return;
+      if (!confirm(`Remove "${target.name}" from ministry partners?`)) return;
+      deletePartner(id);
+      renderPartnersList();
+      toast(`🗑️ "${target.name}" removed from partners.`);
     });
   });
 }

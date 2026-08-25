@@ -1,10 +1,11 @@
-import { getSermons } from './data/sermons.js';
-import { getEvents } from './data/events.js';
-import { getPreachers } from './data/preachers.js';
+import { getSermons, upsertSermon } from './data/sermons.js';
+import { getEvents, saveEvents } from './data/events.js';
+import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { topics } from './data/topics.js';
-import { getDailyVerses } from './data/dailyVerse.js';
-import { getLeadershipTeam } from './data/leadership.js';
+import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
+import { getLeadershipTeam, saveLeadershipTeam } from './data/leadership.js';
+import { getPartners, savePartners } from './data/partners.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
 const sermons    = () => getSermons();
@@ -12,6 +13,7 @@ const events     = () => getEvents();
 const preachers  = () => getPreachers();
 const scheduledDailyVerses = () => getDailyVerses();
 const leadership = () => getLeadershipTeam();
+const partners   = () => getPartners();
 
 
 let activeView = 'home';
@@ -57,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupNewsletterForm();
   setupGeneralContactForm();
   setupAdminPortal();
+  setupAboutTabs();
 
   renderHomeSermons();
   filterAndRenderSermons();
@@ -65,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPreachersHub();
   renderEventsGrid();
   renderAdminPreachersList();
-  renderAboutOrganigram();
+  renderAboutTeamRoster();
+  renderAboutPartners();
   updateFooterSocialLinks();
 
   // ─── Real-time Cloud Data Sync Listeners ─────────────────────────────────
@@ -76,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTopicsHub();
     renderPreachersHub();
     renderEventsGrid();
-    renderAboutOrganigram();
+    renderAboutTeamRoster();
+    renderAboutPartners();
     populateDropdownFilterOptions();
     setupDailyVerse();
     updateFooterSocialLinks();
@@ -88,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:verses:updated', refreshAllUI);
   window.addEventListener('2ms:events:updated', refreshAllUI);
   window.addEventListener('2ms:leadership:updated', refreshAllUI);
+  window.addEventListener('2ms:partners:updated', refreshAllUI);
 });
 
 // ─── LOGO TITLE ANIMATION ─────────────────────────────────────────────────────
@@ -155,21 +161,37 @@ function setupNavigation() {
       const targetView = btn.getAttribute('data-view');
       if (!targetView) return;
       if (targetView === 'admin') { openAdminPortal(); return; }
+      
+      const aboutTab = btn.getAttribute('data-about-tab');
       switchView(targetView);
+      if (targetView === 'about' && aboutTab) {
+        switchAboutTab(aboutTab);
+      }
       closeDropdown();
       closeMobileDrawer();
     });
   });
 
-  window.addEventListener('hashchange', () => {
-    const hash = window.location.hash.replace('#', '');
-    if (hash && document.getElementById(`view-${hash}`)) switchView(hash);
-  });
+  function handleRouteHash() {
+    const rawHash = window.location.hash.replace('#', '');
+    if (!rawHash) return;
 
-  if (window.location.hash) {
-    const h = window.location.hash.replace('#', '');
-    if (document.getElementById(`view-${h}`)) switchView(h);
+    if (rawHash === 'about-structure' || rawHash === 'about/structure') {
+      switchView('about');
+      switchAboutTab('structure');
+    } else if (rawHash === 'about-team' || rawHash === 'about/who-is-who' || rawHash === 'about-who-is-who') {
+      switchView('about');
+      switchAboutTab('who-is-who');
+    } else if (rawHash === 'about-partners' || rawHash === 'about/partners') {
+      switchView('about');
+      switchAboutTab('partners');
+    } else if (document.getElementById(`view-${rawHash}`)) {
+      switchView(rawHash);
+    }
   }
+
+  window.addEventListener('hashchange', handleRouteHash);
+  if (window.location.hash) handleRouteHash();
 }
 
 const VIEW_TITLES = {
@@ -211,28 +233,36 @@ export function switchView(viewId) {
 }
 window.switchView = switchView;
 
-// ─── EXPLORE DROPDOWN ─────────────────────────────────────────────────────────
+// ─── DROPDOWNS ─────────────────────────────────────────────────────────────
 function setupExploreDropdown() {
-  const wrapper = document.getElementById('exploreDropdownWrapper');
-  const btn = document.getElementById('exploreBtn');
-  if (!btn || !wrapper) return;
+  document.querySelectorAll('.dropdown-wrapper').forEach(wrapper => {
+    const btn = wrapper.querySelector('.dropdown-toggle');
+    if (!btn) return;
 
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    wrapper.classList.toggle('open');
-    btn.setAttribute('aria-expanded', wrapper.classList.contains('open'));
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = wrapper.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) {
+        wrapper.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
   });
 
   document.addEventListener('click', e => {
-    if (!wrapper.contains(e.target)) closeDropdown();
+    if (!e.target.closest('.dropdown-wrapper')) closeAllDropdowns();
   });
 }
 
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown-wrapper').forEach(w => {
+    w.classList.remove('open');
+    w.querySelector('.dropdown-toggle')?.setAttribute('aria-expanded', 'false');
+  });
+}
 function closeDropdown() {
-  const wrapper = document.getElementById('exploreDropdownWrapper');
-  const btn = document.getElementById('exploreBtn');
-  wrapper?.classList.remove('open');
-  btn?.setAttribute('aria-expanded', 'false');
+  closeAllDropdowns();
 }
 
 // ─── MOBILE DRAWER ────────────────────────────────────────────────────────────
@@ -637,7 +667,7 @@ function setupDailyVerse() {
       </div>
       <h2 style="margin-bottom:20px;">Upcoming Verse Queue</h2>
       <div style="display:flex;flex-direction:column;gap:16px;">
-        ${scheduledDailyVerses.map(v => `
+        ${scheduledDailyVerses().map(v => `
           <div class="hub-card reveal-on-scroll">
             <span class="badge badge-season">${v.publishDate}</span>
             <h3 style="margin:10px 0 4px;">"${v.verseText}"</h3>
@@ -937,12 +967,14 @@ function setupAdminPortal() {
 
     const entry = { id: `dv-${dateStr}`, publishDate: dateStr, verseText, book, chapter: chap, verse: chapterVerse, reflection, tags: ['Scheduled'] };
 
-    const idx = scheduledDailyVerses.findIndex(v => v.publishDate === dateStr);
-    if (idx >= 0) scheduledDailyVerses[idx] = entry;
+    const queue = [...scheduledDailyVerses()];
+    const idx = queue.findIndex(v => v.publishDate === dateStr);
+    if (idx >= 0) queue[idx] = entry;
     else {
-      scheduledDailyVerses.push(entry);
-      scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
+      queue.push(entry);
+      queue.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
     }
+    saveDailyVerses(queue);
 
     e.target.reset();
     if (dateInput) dateInput.value = getTodayDateStr();
@@ -961,14 +993,16 @@ function setupAdminPortal() {
     ];
 
     const start = new Date();
+    const queue = [...scheduledDailyVerses()];
     for (let i = 1; i <= 30; i++) {
       const d = new Date(start); d.setDate(start.getDate() + i);
       const dateStr = d.toISOString().split('T')[0];
-      if (scheduledDailyVerses.some(v => v.publishDate === dateStr)) continue;
+      if (queue.some(v => v.publishDate === dateStr)) continue;
       const sample = pool[i % pool.length];
-      scheduledDailyVerses.push({ id: `dv-${dateStr}`, publishDate: dateStr, verseText: sample.text, ...sample.ref2, reflection: sample.r, tags: ['Auto-Queue'] });
+      queue.push({ id: `dv-${dateStr}`, publishDate: dateStr, verseText: sample.text, ...sample.ref2, reflection: sample.r, tags: ['Auto-Queue'] });
     }
-    scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
+    queue.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
+    saveDailyVerses(queue);
     renderAdminVerseQueue();
     setupDailyVerse();
     showToast('⚡ 30-Day verse queue auto-populated!');
@@ -989,7 +1023,7 @@ function setupAdminPortal() {
     if (raw.includes('v=')) embedId = raw.split('v=')[1].split('&')[0];
     else if (raw.includes('youtu.be/')) embedId = raw.split('youtu.be/')[1].split('?')[0];
 
-    sermons.unshift({
+    const newSermon = {
       id: `sermon-${Date.now()}`, title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       preacherId: 'p1', preacherName: preacher,
@@ -999,7 +1033,9 @@ function setupAdminPortal() {
       thumbnailUrl: `https://img.youtube.com/vi/${embedId}/hqdefault.jpg`,
       summary, publishDate: getTodayDateStr(), views: 1, featured: true,
       transcript: [{ time: '0:00', text: summary }, { time: '1:00', text: 'Walk boldly in God\'s promises today.' }]
-    });
+    };
+
+    upsertSermon(newSermon);
 
     renderFeaturedCarousel(true);
     renderHomeSermons();
@@ -1022,7 +1058,8 @@ function setupAdminPortal() {
       id: `p-${Date.now()}`, name, denomination, country, photoUrl, bio
     };
 
-    preachers.push(newPreacher);
+    const currentList = [...preachers(), newPreacher];
+    savePreachers(currentList);
     renderPreachersHub();
     renderAdminPreachersList();
     populateDropdownFilterOptions();
@@ -1030,14 +1067,14 @@ function setupAdminPortal() {
 
     // Update stat counter in hero
     const counter = document.getElementById('homePreachersCount');
-    if (counter) counter.textContent = `${preachers.length}+`;
+    if (counter) counter.textContent = `${currentList.length}+`;
 
     showToast(`🎙️ ${name} added to the Preachers Directory!`);
   });
 
   // ── CMS Export ──
   document.getElementById('adminExportJsonBtn')?.addEventListener('click', () => {
-    const data = { exportedAt: new Date().toISOString(), scheduledDailyVerses, sermons, preachers, pendingPrayers };
+    const data = { exportedAt: new Date().toISOString(), scheduledDailyVerses: scheduledDailyVerses(), sermons: sermons(), preachers: preachers(), pendingPrayers };
     const url = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
     const a = document.createElement('a');
     a.href = url; a.download = `2ms-cms-backup-${getTodayDateStr()}.json`;
@@ -1050,11 +1087,12 @@ function setupAdminPortal() {
 function renderAdminVerseQueue() {
   const c = document.getElementById('adminVerseQueueList');
   if (!c) return;
-  if (!scheduledDailyVerses.length) {
+  const list = scheduledDailyVerses();
+  if (!list.length) {
     c.innerHTML = `<p style="color:#777;text-align:center;padding:24px;">No verses scheduled yet.</p>`;
     return;
   }
-  c.innerHTML = scheduledDailyVerses.map((v, idx) => `
+  c.innerHTML = list.map((v, idx) => `
     <div class="admin-queue-item">
       <div class="admin-queue-header">
         <strong style="color:var(--color-sermon-red);">${v.publishDate}</strong>
@@ -1068,7 +1106,9 @@ function renderAdminVerseQueue() {
     </div>`).join('');
 }
 window.removeScheduledVerse = idx => {
-  scheduledDailyVerses.splice(idx, 1);
+  const queue = [...scheduledDailyVerses()];
+  queue.splice(idx, 1);
+  saveDailyVerses(queue);
   renderAdminVerseQueue();
   setupDailyVerse();
   showToast('Verse removed from queue.');
@@ -1077,7 +1117,8 @@ window.removeScheduledVerse = idx => {
 function renderAdminPreachersList() {
   const c = document.getElementById('adminPreachersList');
   if (!c) return;
-  c.innerHTML = preachers.map((p, idx) => `
+  const list = preachers();
+  c.innerHTML = list.map((p, idx) => `
     <div class="admin-preacher-item">
       <img src="${p.photoUrl}" alt="${p.name}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff'">
       <div class="admin-preacher-info">
@@ -1090,13 +1131,15 @@ function renderAdminPreachersList() {
     </div>`).join('');
 }
 window.removePreacher = idx => {
-  const name = preachers[idx]?.name;
-  preachers.splice(idx, 1);
+  const list = [...preachers()];
+  const name = list[idx]?.name;
+  list.splice(idx, 1);
+  savePreachers(list);
   renderPreachersHub();
   renderAdminPreachersList();
   populateDropdownFilterOptions();
   const counter = document.getElementById('homePreachersCount');
-  if (counter) counter.textContent = `${preachers.length}+`;
+  if (counter) counter.textContent = `${list.length}+`;
   showToast(`${name} removed from directory.`);
 };
 
@@ -1231,55 +1274,119 @@ window.shareEvent = (titleEnc, dateEnc, locEnc) => {
   }
 };
 
-export function renderAboutOrganigram() {
-  const container = document.getElementById('aboutOrganigramContainer');
+// ─── ABOUT US INTERACTIVE HUB (Mission, Structure, Who is Who, Partners) ───────
+let activeAboutTab = 'mission';
+let activeTeamFilter = 'all';
+
+export function setupAboutTabs() {
+  document.querySelectorAll('.about-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-about-tab');
+      if (tab) switchAboutTab(tab);
+    });
+  });
+
+  // Team Filter Chips
+  document.querySelectorAll('[data-team-filter]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('[data-team-filter]').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeTeamFilter = chip.getAttribute('data-team-filter');
+      renderAboutTeamRoster(activeTeamFilter);
+    });
+  });
+}
+
+export function switchAboutTab(tabName) {
+  activeAboutTab = tabName;
+
+  // Update tab buttons
+  document.querySelectorAll('.about-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-about-tab') === tabName);
+  });
+
+  // Update tab panels
+  const panelMap = {
+    mission: 'aboutPanelMission',
+    structure: 'aboutPanelStructure',
+    'who-is-who': 'aboutPanelWhoIsWho',
+    partners: 'aboutPanelPartners'
+  };
+
+  document.querySelectorAll('.about-panel').forEach(p => p.classList.remove('active'));
+  const targetPanelId = panelMap[tabName] || 'aboutPanelMission';
+  const targetPanel = document.getElementById(targetPanelId);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+  }
+}
+window.switchAboutTab = switchAboutTab;
+
+export function renderAboutTeamRoster(filter = 'all') {
+  const container = document.getElementById('aboutTeamRosterContainer');
+  const countEl = document.getElementById('teamTotalCount');
   if (!container) return;
 
   const team = leadership();
-  const exec = team.filter(m => m.tierOrder === 1 || m.tier === 'Executive Leadership');
-  const advisory = team.filter(m => m.tierOrder === 2 || m.tier === 'Advisory & Governance');
-  const depts = team.filter(m => m.tierOrder === 3 || m.tier === 'Department Directors' || (!exec.includes(m) && !advisory.includes(m)));
+  if (countEl) countEl.textContent = team.length;
 
-  const renderCard = (m, isExec = false) => `
-    <div class="organigram-card ${isExec ? 'executive' : ''}">
-      <img src="${m.photoUrl}" alt="${m.name}" class="organigram-card-avatar"
-        onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=160'">
-      <span class="organigram-tier-badge">${m.tier || (isExec ? 'Executive Leadership' : 'Ministry Lead')}</span>
-      <h3 class="organigram-name">${m.name}</h3>
-      <div class="organigram-role">${m.role}</div>
-      ${m.bio ? `<p class="organigram-bio">${m.bio}</p>` : ''}
-    </div>
-  `;
-
-  let html = '';
-
-  if (exec.length) {
-    html += `
-      <div class="organigram-tier tier-exec">
-        ${exec.map(m => renderCard(m, true)).join('')}
-      </div>
-    `;
+  let filtered = team;
+  if (filter && filter !== 'all') {
+    filtered = team.filter(m => m.tier === filter);
   }
 
-  if (advisory.length) {
-    html += `
-      <div class="organigram-tier tier-advisory">
-        ${advisory.map(m => renderCard(m, false)).join('')}
-      </div>
-    `;
+  if (!filtered.length) {
+    container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--color-mediumgray);padding:32px;">No team members found for this category.</p>`;
+    return;
   }
 
-  if (depts.length) {
-    html += `
-      <div class="organigram-tier tier-depts">
-        ${depts.map(m => renderCard(m, false)).join('')}
+  container.innerHTML = filtered.map(m => {
+    const isExec = m.tier === 'Executive Board' || m.tierOrder === 1;
+    return `
+      <div class="team-member-card ${isExec ? 'executive' : ''}">
+        <img src="${m.photoUrl}" alt="${m.name}" class="team-avatar"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=160'">
+        <span class="team-tier-tag">${m.tier || 'Ministry Team'}</span>
+        <h3 class="team-name">${m.name}</h3>
+        <div class="team-role">${m.role}</div>
+        ${m.bio ? `<p class="team-bio">${m.bio}</p>` : ''}
       </div>
     `;
-  }
-
-  container.innerHTML = html;
+  }).join('');
 }
-window.renderAboutOrganigram = renderAboutOrganigram;
+window.renderAboutTeamRoster = renderAboutTeamRoster;
+
+export function renderAboutPartners() {
+  const container = document.getElementById('aboutPartnersContainer');
+  if (!container) return;
+
+  const list = partners();
+  if (!list.length) {
+    container.innerHTML = `<p style="text-align:center;color:var(--color-mediumgray);padding:32px;">No partners listed yet.</p>`;
+    return;
+  }
+
+  container.innerHTML = list.map(p => `
+    <div class="partner-card">
+      <div class="partner-logo-box">
+        <img src="${p.logoUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80'}" alt="${p.name}" class="partner-logo-img"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=D97706&color=fff&size=200'">
+      </div>
+      <div class="partner-info">
+        <span class="partner-badge">${p.category || 'Ministry Partner'}</span>
+        <h3 class="partner-title">${p.name}</h3>
+        ${p.scriptureAnchor ? `<div class="partner-scripture">📖 ${p.scriptureAnchor}</div>` : ''}
+        <p class="partner-desc">${p.description}</p>
+        ${p.websiteUrl ? `
+          <a href="${p.websiteUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+            🌐 Visit Website
+          </a>
+        ` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+window.renderAboutPartners = renderAboutPartners;
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 export function showToast(msg, duration = 4000) {
