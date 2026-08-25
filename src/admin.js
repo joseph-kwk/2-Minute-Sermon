@@ -728,7 +728,10 @@ import { isFirebaseConfigured, saveDocument, seedCollectionIfEmpty } from './fir
 
 // ── MINISTRY SETTINGS ─────────────────────────────────────────────────────
 const SETTINGS_KEY = '2ms_settings';
+const DEFAULT_MINISTRY_EMAIL = 'info2minutesermon@gmail.com';
 const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
+const DEFAULT_FB_PAGE    = 'https://www.facebook.com/2minutesermon';
+const DEFAULT_IG_PAGE    = 'https://www.instagram.com/2_minutesermon/';
 
 export function normalizeUrl(url) {
   if (!url) return '';
@@ -745,37 +748,50 @@ export function getSettings() {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Auto-migrate generic or empty youtubeUrl to official channel
+      // Auto-migrate generic/placeholder values to verified ministry values
+      if (!parsed.contactEmail || parsed.contactEmail.includes('@2minutesermon.org')) {
+        parsed.contactEmail = DEFAULT_MINISTRY_EMAIL;
+      }
+      if (!parsed.newsletterEmail || parsed.newsletterEmail.includes('@2minutesermon.org')) {
+        parsed.newsletterEmail = DEFAULT_MINISTRY_EMAIL;
+      }
       if (!parsed.youtubeUrl || parsed.youtubeUrl === 'https://youtube.com' || parsed.youtubeUrl === 'https://youtube.com/') {
         parsed.youtubeUrl = DEFAULT_YT_CHANNEL;
+      }
+      if (!parsed.facebookUrl || parsed.facebookUrl === 'https://facebook.com' || parsed.facebookUrl === 'https://facebook.com/') {
+        parsed.facebookUrl = DEFAULT_FB_PAGE;
+      }
+      if (!parsed.instagramUrl || parsed.instagramUrl === 'https://instagram.com' || parsed.instagramUrl === 'https://instagram.com/') {
+        parsed.instagramUrl = DEFAULT_IG_PAGE;
       }
       return parsed;
     }
   } catch (_) {}
   return {
-    contactEmail: 'pastor@2minutesermon.org',
-    newsletterEmail: 'newsletter@2minutesermon.org',
+    contactEmail: DEFAULT_MINISTRY_EMAIL,
+    newsletterEmail: DEFAULT_MINISTRY_EMAIL,
     endpointUrl: '',
     youtubeUrl: DEFAULT_YT_CHANNEL,
-    facebookUrl: 'https://facebook.com',
-    instagramUrl: 'https://instagram.com',
-    twitterUrl: 'https://twitter.com',
-    spotifyUrl: 'https://spotify.com'
+    facebookUrl: DEFAULT_FB_PAGE,
+    instagramUrl: DEFAULT_IG_PAGE,
+    twitterUrl: '',
+    spotifyUrl: ''
   };
 }
 
 export function saveSettings(s) {
   try {
-    // Ensure valid youtubeUrl and normalized social links
+    // Ensure valid emails and normalized social links
+    s.contactEmail = s.contactEmail?.trim() || DEFAULT_MINISTRY_EMAIL;
+    s.newsletterEmail = s.newsletterEmail?.trim() || DEFAULT_MINISTRY_EMAIL;
+
     if (!s.youtubeUrl || s.youtubeUrl === 'https://youtube.com' || s.youtubeUrl === 'https://youtube.com/') {
       s.youtubeUrl = DEFAULT_YT_CHANNEL;
     } else {
       s.youtubeUrl = normalizeUrl(s.youtubeUrl);
     }
-    s.facebookUrl = normalizeUrl(s.facebookUrl) || 'https://facebook.com';
-    s.instagramUrl = normalizeUrl(s.instagramUrl) || 'https://instagram.com';
-    s.twitterUrl = normalizeUrl(s.twitterUrl) || 'https://twitter.com';
-    s.spotifyUrl = normalizeUrl(s.spotifyUrl) || 'https://spotify.com';
+    s.facebookUrl = normalizeUrl(s.facebookUrl) || DEFAULT_FB_PAGE;
+    s.instagramUrl = normalizeUrl(s.instagramUrl) || DEFAULT_IG_PAGE;
     if (s.endpointUrl) s.endpointUrl = normalizeUrl(s.endpointUrl);
 
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
@@ -794,31 +810,27 @@ function setupSettingsPanel() {
   const ytInput         = document.getElementById('settingYoutubeUrl');
   const fbInput         = document.getElementById('settingFacebookUrl');
   const igInput         = document.getElementById('settingInstagramUrl');
-  const twInput         = document.getElementById('settingTwitterUrl');
-  const spInput         = document.getElementById('settingSpotifyUrl');
   const form            = document.getElementById('adminSettingsForm');
 
   const current = getSettings();
-  if (contactInput)    contactInput.value    = current.contactEmail || '';
-  if (newsletterInput) newsletterInput.value = current.newsletterEmail || '';
+  if (contactInput)    contactInput.value    = current.contactEmail || DEFAULT_MINISTRY_EMAIL;
+  if (newsletterInput) newsletterInput.value = current.newsletterEmail || DEFAULT_MINISTRY_EMAIL;
   if (endpointInput)   endpointInput.value   = current.endpointUrl || '';
   if (ytInput)         ytInput.value         = current.youtubeUrl || DEFAULT_YT_CHANNEL;
-  if (fbInput)         fbInput.value         = current.facebookUrl || '';
-  if (igInput)         igInput.value         = current.instagramUrl || '';
-  if (twInput)         twInput.value         = current.twitterUrl || '';
-  if (spInput)         spInput.value         = current.spotifyUrl || '';
+  if (fbInput)         fbInput.value         = current.facebookUrl || DEFAULT_FB_PAGE;
+  if (igInput)         igInput.value         = current.instagramUrl || DEFAULT_IG_PAGE;
 
   form?.addEventListener('submit', e => {
     e.preventDefault();
     const updated = {
-      contactEmail: contactInput?.value.trim() || '',
-      newsletterEmail: newsletterInput?.value.trim() || '',
+      contactEmail: contactInput?.value.trim() || DEFAULT_MINISTRY_EMAIL,
+      newsletterEmail: newsletterInput?.value.trim() || DEFAULT_MINISTRY_EMAIL,
       endpointUrl: normalizeUrl(endpointInput?.value),
       youtubeUrl: normalizeUrl(ytInput?.value) || DEFAULT_YT_CHANNEL,
-      facebookUrl: normalizeUrl(fbInput?.value) || 'https://facebook.com',
-      instagramUrl: normalizeUrl(igInput?.value) || 'https://instagram.com',
-      twitterUrl: normalizeUrl(twInput?.value) || 'https://twitter.com',
-      spotifyUrl: normalizeUrl(spInput?.value) || 'https://spotify.com'
+      facebookUrl: normalizeUrl(fbInput?.value) || DEFAULT_FB_PAGE,
+      instagramUrl: normalizeUrl(igInput?.value) || DEFAULT_IG_PAGE,
+      twitterUrl: '',
+      spotifyUrl: ''
     };
     saveSettings(updated);
     toast('💾 Ministry settings & social channel links saved!');

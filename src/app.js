@@ -704,8 +704,6 @@ function setupPrayerForm() {
 
 import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 
-const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
-
 // Real-time Cloud Settings Sync
 if (isFirebaseConfigured()) {
   subscribeCollection('settings', (remoteDocs) => {
@@ -729,27 +727,44 @@ function normalizeUrl(url) {
   return trimmed;
 }
 
-// ─── SETTINGS HELPERS (reads from localStorage) ─────────────────────────────
+const DEFAULT_MINISTRY_EMAIL = 'info2minutesermon@gmail.com';
+const DEFAULT_YT_CHANNEL     = 'https://www.youtube.com/c/2MinuteSermonP';
+const DEFAULT_FB_PAGE        = 'https://www.facebook.com/2minutesermon';
+const DEFAULT_IG_PAGE        = 'https://www.instagram.com/2_minutesermon/';
+
+// ─── SETTINGS HELPERS (reads from localStorage & Firestore) ─────────────────
 function getMinistrySettings() {
   try {
     const raw = localStorage.getItem('2ms_settings');
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (!parsed.contactEmail || parsed.contactEmail.includes('@2minutesermon.org')) {
+        parsed.contactEmail = DEFAULT_MINISTRY_EMAIL;
+      }
+      if (!parsed.newsletterEmail || parsed.newsletterEmail.includes('@2minutesermon.org')) {
+        parsed.newsletterEmail = DEFAULT_MINISTRY_EMAIL;
+      }
       if (!parsed.youtubeUrl || parsed.youtubeUrl === 'https://youtube.com' || parsed.youtubeUrl === 'https://youtube.com/') {
         parsed.youtubeUrl = DEFAULT_YT_CHANNEL;
+      }
+      if (!parsed.facebookUrl || parsed.facebookUrl === 'https://facebook.com' || parsed.facebookUrl === 'https://facebook.com/') {
+        parsed.facebookUrl = DEFAULT_FB_PAGE;
+      }
+      if (!parsed.instagramUrl || parsed.instagramUrl === 'https://instagram.com' || parsed.instagramUrl === 'https://instagram.com/') {
+        parsed.instagramUrl = DEFAULT_IG_PAGE;
       }
       return parsed;
     }
   } catch (_) {}
   return {
-    contactEmail: 'pastor@2minutesermon.org',
-    newsletterEmail: 'newsletter@2minutesermon.org',
+    contactEmail: DEFAULT_MINISTRY_EMAIL,
+    newsletterEmail: DEFAULT_MINISTRY_EMAIL,
     endpointUrl: '',
     youtubeUrl: DEFAULT_YT_CHANNEL,
-    facebookUrl: 'https://facebook.com',
-    instagramUrl: 'https://instagram.com',
-    twitterUrl: 'https://twitter.com',
-    spotifyUrl: 'https://spotify.com'
+    facebookUrl: DEFAULT_FB_PAGE,
+    instagramUrl: DEFAULT_IG_PAGE,
+    twitterUrl: '',
+    spotifyUrl: ''
   };
 }
 
@@ -758,10 +773,8 @@ function updateFooterSocialLinks() {
   
   const map = {
     youtube: normalizeUrl(s.youtubeUrl) || DEFAULT_YT_CHANNEL,
-    facebook: normalizeUrl(s.facebookUrl) || 'https://facebook.com',
-    instagram: normalizeUrl(s.instagramUrl) || 'https://instagram.com',
-    twitter: normalizeUrl(s.twitterUrl) || 'https://twitter.com',
-    spotify: normalizeUrl(s.spotifyUrl) || 'https://spotify.com'
+    facebook: normalizeUrl(s.facebookUrl) || DEFAULT_FB_PAGE,
+    instagram: normalizeUrl(s.instagramUrl) || DEFAULT_IG_PAGE
   };
 
   const socialIcons = document.querySelectorAll('.social-icon');
@@ -769,7 +782,7 @@ function updateFooterSocialLinks() {
     const key = (a.getAttribute('data-social') || a.getAttribute('title') || a.getAttribute('aria-label') || '').toLowerCase();
     
     for (const [platform, url] of Object.entries(map)) {
-      if (key.includes(platform) || (platform === 'twitter' && (key.includes('twitter') || key.includes('x profile')))) {
+      if (key.includes(platform)) {
         a.href = url;
         break;
       }
