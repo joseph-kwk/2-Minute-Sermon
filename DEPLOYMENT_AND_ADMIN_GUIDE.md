@@ -127,18 +127,6 @@ Firebase will output your live URL (e.g. `https://2-minute-sermon.web.app` or `h
 
 ---
 
-### Option B — Vercel
-
-1. Go to **[vercel.com](https://vercel.com)** → sign in with your GitHub account.
-2. Click **Add New → Project** → select **`2-Minute-Sermon`**.
-3. Confirm build settings:
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Add your Environment Variables (`VITE_ADMIN_PASSWORD` and `VITE_FIREBASE_*` keys).
-5. Click **Deploy**.
-
----
-
 ## Phase 5 — Wire Up Email Forms & Social Links in The Steward
 
 > **This makes Contact forms deliver to your inbox and updates your social media links.**
@@ -164,21 +152,18 @@ From this point on, Contact forms deliver to your inbox and footer icons link di
 
 ### Step 1 — Add the domain in your hosting dashboard
 
-**Firebase Hosting**: Firebase Console → **Hosting → Add custom domain** → enter `2minutesermon.org`.  
-**Vercel**: Project → **Settings → Domains → Add**.
-
-Type your domain (e.g. `2minutesermon.org`) and the `www` version.
+Go to **Firebase Console → Hosting → Add custom domain** → enter your domain (e.g. `2minutesermon.org`) and the `www` version.
 
 ---
 
 ### Step 2 — Update DNS at your domain registrar
 
-Log in to wherever you bought your domain. Find **DNS settings** and add the records provided by your host:
+Log in to wherever you bought your domain. Find **DNS settings** and add the records provided by Firebase Console:
 
-| Record Type | Host / Name | Firebase Hosting Target | Vercel Target |
-|---|---|---|---|
-| **A Record** | `@` | Provided in Firebase Console (e.g. `199.36.158.100`) | `76.76.21.21` |
-| **CNAME** | `www` | `your-app.web.app` | `cname.vercel-dns.com` |
+| Record Type | Host / Name | Firebase Hosting Target |
+|---|---|---|
+| **A Record** | `@` | Provided in Firebase Console (e.g. `199.36.158.100`) |
+| **CNAME** | `www` | `your-app.web.app` |
 
 > DNS takes 5 minutes to 24 hours to activate. Cloudflare/Namecheap usually take 5–15 min.
 
@@ -186,7 +171,7 @@ Log in to wherever you bought your domain. Find **DNS settings** and add the rec
 
 ### Step 3 — HTTPS is automatic
 
-Once DNS confirms, Vercel/Netlify auto-installs a free **SSL certificate**. Your site gets a padlock 🔒 and all traffic is secure. Nothing to do on your end.
+Once DNS confirms, Firebase automatically provisions a free **SSL certificate**. Your site gets a padlock 🔒 and all traffic is secure. Nothing to do on your end.
 
 ---
 
@@ -215,9 +200,8 @@ The Steward (`/admin.html`) is protected by a secure, environment-gated passphra
 | Setting | Details |
 |---|---|
 | **Local dev password** | Defined in `.env`: `VITE_ADMIN_PASSWORD=Steward2026!` |
-| **Production password** | Set in Vercel/Netlify Environment Variables: `VITE_ADMIN_PASSWORD` |
+| **Live site password** | Defined in `.env` or project settings: `VITE_ADMIN_PASSWORD` |
 | **Login Experience** | Aesthetic card overlay with instant feedback & shake animation on error |
-| **Changing the password** | Update the environment variable → redeploy → instant update |
 
 > ⚠️ **Never** commit your password to GitHub. `.env` is automatically ignored by `.gitignore`.
 
@@ -259,10 +243,10 @@ All content (sermons, verses, preachers, events) is synced to **Google Firebase 
 
 | What you need | Where to go |
 |---|---|
-| Deploy site | [vercel.com](https://vercel.com) or [netlify.com](https://netlify.com) |
+| Deploy site | Firebase Console → Hosting |
 | Create email forms | [formspree.io](https://formspree.io) (free) |
 | Create Cloud DB | [console.firebase.google.com](https://console.firebase.google.com) (free) |
-| Set admin password | Hosting dashboard → Environment Variables → `VITE_ADMIN_PASSWORD` |
+| Set admin password | `.env` file (`VITE_ADMIN_PASSWORD`) |
 | Access The Steward | `yourdomain.com/admin.html` |
 | Wire contact & social | The Steward → ⚙️ Ministry Settings |
 | Export a JSON backup | The Steward → CMS Backup → Export |

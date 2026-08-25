@@ -89,7 +89,7 @@ Open [http://localhost:5173/admin.html](http://localhost:5173/admin.html) for Th
 npm run build
 ```
 
-Output is in `dist/` — ready to deploy to any static host (Netlify, Vercel, Firebase Hosting, GitHub Pages).
+Output is in `dist/` — ready to deploy directly to **Firebase Hosting**.
 
 ---
 
