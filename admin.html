@@ -334,32 +334,49 @@
         <div class="admin-panel-grid">
           <div class="admin-card">
             <h2 class="admin-card-title">Add Preacher Profile</h2>
-            <p class="admin-card-sub">Register a new contributing minister to the directory.</p>
+            <p class="admin-card-sub">Register a new contributing minister with photo, location, and bio.</p>
             <form id="adminAddPreacherForm">
+              <!-- Live Photo Preview & Upload Controls -->
+              <div class="admin-form-group" style="display:flex;gap:18px;align-items:center;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
+                <div class="admin-avatar-preview-box" style="position:relative;flex-shrink:0;">
+                  <img id="adminPreacherPhotoPreview" src="https://ui-avatars.com/api/?name=Minister&background=C62828&color=fff&size=160" alt="Preacher Avatar Preview" 
+                    style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid var(--admin-red);box-shadow:0 4px 14px rgba(198,40,40,0.3);background:#222;display:block;">
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <label class="admin-form-label" style="margin-bottom:6px;font-size:0.85rem;">Preacher Photo</label>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <input type="file" id="newPreacherPhotoFile" accept="image/*" style="display:none;">
+                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnTriggerPhotoUpload">
+                      📁 Upload from Device
+                    </button>
+                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnDefaultAvatar">
+                      ⚡ Use Initials
+                    </button>
+                  </div>
+                  <input type="url" id="newPreacherPhoto" placeholder="Or paste image URL (https://...)" class="admin-input" style="margin-top:8px;font-size:0.8rem;padding:6px 10px;">
+                </div>
+              </div>
+
               <div class="admin-form-group">
                 <label>Full Name with Title</label>
-                <input type="text" id="newPreacherName" placeholder="e.g. Dr. Grace Lawson" class="admin-input" required>
+                <input type="text" id="newPreacherName" placeholder="e.g. Pastor Anany Kasongo" class="admin-input" required>
               </div>
               <div class="admin-form-row">
                 <div class="admin-form-group">
-                  <label>Denomination</label>
-                  <input type="text" id="newPreacherDenomination" placeholder="e.g. Baptist" class="admin-input" required>
+                  <label>Denomination / Ministry</label>
+                  <input type="text" id="newPreacherDenomination" placeholder="e.g. Non-Denominational" class="admin-input" required>
                 </div>
                 <div class="admin-form-group">
-                  <label>Country</label>
+                  <label>Country / Location</label>
                   <input type="text" id="newPreacherCountry" placeholder="e.g. United States" class="admin-input" required>
                 </div>
               </div>
               <div class="admin-form-group">
-                <label>Photo URL</label>
-                <input type="url" id="newPreacherPhoto" placeholder="https://..." class="admin-input" required>
-              </div>
-              <div class="admin-form-group">
-                <label>Short Bio</label>
-                <textarea id="newPreacherBio" rows="3" placeholder="Pastoral background..." class="admin-input" required></textarea>
+                <label>Short Bio &amp; Ministry Background</label>
+                <textarea id="newPreacherBio" rows="3" placeholder="Brief pastoral background and heart for preaching..." class="admin-input" required></textarea>
               </div>
               <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;">
-                ➕ Add to Directory
+                ➕ Add Preacher to Directory
               </button>
             </form>
           </div>

@@ -464,21 +464,95 @@ function populateSelects() {
 
 // ── PREACHERS MANAGER ─────────────────────────────────────────────────────
 function setupPreachersManager() {
-  document.getElementById('adminAddPreacherForm')?.addEventListener('submit', e => {
-    e.preventDefault();
-    const name         = document.getElementById('newPreacherName').value;
-    const denomination = document.getElementById('newPreacherDenomination').value;
-    const country      = document.getElementById('newPreacherCountry').value;
-    const photoUrl     = document.getElementById('newPreacherPhoto').value;
-    const bio          = document.getElementById('newPreacherBio').value;
+  const form = document.getElementById('adminAddPreacherForm');
+  const nameInput = document.getElementById('newPreacherName');
+  const denomInput = document.getElementById('newPreacherDenomination');
+  const countryInput = document.getElementById('newPreacherCountry');
+  const photoUrlInput = document.getElementById('newPreacherPhoto');
+  const photoFileInput = document.getElementById('newPreacherPhotoFile');
+  const bioInput = document.getElementById('newPreacherBio');
+  const previewImg = document.getElementById('adminPreacherPhotoPreview');
+  const btnTriggerUpload = document.getElementById('btnTriggerPhotoUpload');
+  const btnDefaultAvatar = document.getElementById('btnDefaultAvatar');
 
-    preachers.push({ id:`p-${Date.now()}`, name, denomination, country, photoUrl, bio });
+  function updateAvatarPreview() {
+    const customUrl = photoUrlInput?.value.trim();
+    const name = nameInput?.value.trim() || 'Minister';
+    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
+
+    if (previewImg) {
+      if (customUrl) {
+        previewImg.src = customUrl;
+        previewImg.onerror = () => { previewImg.src = fallback; };
+      } else {
+        previewImg.src = fallback;
+      }
+    }
+  }
+
+  nameInput?.addEventListener('input', () => {
+    if (!photoUrlInput?.value) updateAvatarPreview();
+  });
+
+  photoUrlInput?.addEventListener('input', updateAvatarPreview);
+
+  btnTriggerUpload?.addEventListener('click', () => {
+    photoFileInput?.click();
+  });
+
+  photoFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast('⚠️ Image is large (>2MB). Please select a smaller photo.');
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const dataUrl = evt.target.result;
+      if (photoUrlInput) photoUrlInput.value = dataUrl;
+      if (previewImg) previewImg.src = dataUrl;
+      toast('🖼️ Preacher photo uploaded!');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  btnDefaultAvatar?.addEventListener('click', () => {
+    const name = nameInput?.value.trim() || 'Minister';
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
+    if (photoUrlInput) photoUrlInput.value = avatarUrl;
+    if (previewImg) previewImg.src = avatarUrl;
+    toast('⚡ Default initials avatar set.');
+  });
+
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const name         = nameInput?.value.trim() || '';
+    const denomination = denomInput?.value.trim() || '';
+    const country      = countryInput?.value.trim() || '';
+    let photoUrl       = photoUrlInput?.value.trim();
+    const bio          = bioInput?.value.trim() || '';
+
+    if (!photoUrl) {
+      photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
+    }
+
+    const newPreacher = { 
+      id: `p-${Date.now()}`, 
+      name, 
+      denomination, 
+      country, 
+      photoUrl, 
+      bio 
+    };
+
+    preachers.push(newPreacher);
     savePreachers(preachers);
     populateSelects();
     renderPreachersList();
     renderDashboardStats();
-    e.target.reset();
-    toast(`🎙️ ${name} added to the directory!`);
+    form.reset();
+    updateAvatarPreview();
+    toast(`🎙️ ${name} added to the preacher directory!`);
   });
 }
 

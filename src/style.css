@@ -155,13 +155,18 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
    ========================================================================== */
 .app-header {
   position: sticky; top: 0; z-index: 100;
-  background-color: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-lightgray);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-normal);
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  transition: all var(--transition-normal);
 }
-.app-header.scrolled { box-shadow: var(--shadow-md); }
+.app-header.scrolled {
+  background-color: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
 
 .header-container { display: flex; align-items: center; justify-content: space-between; height: 76px; }
 
