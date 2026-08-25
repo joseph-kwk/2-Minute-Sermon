@@ -22,6 +22,22 @@ const seedEvents = [
   }
 ];
 
+import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
+
+// ── Real-time Firebase Firestore Sync ───────────────────────────────────────
+if (isFirebaseConfigured()) {
+  seedCollectionIfEmpty('events', seedEvents);
+  subscribeCollection('events', (remoteEvents) => {
+    if (remoteEvents && remoteEvents.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteEvents));
+        window.dispatchEvent(new CustomEvent('2ms:events:updated', { detail: remoteEvents }));
+        window.dispatchEvent(new Event('storage'));
+      } catch (_) {}
+    }
+  });
+}
+
 // ── localStorage-backed CMS store ───────────────────────────────────────────
 
 /** Read events from localStorage; seeds from static data on first run. */
@@ -34,9 +50,12 @@ export function getEvents() {
   return [...seedEvents];
 }
 
-/** Persist events array to localStorage. */
+/** Persist events array to localStorage and Firebase if configured. */
 export function saveEvents(arr) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+  if (isFirebaseConfigured()) {
+    arr.forEach(e => saveDocument('events', e.id, e));
+  }
 }
 
 /** Add or update an event (matched by id). Returns updated array. */
@@ -45,6 +64,9 @@ export function upsertEvent(event) {
   const idx = all.findIndex(e => e.id === event.id);
   if (idx >= 0) all[idx] = event; else all.unshift(event);
   saveEvents(all);
+  if (isFirebaseConfigured()) {
+    saveDocument('events', event.id, event);
+  }
   return all;
 }
 
@@ -52,6 +74,9 @@ export function upsertEvent(event) {
 export function deleteEvent(id) {
   const all = getEvents().filter(e => e.id !== id);
   saveEvents(all);
+  if (isFirebaseConfigured()) {
+    deleteDocument('events', id);
+  }
   return all;
 }
 

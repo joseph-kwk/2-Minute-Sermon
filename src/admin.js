@@ -33,6 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSettingsPanel();
   setupBackupPanel();
   populateSelects();
+
+  // ── Real-time Cloud Data Sync Listeners for Admin ─────────────────────────
+  const refreshAdminView = () => {
+    populateSelects();
+    renderDashboardStats();
+    renderVerseQueue();
+    renderPreachersList();
+    renderEventsList();
+    renderPrayerInbox();
+  };
+
+  window.addEventListener('storage', refreshAdminView);
+  window.addEventListener('2ms:sermons:updated', refreshAdminView);
+  window.addEventListener('2ms:preachers:updated', refreshAdminView);
+  window.addEventListener('2ms:verses:updated', refreshAdminView);
+  window.addEventListener('2ms:events:updated', refreshAdminView);
 });
 
 // ── Topbar date ──────────────────────────────────────────────────────────

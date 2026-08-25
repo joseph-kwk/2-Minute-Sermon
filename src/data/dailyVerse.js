@@ -64,6 +64,22 @@ const seedDailyVerses = [
   }
 ];
 
+import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
+
+// ── Real-time Firebase Firestore Sync ───────────────────────────────────────
+if (isFirebaseConfigured()) {
+  seedCollectionIfEmpty('dailyVerses', seedDailyVerses);
+  subscribeCollection('dailyVerses', (remoteVerses) => {
+    if (remoteVerses && remoteVerses.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteVerses));
+        window.dispatchEvent(new CustomEvent('2ms:verses:updated', { detail: remoteVerses }));
+        window.dispatchEvent(new Event('storage'));
+      } catch (_) {}
+    }
+  });
+}
+
 /** Read verses from localStorage; seeds from static data on first run. */
 export function getDailyVerses() {
   try {
@@ -74,13 +90,36 @@ export function getDailyVerses() {
   return [...seedDailyVerses];
 }
 
-/** Persist daily verses array to localStorage. */
+/** Persist daily verses array to localStorage and Firebase if configured. */
 export function saveDailyVerses(arr) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+  if (isFirebaseConfigured()) {
+    arr.forEach(v => saveDocument('dailyVerses', v.id, v));
+  }
+}
+
+/** Add or update a scheduled daily verse */
+export function upsertDailyVerse(verse) {
+  const all = getDailyVerses();
+  const idx = all.findIndex(v => v.id === verse.id || v.publishDate === verse.publishDate);
+  if (idx >= 0) all[idx] = verse; else all.push(verse);
+  saveDailyVerses(all);
+  if (isFirebaseConfigured()) {
+    saveDocument('dailyVerses', verse.id, verse);
+  }
+  return all;
+}
+
+/** Delete a daily verse */
+export function deleteDailyVerse(id) {
+  const all = getDailyVerses().filter(v => v.id !== id);
+  saveDailyVerses(all);
+  if (isFirebaseConfigured()) {
+    deleteDocument('dailyVerses', id);
+  }
+  return all;
 }
 
 export const scheduledDailyVerses = seedDailyVerses;
-
-
 export const dailyVerseToday = scheduledDailyVerses[0];
 export const dailyVerseArchive = scheduledDailyVerses;

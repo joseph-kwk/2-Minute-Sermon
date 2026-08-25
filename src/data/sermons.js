@@ -170,7 +170,23 @@ const seedSermons = [
   }
 ];
 
-// ── localStorage-backed CMS store ───────────────────────────────────────────
+import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
+
+// ── Real-time Firebase Firestore Sync ───────────────────────────────────────
+if (isFirebaseConfigured()) {
+  seedCollectionIfEmpty('sermons', seedSermons);
+  subscribeCollection('sermons', (remoteSermons) => {
+    if (remoteSermons && remoteSermons.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteSermons));
+        window.dispatchEvent(new CustomEvent('2ms:sermons:updated', { detail: remoteSermons }));
+        window.dispatchEvent(new Event('storage'));
+      } catch (_) {}
+    }
+  });
+}
+
+// ── localStorage & Firebase CMS store ────────────────────────────────────────
 
 /** Read sermons from localStorage; seeds from static data on first run. */
 export function getSermons() {
@@ -182,7 +198,7 @@ export function getSermons() {
   return [...seedSermons];
 }
 
-/** Persist sermons array to localStorage. */
+/** Persist sermons array to localStorage and Firebase if configured. */
 export function saveSermons(arr) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
 }
@@ -193,6 +209,9 @@ export function upsertSermon(sermon) {
   const idx = all.findIndex(s => s.id === sermon.id);
   if (idx >= 0) all[idx] = sermon; else all.unshift(sermon);
   saveSermons(all);
+  if (isFirebaseConfigured()) {
+    saveDocument('sermons', sermon.id, sermon);
+  }
   return all;
 }
 
@@ -200,6 +219,9 @@ export function upsertSermon(sermon) {
 export function deleteSermon(id) {
   const all = getSermons().filter(s => s.id !== id);
   saveSermons(all);
+  if (isFirebaseConfigured()) {
+    deleteDocument('sermons', id);
+  }
   return all;
 }
 

@@ -52,7 +52,50 @@ Go to **[formspree.io](https://formspree.io)** and sign up (free).
 
 ---
 
-## Phase 3 — Deploy the Site
+## Phase 3 — Firebase Cloud Database Setup (Free Live Cloud Sync)
+
+> **This is what makes updates in The Steward immediately visible to visitors worldwide.**
+> Takes ~5 minutes to set up, 100% free.
+
+### Step 1 — Create a free Firebase Project
+1. Go to **[console.firebase.google.com](https://console.firebase.google.com)** and sign in with your Google account.
+2. Click **+ Add project** → Name it `2-Minute-Sermon` → Click **Continue**.
+3. You can disable Google Analytics (optional) → Click **Create project**.
+
+### Step 2 — Create Firestore Database
+1. In your Firebase sidebar, click **Build → Firestore Database**.
+2. Click **Create database** → Select a location near your primary audience (e.g. `nam5 (us-central)`).
+3. Choose **Start in test mode** → Click **Create**.
+
+### Step 3 — Get your Firebase Config keys
+1. Click the **⚙️ Project Settings** gear icon in the top left sidebar.
+2. Under *Your apps*, click the **Web icon (`</>`)**.
+3. Register app with nickame `2-Minute Sermon Web`.
+4. Copy the 6 configuration values:
+   - `apiKey`
+   - `authDomain`
+   - `projectId`
+   - `storageBucket`
+   - `messagingSenderId`
+   - `appId`
+
+### Step 4 — Add keys to Vercel / Netlify
+In your hosting provider dashboard (Vercel / Netlify) under **Environment Variables**, add these 6 keys:
+
+| Environment Variable Key | Description |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | Your Firebase `apiKey` |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Your Firebase `authDomain` |
+| `VITE_FIREBASE_PROJECT_ID` | Your Firebase `projectId` |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Your Firebase `storageBucket` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Your Firebase `messagingSenderId` |
+| `VITE_FIREBASE_APP_ID` | Your Firebase `appId` |
+
+Once added, redeploy your site. Every sermon, daily verse, preacher, and event published in *The Steward* will now sync across the globe in real time! ✅
+
+---
+
+## Phase 4 — Deploy the Site
 
 Choose **one** option below. Both are free.
 

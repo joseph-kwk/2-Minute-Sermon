@@ -62,10 +62,26 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTopicsHub();
   renderPreachersHub();
   renderEventsGrid();
-  populateDropdownFilterOptions();
-  renderAdminPrayerInbox();
-  renderAdminVerseQueue();
   renderAdminPreachersList();
+
+  // ─── Real-time Cloud Data Sync Listeners ─────────────────────────────────
+  const refreshAllUI = () => {
+    renderFeaturedCarousel();
+    renderHomeSermons();
+    filterAndRenderSermons();
+    renderSeasonsHub();
+    renderTopicsHub();
+    renderPreachersHub();
+    renderEventsGrid();
+    populateDropdownFilterOptions();
+    setupDailyVerse();
+  };
+
+  window.addEventListener('storage', refreshAllUI);
+  window.addEventListener('2ms:sermons:updated', refreshAllUI);
+  window.addEventListener('2ms:preachers:updated', refreshAllUI);
+  window.addEventListener('2ms:verses:updated', refreshAllUI);
+  window.addEventListener('2ms:events:updated', refreshAllUI);
 });
 
 // ─── LOGO TITLE ANIMATION ─────────────────────────────────────────────────────

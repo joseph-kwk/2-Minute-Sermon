@@ -43,6 +43,22 @@ const seedPreachers = [
   }
 ];
 
+import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
+
+// ── Real-time Firebase Firestore Sync ───────────────────────────────────────
+if (isFirebaseConfigured()) {
+  seedCollectionIfEmpty('preachers', seedPreachers);
+  subscribeCollection('preachers', (remotePreachers) => {
+    if (remotePreachers && remotePreachers.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remotePreachers));
+        window.dispatchEvent(new CustomEvent('2ms:preachers:updated', { detail: remotePreachers }));
+        window.dispatchEvent(new Event('storage'));
+      } catch (_) {}
+    }
+  });
+}
+
 /** Read preachers from localStorage; seeds from static data on first run. */
 export function getPreachers() {
   try {
@@ -53,9 +69,34 @@ export function getPreachers() {
   return [...seedPreachers];
 }
 
-/** Persist preachers array to localStorage. */
+/** Persist preachers array to localStorage and Firebase if configured. */
 export function savePreachers(arr) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+  if (isFirebaseConfigured()) {
+    arr.forEach(p => saveDocument('preachers', p.id, p));
+  }
+}
+
+/** Add or update a preacher profile */
+export function upsertPreacher(preacher) {
+  const all = getPreachers();
+  const idx = all.findIndex(p => p.id === preacher.id);
+  if (idx >= 0) all[idx] = preacher; else all.push(preacher);
+  savePreachers(all);
+  if (isFirebaseConfigured()) {
+    saveDocument('preachers', preacher.id, preacher);
+  }
+  return all;
+}
+
+/** Delete a preacher profile */
+export function deletePreacher(id) {
+  const all = getPreachers().filter(p => p.id !== id);
+  savePreachers(all);
+  if (isFirebaseConfigured()) {
+    deleteDocument('preachers', id);
+  }
+  return all;
 }
 
 export const preachers = seedPreachers;
