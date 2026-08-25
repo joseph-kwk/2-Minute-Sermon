@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPreachersHub();
   renderEventsGrid();
   renderAdminPreachersList();
+  updateFooterSocialLinks();
 
   // ─── Real-time Cloud Data Sync Listeners ─────────────────────────────────
   const refreshAllUI = () => {
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderEventsGrid();
     populateDropdownFilterOptions();
     setupDailyVerse();
+    updateFooterSocialLinks();
   };
 
   window.addEventListener('storage', refreshAllUI);
@@ -706,7 +708,29 @@ function getMinistrySettings() {
     const raw = localStorage.getItem('2ms_settings');
     if (raw) return JSON.parse(raw);
   } catch (_) {}
-  return { contactEmail: '', newsletterEmail: '', endpointUrl: '' };
+  return {
+    contactEmail: '',
+    newsletterEmail: '',
+    endpointUrl: '',
+    youtubeUrl: 'https://youtube.com',
+    facebookUrl: 'https://facebook.com',
+    instagramUrl: 'https://instagram.com',
+    twitterUrl: 'https://twitter.com',
+    spotifyUrl: 'https://spotify.com'
+  };
+}
+
+function updateFooterSocialLinks() {
+  const s = getMinistrySettings();
+  const socialIcons = document.querySelectorAll('.social-icon');
+  socialIcons.forEach(a => {
+    const title = (a.getAttribute('title') || '').toLowerCase();
+    if (title.includes('youtube') && s.youtubeUrl) a.href = s.youtubeUrl;
+    else if (title.includes('facebook') && s.facebookUrl) a.href = s.facebookUrl;
+    else if (title.includes('instagram') && s.instagramUrl) a.href = s.instagramUrl;
+    else if (title.includes('twitter') && s.twitterUrl) a.href = s.twitterUrl;
+    else if (title.includes('spotify') && s.spotifyUrl) a.href = s.spotifyUrl;
+  });
 }
 
 async function postToEndpoint(endpoint, payload) {

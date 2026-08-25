@@ -703,34 +703,57 @@ export function getSettings() {
   return {
     contactEmail: 'pastor@2minutesermon.org',
     newsletterEmail: 'newsletter@2minutesermon.org',
-    endpointUrl: ''
+    endpointUrl: '',
+    youtubeUrl: 'https://youtube.com',
+    facebookUrl: 'https://facebook.com',
+    instagramUrl: 'https://instagram.com',
+    twitterUrl: 'https://twitter.com',
+    spotifyUrl: 'https://spotify.com'
   };
 }
 
 export function saveSettings(s) {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (_) {}
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    window.dispatchEvent(new Event('storage'));
+  } catch (_) {}
 }
 
 function setupSettingsPanel() {
   const contactInput    = document.getElementById('settingContactEmail');
   const newsletterInput = document.getElementById('settingNewsletterEmail');
   const endpointInput   = document.getElementById('settingEndpointUrl');
+  const ytInput         = document.getElementById('settingYoutubeUrl');
+  const fbInput         = document.getElementById('settingFacebookUrl');
+  const igInput         = document.getElementById('settingInstagramUrl');
+  const twInput         = document.getElementById('settingTwitterUrl');
+  const spInput         = document.getElementById('settingSpotifyUrl');
   const form            = document.getElementById('adminSettingsForm');
 
   const current = getSettings();
   if (contactInput)    contactInput.value    = current.contactEmail || '';
   if (newsletterInput) newsletterInput.value = current.newsletterEmail || '';
   if (endpointInput)   endpointInput.value   = current.endpointUrl || '';
+  if (ytInput)         ytInput.value         = current.youtubeUrl || '';
+  if (fbInput)         fbInput.value         = current.facebookUrl || '';
+  if (igInput)         igInput.value         = current.instagramUrl || '';
+  if (twInput)         twInput.value         = current.twitterUrl || '';
+  if (spInput)         spInput.value         = current.spotifyUrl || '';
 
   form?.addEventListener('submit', e => {
     e.preventDefault();
     const updated = {
-      contactEmail: contactInput.value.trim(),
-      newsletterEmail: newsletterInput.value.trim(),
-      endpointUrl: endpointInput.value.trim()
+      contactEmail: contactInput?.value.trim() || '',
+      newsletterEmail: newsletterInput?.value.trim() || '',
+      endpointUrl: endpointInput?.value.trim() || '',
+      youtubeUrl: ytInput?.value.trim() || 'https://youtube.com',
+      facebookUrl: fbInput?.value.trim() || 'https://facebook.com',
+      instagramUrl: igInput?.value.trim() || 'https://instagram.com',
+      twitterUrl: twInput?.value.trim() || 'https://twitter.com',
+      spotifyUrl: spInput?.value.trim() || 'https://spotify.com'
     };
     saveSettings(updated);
-    toast('💾 Ministry email & form settings saved!');
+    toast('💾 Ministry settings & social channel links saved!');
   });
 }
 
