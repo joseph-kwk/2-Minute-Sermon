@@ -89,3 +89,19 @@ Log in to your domain registrar (Namecheap, GoDaddy, Squarespace/Google Domains,
 - **Live LocalStorage Persistence**: Sermons, daily verses, preachers, and events persist inside the client browser.
 - **Cross-Tab Synchronization**: Any changes made in *The Steward* update all open visitor browser tabs instantly.
 - **1-Click JSON Backup**: Inside *The Steward* under **Export & Backup**, click **Export Full CMS JSON** to download a complete safety backup of all sermons, preachers, verses, and events.
+
+---
+
+## 📧 4. Contact & Newsletter Email Setup (Option A: Formspree / Web3Forms)
+
+Static web applications (hosted on Vercel, Netlify, or Cloudflare) use lightweight serverless email forwarders to deliver contact messages and newsletter notifications straight to your inbox without requiring a custom server.
+
+### Setup Instructions for Option A (Formspree)
+1. Sign up for a free account at [Formspree.io](https://formspree.io) or [Web3Forms.com](https://web3forms.com).
+2. Create a new form endpoint and set the destination email to your address (e.g. `pastor@2minutesermon.org`).
+3. Copy your Formspree Endpoint URL (e.g. `https://formspree.io/f/xzy...`).
+4. Log into **The Steward** (`/admin.html`) $\rightarrow$ open **⚙️ Ministry Settings**.
+5. Paste your endpoint URL into **Form Forwarding Service Endpoint** and set your **Recipient Email**.
+6. Click **Save Ministry Settings**.
+
+Incoming contact submissions and newsletter signups will now be delivered straight to your email inbox!
