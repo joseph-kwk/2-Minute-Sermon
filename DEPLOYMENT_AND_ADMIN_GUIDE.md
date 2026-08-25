@@ -1,107 +1,216 @@
-# 📖 2-Minute Sermon: Deployment, Domain Setup & Admin Guide
-
-Welcome to the official deployment and operational guide for **2-Minute Sermon** and **The Steward** content management portal.
-
----
-
-## 🔐 1. How Admin Accounts & Access Work
-
-### Current Password-Gated Access (Single/Shared Admin)
-By default, **The Steward** portal (`/admin.html`) is protected by a secure environment-gated passphrase.
-
-1. **Local Development**:
-   - Defined in the local `.env` file:
-     ```env
-     VITE_ADMIN_PASSWORD=Steward2026!
-     ```
-   - You can change `Steward2026!` in `.env` to any password you prefer.
-
-2. **Production Host (Vercel / Netlify / Firebase)**:
-   - In your hosting provider's dashboard under **Environment Variables**, set:
-     - **Key**: `VITE_ADMIN_PASSWORD`
-     - **Value**: Your chosen secret password (e.g., `MyChurchPass#2026`)
-   - Any team member who visits `yourdomain.com/admin.html` and enters this password gains immediate access to publish sermons, schedule daily verses, add preachers, and manage events.
+# 📖 2-Minute Sermon — Complete Setup Guide
+> *From local project to live ministry site, step by step.*
 
 ---
 
-### Upgrading to Individual Admin Accounts (Firebase / Supabase Auth)
-If your ministry expands and you require **individual email & password logins** (e.g., `pastor@2minutesermon.org`) with multi-user permissions (Super Admin, Editor, Contributor):
+## Where Things Stand Right Now
 
-1. **Firebase Authentication Integration**:
-   - Firebase Auth can be connected in ~15 minutes.
-   - Allows creating admin users in the Firebase Console with custom claims (`role: 'admin'`).
-   - Includes password reset emails, multi-factor authentication (MFA), and audit logging.
+| What | Status |
+|---|---|
+| Site is built and working locally | ✅ Done |
+| CMS ("The Steward") is working locally | ✅ Done |
+| Code is clean and production-ready | ✅ Done |
+| GitHub repository exists | ✅ Done |
+| All changes pushed to GitHub | ⬜ To do |
+| Site deployed and live on the internet | ⬜ To do |
+| Custom domain connected | ⬜ To do |
+| Contact & newsletter emails being received | ⬜ To do |
 
 ---
 
-## 🌐 2. Step-by-Step Custom Domain Setup
+## Phase 1 — Push Your Code to GitHub
 
-### Step A: Deploy to Hosting Provider
+> Do this at the end of every work session.
 
-#### Option 1: Vercel (Recommended)
-1. Log in to [Vercel](https://vercel.com) using your GitHub account.
-2. Click **New Project** $\rightarrow$ select **`2-Minute-Sermon`**.
-3. Configure Build Settings:
-   - **Framework Preset**: Vite
+Open your terminal in the project folder and run:
+
+```bash
+git add .
+git commit -m "your short note about what changed"
+git push
+```
+
+That's it. Your code is backed up and ready to deploy.
+
+---
+
+## Phase 2 — Create an Email Endpoint (Formspree)
+
+> This is what lets your Contact and Newsletter forms send emails to your inbox.
+> **Do this before deploying**, so you have the URL ready to paste in.
+
+### Step 1 — Create a free Formspree account
+Go to **[formspree.io](https://formspree.io)** and sign up (free).
+
+### Step 2 — Create a new form
+1. Click **+ New Form**.
+2. Name it `2-Minute Sermon Contact`.
+3. It will give you a URL like: `https://formspree.io/f/xabcdef`
+4. **Copy that URL and save it somewhere.**
+
+> [Web3Forms.com](https://web3forms.com) works identically if you prefer it.
+
+---
+
+## Phase 3 — Deploy the Site
+
+Choose **one** option below. Both are free.
+
+---
+
+### Option A — Vercel (Recommended)
+
+1. Go to **[vercel.com](https://vercel.com)** → sign in with your GitHub account.
+2. Click **Add New → Project** → select **`2-Minute-Sermon`**.
+3. Vercel will auto-detect Vite. Confirm:
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-4. Expand **Environment Variables** $\rightarrow$ add `VITE_ADMIN_PASSWORD` with your desired admin password.
+4. Before clicking Deploy, add an **Environment Variable**:
+   - **Key**: `VITE_ADMIN_PASSWORD`
+   - **Value**: A password you choose (e.g. `MyChurch#2026`) — this is your Steward login.
 5. Click **Deploy**.
 
-#### Option 2: Netlify
-1. Log in to [Netlify](https://netlify.com) using your GitHub account.
-2. Click **Add new site** $\rightarrow$ **Import an existing project** $\rightarrow$ select **`2-Minute-Sermon`**.
-3. Build Settings:
+Vercel gives you a free URL like `2-minute-sermon.vercel.app`. Site is live. ✅
+
+---
+
+### Option B — Netlify
+
+1. Go to **[netlify.com](https://netlify.com)** → sign in with GitHub.
+2. Click **Add new site → Import an existing project** → select `2-Minute-Sermon`.
+3. Confirm:
    - **Build command**: `npm run build`
    - **Publish directory**: `dist`
-4. Go to **Site configuration** $\rightarrow$ **Environment variables** $\rightarrow$ add `VITE_ADMIN_PASSWORD`.
+4. Go to **Site configuration → Environment variables** → add:
+   - **Key**: `VITE_ADMIN_PASSWORD`
+   - **Value**: Your chosen admin password.
 5. Click **Deploy site**.
 
 ---
 
-### Step B: Connect Your Custom Domain
+## Phase 4 — Wire Up Your Email Forms in The Steward
 
-1. In your host dashboard (Vercel/Netlify), navigate to **Domains** / **Custom Domains**.
-2. Click **Add Domain** and enter your registered domain name (e.g., `2minutesermon.org` and `www.2minutesermon.org`).
-3. Note the DNS target records provided by the host.
+> **This is what makes Contact and Newsletter forms actually deliver to your inbox.**
+> Do this once after deployment (or locally first — both work).
 
----
+1. Open your site → go to `/admin.html`.
+2. Log in with the password you set in Phase 3.
+3. In the left sidebar, click **⚙️ Ministry Settings**.
+4. Fill in:
+   - **Contact Recipient Email** — where contact messages go (e.g. `pastor@yourchurch.org`)
+   - **Newsletter Recipient Email** — where subscriber alerts go
+   - **Form Forwarding Endpoint** — paste your Formspree URL (`https://formspree.io/f/xabcdef`)
+5. Click **Save Ministry Settings**.
 
-### Step C: Configure DNS at Your Registrar
-
-Log in to your domain registrar (Namecheap, GoDaddy, Squarespace/Google Domains, Cloudflare) and set the following DNS records:
-
-| Record Type | Host / Name | Value / Target | Notes |
-| :--- | :--- | :--- | :--- |
-| **A Record** | `@` (or leave blank) | `76.76.21.21` *(Vercel)* <br> or `75.2.60.5` *(Netlify)* | Points root domain |
-| **CNAME Record** | `www` | `cname.vercel-dns.com` *(Vercel)* <br> or `your-app.netlify.app` *(Netlify)* | Points `www` subdomain |
-
----
-
-### Step D: Automatic Free SSL (HTTPS)
-- Within **2–5 minutes** of updating DNS records, Vercel/Netlify automatically provisions a free **Let's Encrypt SSL certificate**.
-- Your domain will automatically enforce secure `https://` traffic with a green padlock.
+From this point on, every Contact and Newsletter form submission is delivered to your inbox. ✅
 
 ---
 
-## 📦 3. CMS Backup & Data Maintenance
+## Phase 5 — Connect Your Custom Domain
 
-- **Live LocalStorage Persistence**: Sermons, daily verses, preachers, and events persist inside the client browser.
-- **Cross-Tab Synchronization**: Any changes made in *The Steward* update all open visitor browser tabs instantly.
-- **1-Click JSON Backup**: Inside *The Steward* under **Export & Backup**, click **Export Full CMS JSON** to download a complete safety backup of all sermons, preachers, verses, and events.
+> You need a domain registered somewhere (Namecheap, GoDaddy, Google Domains, Cloudflare, etc.)
+
+### Step 1 — Add the domain in your hosting dashboard
+
+**Vercel**: Project → **Settings → Domains → Add**
+**Netlify**: Site → **Domain management → Add custom domain**
+
+Type your domain (e.g. `2minutesermon.org`) and the `www` version.
 
 ---
 
-## 📧 4. Contact & Newsletter Email Setup (Option A: Formspree / Web3Forms)
+### Step 2 — Update DNS at your domain registrar
 
-Static web applications (hosted on Vercel, Netlify, or Cloudflare) use lightweight serverless email forwarders to deliver contact messages and newsletter notifications straight to your inbox without requiring a custom server.
+Log in to wherever you bought your domain. Find **DNS settings** and add these two records:
 
-### Setup Instructions for Option A (Formspree)
-1. Sign up for a free account at [Formspree.io](https://formspree.io) or [Web3Forms.com](https://web3forms.com).
-2. Create a new form endpoint and set the destination email to your address (e.g. `pastor@2minutesermon.org`).
-3. Copy your Formspree Endpoint URL (e.g. `https://formspree.io/f/xzy...`).
-4. Log into **The Steward** (`/admin.html`) $\rightarrow$ open **⚙️ Ministry Settings**.
-5. Paste your endpoint URL into **Form Forwarding Service Endpoint** and set your **Recipient Email**.
-6. Click **Save Ministry Settings**.
+| Record Type | Host / Name | Value — Vercel | Value — Netlify |
+|---|---|---|---|
+| **A** | `@` | `76.76.21.21` | `75.2.60.5` |
+| **CNAME** | `www` | `cname.vercel-dns.com` | `your-site.netlify.app` |
 
-Incoming contact submissions and newsletter signups will now be delivered straight to your email inbox!
+> DNS takes 5 minutes to 24 hours to activate. Cloudflare/Namecheap usually take 5–15 min.
+
+---
+
+### Step 3 — HTTPS is automatic
+
+Once DNS confirms, Vercel/Netlify auto-installs a free **SSL certificate**. Your site gets a padlock 🔒 and all traffic is secure. Nothing to do on your end.
+
+---
+
+## Phase 6 — First Admin Checklist (Do This Once Live)
+
+Log into The Steward (`yourdomain.com/admin.html`) and go through this list:
+
+```
+[ ] 1. Log in with the password you set in VITE_ADMIN_PASSWORD
+[ ] 2. Go to ⚙️ Ministry Settings → paste Formspree URL + set recipient emails → Save
+[ ] 3. Go to Sermon Publisher → publish your first real sermon
+[ ] 4. Go to Daily Verse Scheduler → schedule this week's verses
+[ ] 5. Go to Preachers Manager → add at least one preacher profile
+[ ] 6. Go to CMS Backup → Export a JSON backup → save it to Google Drive or email to yourself
+[ ] 7. Visit your public site → submit a test Contact message
+[ ] 8. Check your inbox → you should receive the test message
+[ ] 9. Submit a test Newsletter signup → check inbox again
+```
+
+---
+
+## How Admin Access Works
+
+The Steward (`/admin.html`) uses a single shared password — no usernames or accounts needed.
+
+| Setting | Where |
+|---|---|
+| **Local dev password** | `.env` file: `VITE_ADMIN_PASSWORD=YourPassword` |
+| **Live site password** | Hosting dashboard → Environment Variables → `VITE_ADMIN_PASSWORD` |
+| **Changing the password** | Update the environment variable → redeploy → done |
+
+> ⚠️ **Never** put your password in code files or commit it to GitHub. `.env` is already in `.gitignore`.
+
+---
+
+### Upgrading to Individual Logins (Future, Optional)
+
+If you eventually need each team member to have their own login:
+
+- **Firebase Authentication** can be added in ~15 minutes.
+- Each person gets their own email + password.
+- Roles (Admin, Editor) can be assigned per user.
+- Includes password reset emails and two-factor authentication (MFA).
+
+Not needed now, but a clean upgrade path when the team grows.
+
+---
+
+## Data & Backups
+
+All content (sermons, verses, preachers, events) is stored in **your browser** (localStorage).
+
+| What this means | Impact |
+|---|---|
+| No database to manage | Zero server cost, simple setup |
+| Data lives in the admin browser | Clearing your browser deletes it — back up regularly |
+| Cross-tab sync is built in | Visitors see changes instantly without refreshing |
+
+### How to back up
+1. Log into The Steward → **CMS Backup**.
+2. Click **Export Full CMS JSON**.
+3. Save the file to Google Drive, OneDrive, or email it to yourself.
+
+**Back up every time you publish new content.**
+
+---
+
+## Quick Reference
+
+| What you need | Where to go |
+|---|---|
+| Deploy site | [vercel.com](https://vercel.com) or [netlify.com](https://netlify.com) |
+| Set up email forms | [formspree.io](https://formspree.io) (free) |
+| Set admin password | Hosting dashboard → Environment Variables → `VITE_ADMIN_PASSWORD` |
+| Access The Steward | `yourdomain.com/admin.html` |
+| Wire contact forms | The Steward → ⚙️ Ministry Settings |
+| Export a backup | The Steward → CMS Backup → Export |
+| Change domain DNS | Your registrar (GoDaddy / Namecheap / Cloudflare etc.) |
+

@@ -684,16 +684,39 @@ function setupPrayerForm() {
   });
 }
 
+// ─── SETTINGS HELPERS (reads from localStorage) ─────────────────────────────
+function getMinistrySettings() {
+  try {
+    const raw = localStorage.getItem('2ms_settings');
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return { contactEmail: '', newsletterEmail: '', endpointUrl: '' };
+}
+
+async function postToEndpoint(endpoint, payload) {
+  try {
+    await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (_) { /* fail silently — toast already shown */ }
+}
+
 // ─── NEWSLETTER FORM ─────────────────────────────────────────────────────────
 function setupNewsletterForm() {
   const form = document.getElementById('newsletterForm');
-  form?.addEventListener('submit', e => {
+  form?.addEventListener('submit', async e => {
     e.preventDefault();
     const input = form.querySelector('.newsletter-input');
     const email = input?.value.trim();
     if (!email || !email.includes('@')) {
       showToast('⚠️ Please enter a valid email address.');
       return;
+    }
+    const { endpointUrl } = getMinistrySettings();
+    if (endpointUrl) {
+      await postToEndpoint(endpointUrl, { type: 'newsletter', email, _subject: 'New Newsletter Subscriber' });
     }
     showToast('🎉 Thank you for subscribing to daily 2-Minute Sermons!');
     form.reset();
@@ -703,7 +726,7 @@ function setupNewsletterForm() {
 // ─── GENERAL CONTACT FORM ───────────────────────────────────────────────────
 function setupGeneralContactForm() {
   const form = document.getElementById('generalContactForm');
-  form?.addEventListener('submit', e => {
+  form?.addEventListener('submit', async e => {
     e.preventDefault();
     const name    = document.getElementById('contactName')?.value.trim();
     const email   = document.getElementById('contactEmail')?.value.trim();
@@ -714,8 +737,11 @@ function setupGeneralContactForm() {
       showToast('⚠️ Please fill out all required fields.');
       return;
     }
-
-    showToast(`✉️ Message sent regarding "${subject}"! Our team will respond shortly.`);
+    const { endpointUrl } = getMinistrySettings();
+    if (endpointUrl) {
+      await postToEndpoint(endpointUrl, { type: 'contact', name, email, subject, message: msg, _subject: `Contact: ${subject}` });
+    }
+    showToast(`✉️ Message sent! Our team will respond shortly.`);
     form.reset();
   });
 }

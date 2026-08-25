@@ -42,6 +42,7 @@ Opens in a dedicated browser tab with full authentication:
 | **Events Manager** | Create, manage, and publish upcoming ministry events |
 | **Prayer Inbox** | Review visitor prayer requests; mark as "Prayed For" |
 | **CMS Backup** | JSON export & validated import to restore or sync CMS data |
+| **Ministry Settings** | Set recipient emails & Formspree/Web3Forms endpoint for contact & newsletter forms |
 
 ---
 
