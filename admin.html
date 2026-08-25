@@ -73,6 +73,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           Prayer Inbox <span class="admin-badge" id="prayerBadge">2</span>
         </button>
+        <button class="admin-nav-item" data-panel="settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Ministry Settings
+        </button>
         <button class="admin-nav-item" data-panel="backup">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 15 21 21 3 21 3 15"></polyline><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           Export / Backup
@@ -428,6 +432,38 @@
           <h2 class="admin-card-title">Intercessory Prayer Inbox</h2>
           <p class="admin-card-sub">Review and respond to prayer submissions from site visitors.</p>
           <div id="adminPrayerInboxList" style="margin-top:16px;display:flex;flex-direction:column;gap:12px;"></div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Ministry Settings ── -->
+      <div class="admin-panel" id="panel-settings">
+        <div class="admin-card" style="max-width:720px;">
+          <h2 class="admin-card-title">Ministry Contact & Email Settings</h2>
+          <p class="admin-card-sub">Configure recipient email addresses and form forwarding options for contact inquiries and newsletter subscribers.</p>
+
+          <form id="adminSettingsForm" style="margin-top:24px;">
+            <div class="admin-form-group">
+              <label class="admin-form-label" for="settingContactEmail">Contact Us Recipient Email</label>
+              <input type="email" id="settingContactEmail" class="admin-input" placeholder="e.g. pastor@2minutesermon.org" required>
+              <span class="admin-form-hint">General inquiries and pastor applications will be routed to this email address.</span>
+            </div>
+
+            <div class="admin-form-group" style="margin-top:16px;">
+              <label class="admin-form-label" for="settingNewsletterEmail">Newsletter Subscriber Recipient Email</label>
+              <input type="email" id="settingNewsletterEmail" class="admin-input" placeholder="e.g. newsletter@2minutesermon.org" required>
+              <span class="admin-form-hint">Daily devotional subscriber alerts are sent to this address.</span>
+            </div>
+
+            <div class="admin-form-group" style="margin-top:16px;">
+              <label class="admin-form-label" for="settingEndpointUrl">Form Forwarding Service Endpoint (Optional)</label>
+              <input type="url" id="settingEndpointUrl" class="admin-input" placeholder="https://formspree.io/f/your_form_id">
+              <span class="admin-form-hint">If using a serverless form service (Formspree, Web3Forms, or custom API), paste your endpoint URL here.</span>
+            </div>
+
+            <button type="submit" class="admin-btn admin-btn-primary" style="padding:12px 24px;margin-top:20px;">
+              💾 Save Ministry Settings
+            </button>
+          </form>
         </div>
       </div>
 

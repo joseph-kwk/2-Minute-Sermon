@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSermonPublisher();
   setupPreachersManager();
   setupEventsManager();
+  setupSettingsPanel();
   setupBackupPanel();
   populateSelects();
 });
@@ -117,6 +118,7 @@ const PANEL_TITLES = {
   preachers:   'Preachers Manager',
   events:      'Events Manager',
   prayers:     'Prayer Inbox',
+  settings:    'Ministry Settings',
   backup:      'Export & Backup'
 };
 
@@ -671,6 +673,48 @@ function setupBackupPanel() {
       importInput.value = '';
     };
     reader.readAsText(file);
+  });
+}
+
+// ── MINISTRY SETTINGS ─────────────────────────────────────────────────────
+const SETTINGS_KEY = '2ms_settings';
+
+export function getSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return {
+    contactEmail: 'pastor@2minutesermon.org',
+    newsletterEmail: 'newsletter@2minutesermon.org',
+    endpointUrl: ''
+  };
+}
+
+export function saveSettings(s) {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (_) {}
+}
+
+function setupSettingsPanel() {
+  const contactInput    = document.getElementById('settingContactEmail');
+  const newsletterInput = document.getElementById('settingNewsletterEmail');
+  const endpointInput   = document.getElementById('settingEndpointUrl');
+  const form            = document.getElementById('adminSettingsForm');
+
+  const current = getSettings();
+  if (contactInput)    contactInput.value    = current.contactEmail || '';
+  if (newsletterInput) newsletterInput.value = current.newsletterEmail || '';
+  if (endpointInput)   endpointInput.value   = current.endpointUrl || '';
+
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const updated = {
+      contactEmail: contactInput.value.trim(),
+      newsletterEmail: newsletterInput.value.trim(),
+      endpointUrl: endpointInput.value.trim()
+    };
+    saveSettings(updated);
+    toast('💾 Ministry email & form settings saved!');
   });
 }
 
