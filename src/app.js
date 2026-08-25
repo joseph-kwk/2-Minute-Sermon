@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupExploreDropdown();
   setupMobileDrawer();
   setupHeroCtas();
+  setupPromoVideo();
   setupSermonFilters();
   setupDailyVerse();
   setupPrayerForm();
@@ -55,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupGeneralContactForm();
   setupAdminPortal();
 
-  renderFeaturedCarousel();
   renderHomeSermons();
   filterAndRenderSermons();
   renderSeasonsHub();
@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Real-time Cloud Data Sync Listeners ─────────────────────────────────
   const refreshAllUI = () => {
-    renderFeaturedCarousel();
     renderHomeSermons();
     filterAndRenderSermons();
     renderSeasonsHub();
@@ -248,34 +247,28 @@ function closeMobileDrawer() {
   document.getElementById('mobileToggleBtn')?.classList.remove('open');
 }
 
-// ─── HERO & CAROUSEL ──────────────────────────────────────────────────────────
+// ─── HERO & PROMO VIDEO ───────────────────────────────────────────────────────
+const PROMO_VIDEO_ID = 'SJFqqNvTeh8';
+
 function setupHeroCtas() {
-  document.getElementById('heroPrimaryCta')?.addEventListener('click', () => {
-    const featured = sermons().find(s => s.featured) || sermons()[0];
-    openSermonModal(featured.id);
+  document.getElementById('heroPrimaryCta')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    playPromoVideo();
   });
 
-  document.getElementById('heroSecondaryCta')?.addEventListener('click', () => switchView('daily-verse'));
-
-  const getFeatured = () => sermons().filter(s => s.featured);
-
-  document.getElementById('carouselPrev')?.addEventListener('click', () => {
-    const list = getFeatured();
-    if (!list.length) return;
-    currentCarouselIndex = (currentCarouselIndex - 1 + list.length) % list.length;
-    renderFeaturedCarousel(true);
-  });
-  document.getElementById('carouselNext')?.addEventListener('click', () => {
-    const list = getFeatured();
-    if (!list.length) return;
-    currentCarouselIndex = (currentCarouselIndex + 1) % list.length;
-    renderFeaturedCarousel(true);
+  document.getElementById('heroSecondaryCta')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const dvSection = document.querySelector('.section-daily-verse-widget');
+    if (dvSection) {
+      dvSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      switchView('daily-verse');
+    }
   });
 
-  // Re-render when sermons, events, verses, or preachers are updated in localStorage from another tab / admin
+  // Re-render when sermons, events, verses, or preachers are updated in localStorage
   window.addEventListener('storage', (e) => {
     if (e.key === '2ms_sermons') {
-      renderFeaturedCarousel();
       renderHomeSermons();
       filterAndRenderSermons();
     }
@@ -292,46 +285,39 @@ function setupHeroCtas() {
   });
 }
 
-function renderFeaturedCarousel(animate = false) {
-  const container = document.getElementById('featuredCarouselCard');
-  const featuredList = sermons().filter(s => s.featured);
-  if (!container || !featuredList.length) return;
+function setupPromoVideo() {
+  const posterWrap = document.getElementById('promoPosterWrap');
+  posterWrap?.addEventListener('click', () => playPromoVideo());
+  posterWrap?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      playPromoVideo();
+    }
+  });
+}
 
-  const s = featuredList[currentCarouselIndex];
-  if (animate) { container.style.opacity = '0'; container.style.transform = 'translateY(8px)'; }
+function playPromoVideo() {
+  const frame = document.getElementById('promoCinemaFrame');
+  const posterWrap = document.getElementById('promoPosterWrap');
+  const playerWrap = document.getElementById('promoPlayerWrap');
+  if (!playerWrap || !posterWrap) return;
 
-  container.innerHTML = `
-    <div class="carousel-media-container">
-      <img src="${s.thumbnailUrl}" alt="${s.title}" class="carousel-img" loading="lazy"
-        onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
-      <div class="carousel-play-overlay">
-        <button class="play-btn-circle" onclick="window.openSermonModal('${s.id}')" aria-label="Watch ${s.title}">
-          ${svgPlay}
-        </button>
-      </div>
-    </div>
-    <div class="carousel-card-content">
-      <div class="carousel-badges">
-        <span class="badge badge-season">${s.primarySeason}</span>
-        <span class="badge badge-scripture">${svgBook} ${s.scripture}</span>
-      </div>
-      <h3 class="carousel-title">${s.title}</h3>
-      <div class="carousel-meta">${s.preacherName} &bull; ${svgClock} ${s.duration}</div>
-      <p class="carousel-summary">${s.summary}</p>
-      <button class="btn btn-primary" onclick="window.openSermonModal('${s.id}')">
-        ${svgPlay} Watch Sermon (120s)
-      </button>
-    </div>
+  posterWrap.style.display = 'none';
+  playerWrap.hidden = false;
+  playerWrap.innerHTML = `
+    <iframe 
+      src="https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
+      title="2-Minute Sermon Promo Video" 
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+      allowfullscreen
+      class="promo-iframe">
+    </iframe>
   `;
 
-  if (animate) {
-    requestAnimationFrame(() => {
-      container.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
-      container.style.opacity = '1';
-      container.style.transform = 'translateY(0)';
-    });
-  }
+  frame?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+window.playPromoVideo = playPromoVideo;
 
 function renderHomeSermons() {
   const container = document.getElementById('homeSermonsGrid');

@@ -343,43 +343,157 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .stat-divider { width: 1px; height: 36px; background: rgba(255, 255, 255, 0.18); }
 
 /* ==========================================================================
-   FEATURED CAROUSEL
+   PROMO VIDEO CINEMA SHOWCASE
    ========================================================================== */
-.featured-carousel-card {
-  background: var(--color-white); border: 1px solid var(--color-lightgray);
-  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md);
-  display: grid; grid-template-columns: 1.2fr 1fr;
-  transition: box-shadow var(--transition-normal);
+.section-promo-video {
+  padding: 64px 0 72px;
+  background: linear-gradient(180deg, var(--color-offwhite) 0%, var(--color-white) 100%);
 }
-.featured-carousel-card:hover { box-shadow: var(--shadow-lg); }
 
-.carousel-controls { display: flex; gap: 8px; }
-.carousel-btn {
-  width: 38px; height: 38px; border-radius: var(--radius-md); border: 1.5px solid var(--color-lightgray);
-  display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: bold;
-  transition: all var(--transition-fast);
+.promo-cinema-frame {
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(198, 40, 40, 0.16), 0 8px 28px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(198, 40, 40, 0.15);
+  background: #000;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
-.carousel-btn:hover { background-color: var(--color-sermon-red); color: white; border-color: var(--color-sermon-red); transform: scale(1.05); }
-
-.carousel-media-container { position: relative; min-height: 320px; overflow: hidden; }
-.carousel-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
-.carousel-media-container:hover .carousel-img { transform: scale(1.04); }
-.carousel-play-overlay {
-  position: absolute; inset: 0; background: rgba(22, 22, 22, 0.3);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity var(--transition-normal);
+.promo-cinema-frame:hover {
+  box-shadow: 0 26px 70px rgba(198, 40, 40, 0.24), 0 10px 32px rgba(0, 0, 0, 0.16);
 }
-.carousel-media-container:hover .carousel-play-overlay { opacity: 1; }
-.featured-carousel-card .carousel-play-overlay { opacity: 1; } /* always show on featured */
 
-.play-btn-circle {
-  width: 68px; height: 68px; border-radius: 50%; background: var(--color-sermon-red);
-  color: var(--color-white); display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 24px rgba(198, 40, 40, 0.5); transition: transform var(--transition-spring), box-shadow var(--transition-fast);
+.promo-poster-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  overflow: hidden;
 }
-.play-btn-circle:hover { transform: scale(1.12); box-shadow: 0 10px 32px rgba(198, 40, 40, 0.6); }
 
-.carousel-card-content { padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+.promo-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), filter 0.6s ease;
+  filter: brightness(0.92);
+}
+.promo-poster-wrap:hover .promo-poster-img {
+  transform: scale(1.03);
+  filter: brightness(0.82);
+}
+
+.promo-poster-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.8) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28px 32px;
+  color: var(--color-white);
+}
+
+.promo-badge-top {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.promo-play-btn-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promo-play-pulse {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(198, 40, 40, 0.45);
+  animation: pulseRipple 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.promo-play-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--color-sermon-red);
+  color: var(--color-white);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(198, 40, 40, 0.5);
+  transition: transform var(--transition-spring), background var(--transition-fast), box-shadow var(--transition-fast);
+  z-index: 2;
+}
+.promo-play-btn svg {
+  width: 32px;
+  height: 32px;
+  margin-left: 4px;
+}
+.promo-poster-wrap:hover .promo-play-btn {
+  transform: scale(1.12);
+  background: var(--color-sermon-red-hover);
+  box-shadow: 0 12px 36px rgba(198, 40, 40, 0.7);
+}
+
+.promo-poster-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.promo-poster-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+}
+.promo-poster-sub {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.promo-player-wrap,
+.promo-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+@keyframes pulseRipple {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  70% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+  .promo-poster-overlay { padding: 18px 20px; }
+  .promo-play-btn { width: 58px; height: 58px; }
+  .promo-play-btn svg { width: 24px; height: 24px; }
+  .promo-poster-title { font-size: 1.15rem; }
+}
+
 .carousel-badges { display: flex; gap: 8px; margin-bottom: 14px; }
 .badge {
   padding: 4px 10px; border-radius: var(--radius-md); font-size: 0.75rem; font-weight: 700;
@@ -387,10 +501,6 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 }
 .badge-season { background: var(--color-sermon-red-light); color: var(--color-sermon-red); }
 .badge-scripture { background: #E3F2FD; color: #1565C0; }
-
-.carousel-title { font-size: 1.9rem; margin-bottom: 8px; }
-.carousel-meta { font-size: 0.9rem; color: var(--color-mediumgray); margin-bottom: 16px; }
-.carousel-summary { font-size: 1rem; color: var(--color-darkgray); margin-bottom: 28px; line-height: 1.6; }
 
 /* ==========================================================================
    DAILY VERSE CARD

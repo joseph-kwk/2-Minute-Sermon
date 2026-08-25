@@ -173,7 +173,7 @@
           <div class="hero-cta-group">
             <button class="btn btn-primary btn-lg" id="heroPrimaryCta">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              Watch Featured Sermon
+              Watch Ministry Promo (2 Min)
             </button>
             <button class="btn btn-secondary btn-lg" id="heroSecondaryCta">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -200,21 +200,39 @@
         </div>
       </section>
 
-      <!-- Featured Spotlight Carousel -->
-      <section class="section section-featured reveal-on-scroll">
+      <!-- Promo Video Cinema Showcase Section -->
+      <section class="section section-promo-video reveal-on-scroll" id="promoVideoSection">
         <div class="container">
-          <div class="section-header flex-between">
-            <div>
-              <span class="section-tag">Pastoral Spotlight</span>
-              <h2 class="section-title">Featured Sermon</h2>
-            </div>
-            <div class="carousel-controls">
-              <button class="carousel-btn" id="carouselPrev" aria-label="Previous sermon">‹</button>
-              <button class="carousel-btn" id="carouselNext" aria-label="Next sermon">›</button>
-            </div>
+          <div class="section-header text-center" style="text-align:center;margin-bottom:28px;">
+            <span class="section-tag">Ministry Introduction</span>
+            <h2 class="section-title">2-Minute Sermon — In 120 Seconds</h2>
+            <p class="section-desc">Watch our short video to experience how scripture-rooted messages from ministers worldwide are designed for your daily rhythm.</p>
           </div>
 
-          <div class="featured-carousel-card" id="featuredCarouselCard"></div>
+          <div class="promo-cinema-frame" id="promoCinemaFrame">
+            <!-- Video Thumbnail & Play Trigger -->
+            <div class="promo-poster-wrap" id="promoPosterWrap" role="button" tabindex="0" aria-label="Play 2-Minute Sermon Promo Video">
+              <img src="https://img.youtube.com/vi/SJFqqNvTeh8/maxresdefault.jpg" alt="2-Minute Sermon Promo Video" class="promo-poster-img" loading="eager"
+                onerror="this.src='https://img.youtube.com/vi/SJFqqNvTeh8/hqdefault.jpg'">
+              <div class="promo-poster-overlay">
+                <div class="promo-badge-top">
+                  <span class="live-dot"></span> Official Promo • 2:00
+                </div>
+                <div class="promo-play-btn-wrap">
+                  <div class="promo-play-pulse"></div>
+                  <button class="promo-play-btn" aria-label="Play Video with Sound">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  </button>
+                </div>
+                <div class="promo-poster-caption">
+                  <span class="promo-poster-title">Click to Play with Full Sound</span>
+                  <span class="promo-poster-sub">Short, scripture-rooted encouragement from ministers worldwide</span>
+                </div>
+              </div>
+            </div>
+            <!-- Iframe Container (populated on click for zero initial load penalty) -->
+            <div class="promo-player-wrap" id="promoPlayerWrap" hidden></div>
+          </div>
         </div>
       </section>
 
