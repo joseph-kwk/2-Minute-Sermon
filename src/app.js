@@ -4,12 +4,14 @@ import { getPreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { topics } from './data/topics.js';
 import { getDailyVerses } from './data/dailyVerse.js';
+import { getLeadershipTeam } from './data/leadership.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
-const sermons  = () => getSermons();
-const events   = () => getEvents();
-const preachers = () => getPreachers();
+const sermons    = () => getSermons();
+const events     = () => getEvents();
+const preachers  = () => getPreachers();
 const scheduledDailyVerses = () => getDailyVerses();
+const leadership = () => getLeadershipTeam();
 
 
 let activeView = 'home';
@@ -63,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPreachersHub();
   renderEventsGrid();
   renderAdminPreachersList();
+  renderAboutOrganigram();
   updateFooterSocialLinks();
 
   // ─── Real-time Cloud Data Sync Listeners ─────────────────────────────────
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTopicsHub();
     renderPreachersHub();
     renderEventsGrid();
+    renderAboutOrganigram();
     populateDropdownFilterOptions();
     setupDailyVerse();
     updateFooterSocialLinks();
@@ -83,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:preachers:updated', refreshAllUI);
   window.addEventListener('2ms:verses:updated', refreshAllUI);
   window.addEventListener('2ms:events:updated', refreshAllUI);
+  window.addEventListener('2ms:leadership:updated', refreshAllUI);
 });
 
 // ─── LOGO TITLE ANIMATION ─────────────────────────────────────────────────────
@@ -1225,6 +1230,56 @@ window.shareEvent = (titleEnc, dateEnc, locEnc) => {
     showToast('📋 Event details copied to clipboard!');
   }
 };
+
+export function renderAboutOrganigram() {
+  const container = document.getElementById('aboutOrganigramContainer');
+  if (!container) return;
+
+  const team = leadership();
+  const exec = team.filter(m => m.tierOrder === 1 || m.tier === 'Executive Leadership');
+  const advisory = team.filter(m => m.tierOrder === 2 || m.tier === 'Advisory & Governance');
+  const depts = team.filter(m => m.tierOrder === 3 || m.tier === 'Department Directors' || (!exec.includes(m) && !advisory.includes(m)));
+
+  const renderCard = (m, isExec = false) => `
+    <div class="organigram-card ${isExec ? 'executive' : ''}">
+      <img src="${m.photoUrl}" alt="${m.name}" class="organigram-card-avatar"
+        onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=160'">
+      <span class="organigram-tier-badge">${m.tier || (isExec ? 'Executive Leadership' : 'Ministry Lead')}</span>
+      <h3 class="organigram-name">${m.name}</h3>
+      <div class="organigram-role">${m.role}</div>
+      ${m.bio ? `<p class="organigram-bio">${m.bio}</p>` : ''}
+    </div>
+  `;
+
+  let html = '';
+
+  if (exec.length) {
+    html += `
+      <div class="organigram-tier tier-exec">
+        ${exec.map(m => renderCard(m, true)).join('')}
+      </div>
+    `;
+  }
+
+  if (advisory.length) {
+    html += `
+      <div class="organigram-tier tier-advisory">
+        ${advisory.map(m => renderCard(m, false)).join('')}
+      </div>
+    `;
+  }
+
+  if (depts.length) {
+    html += `
+      <div class="organigram-tier tier-depts">
+        ${depts.map(m => renderCard(m, false)).join('')}
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+window.renderAboutOrganigram = renderAboutOrganigram;
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 export function showToast(msg, duration = 4000) {

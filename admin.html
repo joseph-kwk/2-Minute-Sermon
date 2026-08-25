@@ -76,6 +76,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           Prayer Inbox <span class="admin-badge" id="prayerBadge">2</span>
         </button>
+        <button class="admin-nav-item" data-panel="leadership">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Leadership &amp; Team
+        </button>
         <button class="admin-nav-item" data-panel="settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           Ministry Settings
@@ -442,6 +446,71 @@
               <h2 class="admin-card-title" style="margin:0;">Active Events (<span id="eventsCount">0</span>)</h2>
             </div>
             <div class="admin-scroll-list" id="adminEventsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: Leadership & Team Manager ── -->
+      <div class="admin-panel" id="panel-leadership">
+        <div class="admin-panel-grid">
+          <div class="admin-card">
+            <h2 class="admin-card-title">Add Leadership Member</h2>
+            <p class="admin-card-sub">Register ministry directors, advisory council members, and department leads.</p>
+            <form id="adminAddLeadershipForm">
+              <!-- Live Photo Preview & Upload Controls -->
+              <div class="admin-form-group" style="display:flex;gap:18px;align-items:center;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
+                <div class="admin-avatar-preview-box" style="position:relative;flex-shrink:0;">
+                  <img id="adminLeaderPhotoPreview" src="https://ui-avatars.com/api/?name=Leader&background=C62828&color=fff&size=160" alt="Leader Avatar Preview" 
+                    style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid var(--admin-red);box-shadow:0 4px 14px rgba(198,40,40,0.3);background:#222;display:block;">
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <label class="admin-form-label" style="margin-bottom:6px;font-size:0.85rem;">Leader Photo</label>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <input type="file" id="newLeaderPhotoFile" accept="image/*" style="display:none;">
+                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnTriggerLeaderPhotoUpload">
+                      📁 Upload from Device
+                    </button>
+                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnDefaultLeaderAvatar">
+                      ⚡ Use Initials
+                    </button>
+                  </div>
+                  <input type="url" id="newLeaderPhoto" placeholder="Or paste image URL (https://...)" class="admin-input" style="margin-top:8px;font-size:0.8rem;padding:6px 10px;">
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Full Name with Title</label>
+                <input type="text" id="newLeaderName" placeholder="e.g. Pastor Anany Kasongo" class="admin-input" required>
+              </div>
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Role / Position Title</label>
+                  <input type="text" id="newLeaderRole" placeholder="e.g. President &amp; Executive Director" class="admin-input" required>
+                </div>
+                <div class="admin-form-group">
+                  <label>Organigram Tier / Level</label>
+                  <select id="newLeaderTier" class="admin-input" required>
+                    <option value="Executive Leadership">Executive Leadership (Tier 1)</option>
+                    <option value="Advisory &amp; Governance">Advisory &amp; Governance (Tier 2)</option>
+                    <option value="Department Directors">Department Directors (Tier 3)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="admin-form-group">
+                <label>Biography &amp; Ministry Stewardship</label>
+                <textarea id="newLeaderBio" rows="3" placeholder="Brief outline of pastoral leadership or department stewardship..." class="admin-input" required></textarea>
+              </div>
+              <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;">
+                ➕ Add to Leadership Organigram
+              </button>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h2 class="admin-card-title" style="margin:0;">Leadership &amp; Organigram Team (<span id="leadersCount">0</span>)</h2>
+            </div>
+            <div class="admin-scroll-list" id="adminLeadersList"></div>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.j
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
+import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
@@ -16,7 +17,7 @@ let pendingPrayers = [
   { id:'pr-2', name:'David K.', email:'david@example.com', urgency:'Family', msg:'Praying for guidance and peace during a difficult season.', date:'2026-08-23' }
 ];
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? '';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Steward2026!';
 let authenticated   = false;
 let activePanel     = 'dashboard';
 
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupVerseScheduler();
   setupSermonPublisher();
   setupPreachersManager();
+  setupLeadershipManager();
   setupEventsManager();
   setupSettingsPanel();
   setupBackupPanel();
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboardStats();
     renderVerseQueue();
     renderPreachersList();
+    renderLeadershipList();
     renderEventsList();
     renderPrayerInbox();
   };
@@ -49,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:preachers:updated', refreshAdminView);
   window.addEventListener('2ms:verses:updated', refreshAdminView);
   window.addEventListener('2ms:events:updated', refreshAdminView);
+  window.addEventListener('2ms:leadership:updated', refreshAdminView);
 });
 
 // ── Topbar date ──────────────────────────────────────────────────────────
@@ -660,6 +664,146 @@ function renderEventsList() {
       renderEventsList();
       renderDashboardStats();
       toast(`🗑️ "${target.title}" removed.`);
+    });
+  });
+}
+
+// ── LEADERSHIP & TEAM MANAGER ─────────────────────────────────────────────
+function setupLeadershipManager() {
+  const form = document.getElementById('adminAddLeadershipForm');
+  const nameInput = document.getElementById('newLeaderName');
+  const roleInput = document.getElementById('newLeaderRole');
+  const tierInput = document.getElementById('newLeaderTier');
+  const photoUrlInput = document.getElementById('newLeaderPhoto');
+  const photoFileInput = document.getElementById('newLeaderPhotoFile');
+  const bioInput = document.getElementById('newLeaderBio');
+  const previewImg = document.getElementById('adminLeaderPhotoPreview');
+  const btnTriggerUpload = document.getElementById('btnTriggerLeaderPhotoUpload');
+  const btnDefaultAvatar = document.getElementById('btnDefaultLeaderAvatar');
+
+  function updateLeaderAvatarPreview() {
+    const customUrl = photoUrlInput?.value.trim();
+    const name = nameInput?.value.trim() || 'Leader';
+    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
+
+    if (previewImg) {
+      if (customUrl) {
+        previewImg.src = customUrl;
+        previewImg.onerror = () => { previewImg.src = fallback; };
+      } else {
+        previewImg.src = fallback;
+      }
+    }
+  }
+
+  nameInput?.addEventListener('input', () => {
+    if (!photoUrlInput?.value) updateLeaderAvatarPreview();
+  });
+
+  photoUrlInput?.addEventListener('input', updateLeaderAvatarPreview);
+
+  btnTriggerUpload?.addEventListener('click', () => {
+    photoFileInput?.click();
+  });
+
+  photoFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast('⚠️ Image is large (>2MB). Please select a smaller photo.');
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const dataUrl = evt.target.result;
+      if (photoUrlInput) photoUrlInput.value = dataUrl;
+      if (previewImg) previewImg.src = dataUrl;
+      toast('🖼️ Leader photo uploaded!');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  btnDefaultAvatar?.addEventListener('click', () => {
+    const name = nameInput?.value.trim() || 'Leader';
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
+    if (photoUrlInput) photoUrlInput.value = avatarUrl;
+    if (previewImg) previewImg.src = avatarUrl;
+    toast('⚡ Default initials avatar set.');
+  });
+
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const name     = nameInput?.value.trim() || '';
+    const role     = roleInput?.value.trim() || '';
+    const tier     = tierInput?.value || 'Executive Leadership';
+    let photoUrl   = photoUrlInput?.value.trim();
+    const bio      = bioInput?.value.trim() || '';
+
+    let tierOrder = 1;
+    if (tier.includes('Advisory')) tierOrder = 2;
+    if (tier.includes('Department')) tierOrder = 3;
+
+    if (!photoUrl) {
+      photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
+    }
+
+    const newLeader = {
+      id: `lead-${Date.now()}`,
+      name,
+      role,
+      tier,
+      tierOrder,
+      photoUrl,
+      bio,
+      email: ''
+    };
+
+    upsertLeader(newLeader);
+    renderLeadershipList();
+    form.reset();
+    updateLeaderAvatarPreview();
+    toast(`👥 "${name}" added to ministry leadership!`);
+  });
+
+  renderLeadershipList();
+}
+
+function renderLeadershipList() {
+  const c = document.getElementById('adminLeadersList');
+  const countEl = document.getElementById('leadersCount');
+  const team = getLeadershipTeam();
+
+  if (countEl) countEl.textContent = team.length;
+  if (!c) return;
+
+  if (!team.length) {
+    c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No leaders configured. Add one!</p>';
+    return;
+  }
+
+  c.innerHTML = team.map((m) => `
+    <div class="admin-list-item" style="display:flex;align-items:center;gap:14px;padding:12px 14px;">
+      <img src="${m.photoUrl}" alt="${m.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--admin-red);"
+           onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=88'">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <strong style="color:#fff;font-size:0.92rem;">${m.name}</strong>
+          <span class="admin-tag" style="font-size:0.68rem;">${m.tier || 'Team'}</span>
+        </div>
+        <span style="font-size:0.78rem;color:var(--admin-muted);">${m.role}</span>
+      </div>
+      <button class="admin-btn admin-btn-sm admin-btn-danger" data-id="${m.id}" title="Remove from leadership">✕</button>
+    </div>
+  `).join('');
+
+  c.querySelectorAll('.admin-btn-danger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getLeadershipTeam().find(x => x.id === id);
+      if (!target) return;
+      if (!confirm(`Remove "${target.name}" from the leadership organigram?`)) return;
+      deleteLeader(id);
+      renderLeadershipList();
+      toast(`🗑️ "${target.name}" removed from leadership.`);
     });
   });
 }
