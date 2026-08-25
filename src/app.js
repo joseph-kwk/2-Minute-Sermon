@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSermonFilters();
   setupDailyVerse();
   setupPrayerForm();
+  setupNewsletterForm();
+  setupGeneralContactForm();
   setupAdminPortal();
 
   renderFeaturedCarousel();
@@ -679,6 +681,42 @@ function setupPrayerForm() {
 
   document.querySelectorAll('.copy-prayer-btn').forEach(btn => {
     btn.addEventListener('click', () => showToast('📋 Written prayer copied!'));
+  });
+}
+
+// ─── NEWSLETTER FORM ─────────────────────────────────────────────────────────
+function setupNewsletterForm() {
+  const form = document.getElementById('newsletterForm');
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const input = form.querySelector('.newsletter-input');
+    const email = input?.value.trim();
+    if (!email || !email.includes('@')) {
+      showToast('⚠️ Please enter a valid email address.');
+      return;
+    }
+    showToast('🎉 Thank you for subscribing to daily 2-Minute Sermons!');
+    form.reset();
+  });
+}
+
+// ─── GENERAL CONTACT FORM ───────────────────────────────────────────────────
+function setupGeneralContactForm() {
+  const form = document.getElementById('generalContactForm');
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const name    = document.getElementById('contactName')?.value.trim();
+    const email   = document.getElementById('contactEmail')?.value.trim();
+    const subject = document.getElementById('contactSubject')?.value;
+    const msg     = document.getElementById('contactMessage')?.value.trim();
+
+    if (!name || !email || !msg) {
+      showToast('⚠️ Please fill out all required fields.');
+      return;
+    }
+
+    showToast(`✉️ Message sent regarding "${subject}"! Our team will respond shortly.`);
+    form.reset();
   });
 }
 
