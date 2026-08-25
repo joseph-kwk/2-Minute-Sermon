@@ -108,9 +108,9 @@ Choose **one** option below. Both are free.
 3. Vercel will auto-detect Vite. Confirm:
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-4. Before clicking Deploy, add an **Environment Variable**:
-   - **Key**: `VITE_ADMIN_PASSWORD`
-   - **Value**: A password you choose (e.g. `MyChurch#2026`) — this is your Steward login.
+4. Before clicking Deploy, add your **Environment Variables**:
+   - **`VITE_ADMIN_PASSWORD`**: Password of your choice (e.g. `MyChurch#2026`) — this unlocks The Steward.
+   - Add the 6 **`VITE_FIREBASE_*`** keys from Phase 3.
 5. Click **Deploy**.
 
 Vercel gives you a free URL like `2-minute-sermon.vercel.app`. Site is live. ✅
@@ -124,32 +124,31 @@ Vercel gives you a free URL like `2-minute-sermon.vercel.app`. Site is live. ✅
 3. Confirm:
    - **Build command**: `npm run build`
    - **Publish directory**: `dist`
-4. Go to **Site configuration → Environment variables** → add:
-   - **Key**: `VITE_ADMIN_PASSWORD`
-   - **Value**: Your chosen admin password.
+4. Go to **Site configuration → Environment variables** → add `VITE_ADMIN_PASSWORD` and the 6 `VITE_FIREBASE_*` keys.
 5. Click **Deploy site**.
 
 ---
 
-## Phase 4 — Wire Up Your Email Forms in The Steward
+## Phase 5 — Wire Up Email Forms & Social Links in The Steward
 
-> **This is what makes Contact and Newsletter forms actually deliver to your inbox.**
+> **This makes Contact forms deliver to your inbox and updates your social media links.**
 > Do this once after deployment (or locally first — both work).
 
 1. Open your site → go to `/admin.html`.
-2. Log in with the password you set in Phase 3.
+2. Log in with the password you set in `VITE_ADMIN_PASSWORD`.
 3. In the left sidebar, click **⚙️ Ministry Settings**.
 4. Fill in:
    - **Contact Recipient Email** — where contact messages go (e.g. `pastor@yourchurch.org`)
    - **Newsletter Recipient Email** — where subscriber alerts go
    - **Form Forwarding Endpoint** — paste your Formspree URL (`https://formspree.io/f/xabcdef`)
+   - **Social Channel URLs** — paste your official YouTube, Facebook, Instagram, Twitter/X, and Spotify links
 5. Click **Save Ministry Settings**.
 
-From this point on, every Contact and Newsletter form submission is delivered to your inbox. ✅
+From this point on, Contact forms deliver to your inbox and footer icons link directly to your official channels. ✅
 
 ---
 
-## Phase 5 — Connect Your Custom Domain
+## Phase 6 — Connect Your Custom Domain
 
 > You need a domain registered somewhere (Namecheap, GoDaddy, Google Domains, Cloudflare, etc.)
 
@@ -181,67 +180,68 @@ Once DNS confirms, Vercel/Netlify auto-installs a free **SSL certificate**. Your
 
 ---
 
-## Phase 6 — First Admin Checklist (Do This Once Live)
+## Phase 7 — First Admin Checklist (Do This Once Live)
 
 Log into The Steward (`yourdomain.com/admin.html`) and go through this list:
 
 ```
-[ ] 1. Log in with the password you set in VITE_ADMIN_PASSWORD
-[ ] 2. Go to ⚙️ Ministry Settings → paste Formspree URL + set recipient emails → Save
+[ ] 1. Log in with the password set in VITE_ADMIN_PASSWORD
+[ ] 2. Go to ⚙️ Ministry Settings → paste Formspree URL + set recipient emails & social links → Save
 [ ] 3. Go to Sermon Publisher → publish your first real sermon
 [ ] 4. Go to Daily Verse Scheduler → schedule this week's verses
 [ ] 5. Go to Preachers Manager → add at least one preacher profile
 [ ] 6. Go to CMS Backup → Export a JSON backup → save it to Google Drive or email to yourself
 [ ] 7. Visit your public site → submit a test Contact message
-[ ] 8. Check your inbox → you should receive the test message
+[ ] 8. Check your inbox → verify test message delivery
 [ ] 9. Submit a test Newsletter signup → check inbox again
 ```
 
 ---
 
-## How Admin Access Works
+## 🔐 How Admin Auth Works
 
-The Steward (`/admin.html`) uses a single shared password — no usernames or accounts needed.
+The Steward (`/admin.html`) is protected by a secure, environment-gated passphrase — no complex database or registration required.
 
-| Setting | Where |
+| Setting | Details |
 |---|---|
-| **Local dev password** | `.env` file: `VITE_ADMIN_PASSWORD=YourPassword` |
-| **Live site password** | Hosting dashboard → Environment Variables → `VITE_ADMIN_PASSWORD` |
-| **Changing the password** | Update the environment variable → redeploy → done |
+| **Local dev password** | Defined in `.env`: `VITE_ADMIN_PASSWORD=Steward2026!` |
+| **Production password** | Set in Vercel/Netlify Environment Variables: `VITE_ADMIN_PASSWORD` |
+| **Login Experience** | Aesthetic card overlay with instant feedback & shake animation on error |
+| **Changing the password** | Update the environment variable → redeploy → instant update |
 
-> ⚠️ **Never** put your password in code files or commit it to GitHub. `.env` is already in `.gitignore`.
+> ⚠️ **Never** commit your password to GitHub. `.env` is automatically ignored by `.gitignore`.
 
 ---
 
 ### Upgrading to Individual Logins (Future, Optional)
 
-If you eventually need each team member to have their own login:
+If you eventually need each team member to have their own email + password login:
 
-- **Firebase Authentication** can be added in ~15 minutes.
-- Each person gets their own email + password.
-- Roles (Admin, Editor) can be assigned per user.
-- Includes password reset emails and two-factor authentication (MFA).
+- **Firebase Authentication** can be enabled in ~15 minutes (since Firebase is already connected!).
+- Each minister gets their own login email & password.
+- Roles (Admin, Editor, Contributor) can be assigned per user.
+- Includes password reset emails and optional two-factor authentication (MFA).
 
-Not needed now, but a clean upgrade path when the team grows.
+Not required now, but a seamless future upgrade path.
 
 ---
 
-## Data & Backups
+## 📦 Data & Cloud Backups
 
-All content (sermons, verses, preachers, events) is stored in **your browser** (localStorage).
+All content (sermons, verses, preachers, events) is synced to **Google Firebase Firestore** with instant browser caching (`localStorage`).
 
-| What this means | Impact |
+| Aspect | How it operates |
 |---|---|
-| No database to manage | Zero server cost, simple setup |
-| Data lives in the admin browser | Clearing your browser deletes it — back up regularly |
-| Cross-tab sync is built in | Visitors see changes instantly without refreshing |
+| **Cloud Persistence** | Google Firebase Firestore (100% free cloud database) |
+| **Real-time Sync** | Updates published on any device sync across the world in < 1 second |
+| **Local Cache & Fallback** | `localStorage` cache ensures instant page loads and offline resilience |
 
-### How to back up
+### How to export a manual safety backup
 1. Log into The Steward → **CMS Backup**.
 2. Click **Export Full CMS JSON**.
-3. Save the file to Google Drive, OneDrive, or email it to yourself.
+3. Save the JSON file to Google Drive, OneDrive, or email it to yourself.
 
-**Back up every time you publish new content.**
+**Recommended: Export a JSON backup whenever adding major content.**
 
 ---
 
@@ -250,10 +250,11 @@ All content (sermons, verses, preachers, events) is stored in **your browser** (
 | What you need | Where to go |
 |---|---|
 | Deploy site | [vercel.com](https://vercel.com) or [netlify.com](https://netlify.com) |
-| Set up email forms | [formspree.io](https://formspree.io) (free) |
+| Create email forms | [formspree.io](https://formspree.io) (free) |
+| Create Cloud DB | [console.firebase.google.com](https://console.firebase.google.com) (free) |
 | Set admin password | Hosting dashboard → Environment Variables → `VITE_ADMIN_PASSWORD` |
 | Access The Steward | `yourdomain.com/admin.html` |
-| Wire contact forms | The Steward → ⚙️ Ministry Settings |
-| Export a backup | The Steward → CMS Backup → Export |
-| Change domain DNS | Your registrar (GoDaddy / Namecheap / Cloudflare etc.) |
+| Wire contact & social | The Steward → ⚙️ Ministry Settings |
+| Export a JSON backup | The Steward → CMS Backup → Export |
+| Change domain DNS | Your domain registrar (GoDaddy / Namecheap / Cloudflare etc.) |
 
