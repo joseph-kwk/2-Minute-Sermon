@@ -97,35 +97,45 @@ Once added, redeploy your site. Every sermon, daily verse, preacher, and event p
 
 ## Phase 4 — Deploy the Site
 
-Choose **one** option below. Both are free.
+Choose your hosting provider below. **Firebase Hosting** is recommended because it keeps your website and Firestore cloud database together under one roof.
 
 ---
 
-### Option A — Vercel (Recommended)
+### Option A — Firebase Hosting (Recommended)
+
+> **Keep hosting and database together in your Firebase Console.**
+
+1. In your project terminal, build the production files:
+   ```bash
+   npm run build
+   ```
+2. Run the Firebase CLI deployment tool:
+   ```bash
+   npx firebase-tools login
+   npx firebase-tools init hosting
+   ```
+   - **Select project**: Use an existing project $\rightarrow$ select your `2-Minute-Sermon` project.
+   - **Public directory**: Type `dist`
+   - **Single-page app**: Type `N` (since we have `index.html` and `admin.html`)
+   - **Automatic builds with GitHub**: Type `N` (or `Y` if you want automatic GitHub Action deploys)
+3. Deploy live with one command:
+   ```bash
+   npx firebase-tools deploy --only hosting
+   ```
+
+Firebase will output your live URL (e.g. `https://2-minute-sermon.web.app` or `https://2-minute-sermon.firebaseapp.com`). Site is live! ✅
+
+---
+
+### Option B — Vercel
 
 1. Go to **[vercel.com](https://vercel.com)** → sign in with your GitHub account.
 2. Click **Add New → Project** → select **`2-Minute-Sermon`**.
-3. Vercel will auto-detect Vite. Confirm:
+3. Confirm build settings:
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-4. Before clicking Deploy, add your **Environment Variables**:
-   - **`VITE_ADMIN_PASSWORD`**: Password of your choice (e.g. `MyChurch#2026`) — this unlocks The Steward.
-   - Add the 6 **`VITE_FIREBASE_*`** keys from Phase 3.
+4. Add your Environment Variables (`VITE_ADMIN_PASSWORD` and `VITE_FIREBASE_*` keys).
 5. Click **Deploy**.
-
-Vercel gives you a free URL like `2-minute-sermon.vercel.app`. Site is live. ✅
-
----
-
-### Option B — Netlify
-
-1. Go to **[netlify.com](https://netlify.com)** → sign in with GitHub.
-2. Click **Add new site → Import an existing project** → select `2-Minute-Sermon`.
-3. Confirm:
-   - **Build command**: `npm run build`
-   - **Publish directory**: `dist`
-4. Go to **Site configuration → Environment variables** → add `VITE_ADMIN_PASSWORD` and the 6 `VITE_FIREBASE_*` keys.
-5. Click **Deploy site**.
 
 ---
 
@@ -154,8 +164,8 @@ From this point on, Contact forms deliver to your inbox and footer icons link di
 
 ### Step 1 — Add the domain in your hosting dashboard
 
-**Vercel**: Project → **Settings → Domains → Add**
-**Netlify**: Site → **Domain management → Add custom domain**
+**Firebase Hosting**: Firebase Console → **Hosting → Add custom domain** → enter `2minutesermon.org`.  
+**Vercel**: Project → **Settings → Domains → Add**.
 
 Type your domain (e.g. `2minutesermon.org`) and the `www` version.
 
@@ -163,12 +173,12 @@ Type your domain (e.g. `2minutesermon.org`) and the `www` version.
 
 ### Step 2 — Update DNS at your domain registrar
 
-Log in to wherever you bought your domain. Find **DNS settings** and add these two records:
+Log in to wherever you bought your domain. Find **DNS settings** and add the records provided by your host:
 
-| Record Type | Host / Name | Value — Vercel | Value — Netlify |
+| Record Type | Host / Name | Firebase Hosting Target | Vercel Target |
 |---|---|---|---|
-| **A** | `@` | `76.76.21.21` | `75.2.60.5` |
-| **CNAME** | `www` | `cname.vercel-dns.com` | `your-site.netlify.app` |
+| **A Record** | `@` | Provided in Firebase Console (e.g. `199.36.158.100`) | `76.76.21.21` |
+| **CNAME** | `www` | `your-app.web.app` | `cname.vercel-dns.com` |
 
 > DNS takes 5 minutes to 24 hours to activate. Cloudflare/Namecheap usually take 5–15 min.
 
