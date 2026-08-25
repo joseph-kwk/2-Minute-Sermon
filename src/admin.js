@@ -8,6 +8,7 @@ import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
+import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSermonPublisher();
   setupPreachersManager();
   setupLeadershipManager();
+  setupConversationsManager();
   setupPartnersManager();
   setupEventsManager();
   setupSettingsPanel();
@@ -45,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderVerseQueue();
     renderPreachersList();
     renderLeadershipList();
+    renderConversationsList();
     renderPartnersList();
     renderEventsList();
     renderPrayerInbox();
@@ -53,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('storage', refreshAdminView);
   window.addEventListener('2ms:sermons:updated', refreshAdminView);
   window.addEventListener('2ms:preachers:updated', refreshAdminView);
+  window.addEventListener('2ms:conversations:updated', refreshAdminView);
   window.addEventListener('2ms:verses:updated', refreshAdminView);
   window.addEventListener('2ms:events:updated', refreshAdminView);
   window.addEventListener('2ms:leadership:updated', refreshAdminView);
@@ -807,6 +811,166 @@ function renderLeadershipList() {
       deleteLeader(id);
       renderLeadershipList();
       toast(`🗑️ "${target.name}" removed from leadership.`);
+    });
+  });
+}
+
+// ── THE CONVERSATION MANAGER ──────────────────────────────────────────────
+function setupConversationsManager() {
+  const form = document.getElementById('addConversationForm');
+  const cancelBtn = document.getElementById('btnCancelConvEdit');
+  const heading = document.getElementById('convFormHeading');
+  const submitBtn = document.getElementById('btnSubmitConv');
+  const dateInput = document.getElementById('newConvDate');
+
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  cancelBtn?.addEventListener('click', () => {
+    form.reset();
+    document.getElementById('editConvId').value = '';
+    if (heading) heading.textContent = 'Publish Conversation Episode';
+    if (submitBtn) submitBtn.textContent = '➕ Publish Conversation';
+    cancelBtn.style.display = 'none';
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  });
+
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    const editId = document.getElementById('editConvId').value;
+    const title = document.getElementById('newConvTitle').value.trim();
+    const rawUrl = document.getElementById('newConvYoutubeUrl').value.trim();
+    const category = document.getElementById('newConvCategory').value;
+    const duration = document.getElementById('newConvDuration').value.trim() || '25:00';
+    const panelists = document.getElementById('newConvPanelists').value.trim();
+    const scriptures = document.getElementById('newConvScriptures').value.trim();
+    const status = document.getElementById('newConvStatus').value;
+    const publishDate = document.getElementById('newConvDate').value || new Date().toISOString().split('T')[0];
+    const summary = document.getElementById('newConvSummary').value.trim();
+    const featured = document.getElementById('newConvFeatured').checked;
+
+    const embedId = extractVideoId(rawUrl) || 'SJFqqNvTeh8';
+    const finalUrl = rawUrl.startsWith('http') ? rawUrl : `https://www.youtube.com/watch?v=${embedId}`;
+    const thumbnailUrl = ytThumb(embedId);
+
+    const episode = {
+      id: editId || `conv-${Date.now()}`,
+      title,
+      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      youtubeUrl: finalUrl,
+      youtubeEmbedId: embedId,
+      thumbnailUrl,
+      panelists,
+      category,
+      scriptures,
+      duration,
+      durationSec: durationToSeconds(duration) || 1500,
+      publishDate,
+      status,
+      featured,
+      summary
+    };
+
+    upsertConversation(episode);
+    renderConversationsList();
+    form.reset();
+    document.getElementById('editConvId').value = '';
+    if (heading) heading.textContent = 'Publish Conversation Episode';
+    if (submitBtn) submitBtn.textContent = '➕ Publish Conversation';
+    cancelBtn.style.display = 'none';
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    toast(`🎙️ Episode "${title}" saved successfully!`);
+  });
+
+  renderConversationsList();
+}
+
+function renderConversationsList() {
+  const c = document.getElementById('adminConversationsList');
+  const countEl = document.getElementById('convCount');
+  const list = getConversations();
+
+  if (countEl) countEl.textContent = list.length;
+  if (!c) return;
+
+  if (!list.length) {
+    c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No conversation episodes found.</p>';
+    return;
+  }
+
+  c.innerHTML = list.map(item => `
+    <div class="admin-list-item" style="display:flex;align-items:flex-start;gap:14px;padding:14px;">
+      <div style="position:relative;width:96px;aspect-ratio:16/9;border-radius:6px;overflow:hidden;background:#000;flex-shrink:0;">
+        <img src="${item.thumbnailUrl}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;"
+             onerror="this.src='https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=400&q=80'">
+        <span style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,0.85);color:#fff;font-size:0.65rem;font-weight:700;padding:1px 4px;border-radius:3px;">
+          ${item.duration}
+        </span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+          <strong style="color:#fff;font-size:0.92rem;">${item.title}</strong>
+          <span class="admin-tag" style="font-size:0.66rem;">${item.category}</span>
+          ${item.featured ? '<span class="admin-tag" style="font-size:0.66rem;background:rgba(217,119,6,0.2);color:#FBBF24;">⭐ Featured</span>' : ''}
+          <span class="admin-tag" style="font-size:0.66rem;background:${item.status === 'Published' ? 'rgba(46,125,50,0.2)' : 'rgba(217,119,6,0.2)'};color:${item.status === 'Published' ? '#4CAF50' : '#FBBF24'};">
+            ${item.status}
+          </span>
+        </div>
+        <div style="font-size:0.78rem;color:var(--admin-muted);margin-bottom:4px;">
+          <strong>Panelists:</strong> ${item.panelists}
+        </div>
+        ${item.scriptures ? `<div style="font-size:0.75rem;color:var(--admin-red);margin-bottom:4px;">📖 ${item.scriptures}</div>` : ''}
+        <p style="font-size:0.8rem;color:var(--admin-muted);margin:0 0 8px 0;line-height:1.4;">${item.summary.substring(0, 95)}...</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="admin-btn admin-btn-sm admin-btn-outline edit-conv-btn" data-id="${item.id}">✏️ Edit</button>
+          <a href="${item.youtubeUrl}" target="_blank" rel="noopener" class="admin-btn admin-btn-sm admin-btn-outline" style="text-decoration:none;">▶️ Watch</a>
+          <button class="admin-btn admin-btn-sm admin-btn-danger del-conv-btn" data-id="${item.id}" title="Delete Episode">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Hook Edit buttons
+  c.querySelectorAll('.edit-conv-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const item = getConversations().find(x => x.id === id);
+      if (!item) return;
+
+      document.getElementById('editConvId').value = item.id;
+      document.getElementById('newConvTitle').value = item.title;
+      document.getElementById('newConvYoutubeUrl').value = item.youtubeUrl || item.youtubeEmbedId;
+      document.getElementById('newConvCategory').value = item.category || 'Biblical Leadership';
+      document.getElementById('newConvDuration').value = item.duration || '25:00';
+      document.getElementById('newConvPanelists').value = item.panelists || '';
+      document.getElementById('newConvScriptures').value = item.scriptures || '';
+      document.getElementById('newConvStatus').value = item.status || 'Published';
+      document.getElementById('newConvDate').value = item.publishDate || '';
+      document.getElementById('newConvSummary').value = item.summary || '';
+      document.getElementById('newConvFeatured').checked = !!item.featured;
+
+      const heading = document.getElementById('convFormHeading');
+      const submitBtn = document.getElementById('btnSubmitConv');
+      const cancelBtn = document.getElementById('btnCancelConvEdit');
+      if (heading) heading.textContent = `Edit: "${item.title}"`;
+      if (submitBtn) submitBtn.textContent = '💾 Update Episode';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+      document.getElementById('addConversationForm')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // Hook Delete buttons
+  c.querySelectorAll('.del-conv-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getConversations().find(x => x.id === id);
+      if (!target) return;
+      if (!confirm(`Delete conversation episode "${target.title}"?`)) return;
+      deleteConversation(id);
+      renderConversationsList();
+      toast(`🗑️ "${target.title}" deleted.`);
     });
   });
 }

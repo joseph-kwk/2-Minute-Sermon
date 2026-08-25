@@ -6,6 +6,7 @@ import { topics } from './data/topics.js';
 import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam } from './data/leadership.js';
 import { getPartners, savePartners } from './data/partners.js';
+import { getConversations, saveConversations, extractVideoId, ytThumb } from './data/conversations.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
 const sermons    = () => getSermons();
@@ -14,6 +15,7 @@ const preachers  = () => getPreachers();
 const scheduledDailyVerses = () => getDailyVerses();
 const leadership = () => getLeadershipTeam();
 const partners   = () => getPartners();
+const conversations = () => getConversations();
 
 
 let activeView = 'home';
@@ -60,12 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
   setupGeneralContactForm();
   setupAdminPortal();
   setupAboutTabs();
+  setupConversationsView();
 
   renderHomeSermons();
   filterAndRenderSermons();
   renderSeasonsHub();
   renderTopicsHub();
   renderPreachersHub();
+  renderConversationsHub();
   renderEventsGrid();
   renderAdminPreachersList();
   renderAboutTeamRoster();
@@ -79,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSeasonsHub();
     renderTopicsHub();
     renderPreachersHub();
+    renderConversationsHub();
     renderEventsGrid();
     renderAboutTeamRoster();
     renderAboutPartners();
@@ -94,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:events:updated', refreshAllUI);
   window.addEventListener('2ms:leadership:updated', refreshAllUI);
   window.addEventListener('2ms:partners:updated', refreshAllUI);
+  window.addEventListener('2ms:conversations:updated', refreshAllUI);
 });
 
 // ─── LOGO TITLE ANIMATION ─────────────────────────────────────────────────────
@@ -185,6 +191,8 @@ function setupNavigation() {
     } else if (rawHash === 'about-partners' || rawHash === 'about/partners') {
       switchView('about');
       switchAboutTab('partners');
+    } else if (rawHash === 'conversations' || rawHash === 'the-conversation' || rawHash === 'conversation') {
+      switchView('conversations');
     } else if (document.getElementById(`view-${rawHash}`)) {
       switchView(rawHash);
     }
@@ -200,6 +208,7 @@ const VIEW_TITLES = {
   seasons: 'Liturgical Seasons Hub | 2-Minute Sermon',
   topics: 'Topics & Pastoral Themes | 2-Minute Sermon',
   preachers: 'Preachers Directory | 2-Minute Sermon',
+  conversations: 'The Conversation | 2-Minute Sermon',
   'daily-verse': "Today's Daily Verse | 2-Minute Sermon",
   prayers: 'Prayer Requests & Community Wall | 2-Minute Sermon',
   events: 'Upcoming Ministry Events | 2-Minute Sermon',
@@ -1387,6 +1396,155 @@ export function renderAboutPartners() {
   `).join('');
 }
 window.renderAboutPartners = renderAboutPartners;
+
+// ─── THE CONVERSATION HUB ─────────────────────────────────────────────────────
+let activeConvFilter = 'all';
+
+export function setupConversationsView() {
+  document.querySelectorAll('[data-conv-filter]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('[data-conv-filter]').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeConvFilter = chip.getAttribute('data-conv-filter');
+      renderConversationsHub(activeConvFilter);
+    });
+  });
+}
+
+export function renderConversationsHub(filter = 'all') {
+  const featuredContainer = document.getElementById('conversationFeaturedContainer');
+  const gridContainer = document.getElementById('conversationsGrid');
+  const countEl = document.getElementById('convTotalCount');
+  if (!gridContainer) return;
+
+  const allEpisodes = conversations();
+  if (countEl) countEl.textContent = allEpisodes.length;
+
+  // Render Spotlight / Featured Episode
+  if (featuredContainer) {
+    const featured = allEpisodes.find(c => c.featured) || allEpisodes[0];
+    if (featured) {
+      const isUpcoming = featured.status === 'Upcoming';
+      featuredContainer.innerHTML = `
+        <div class="conversation-featured-card">
+          <div class="conv-featured-media" onclick="${isUpcoming ? `showToast('📅 This panel discussion is in production and coming soon!')` : `window.open('${featured.youtubeUrl}','_blank')`}">
+            <img src="${featured.thumbnailUrl}" alt="${featured.title}" class="conv-featured-img"
+                 onerror="this.src='https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80'">
+            <div class="conv-featured-overlay">
+              <div class="conv-featured-play-btn" title="${isUpcoming ? 'Coming Soon' : 'Watch on YouTube'}">
+                ${isUpcoming ? '<span style="font-size:1.6rem;">⏳</span>' : svgPlay}
+              </div>
+            </div>
+            <div class="conv-featured-duration">${svgClock} ${featured.duration}</div>
+          </div>
+          <div class="conv-featured-body">
+            <div class="conv-badge-row">
+              <span class="conv-category-badge">${featured.category}</span>
+              <span class="conv-status-badge">${featured.status}</span>
+              <span style="font-size:0.8rem;color:var(--color-mediumgray);">Published: ${featured.publishDate}</span>
+            </div>
+            <h2 class="conv-featured-title">${featured.title}</h2>
+            <div class="conv-panelists">
+              <span>🎙️ <strong>Panelists:</strong> ${featured.panelists}</span>
+            </div>
+            ${featured.scriptures ? `<div class="conv-scriptures">📖 ${featured.scriptures}</div>` : ''}
+            <p class="conv-summary">${featured.summary}</p>
+            <div class="conv-actions">
+              ${isUpcoming ? `
+                <button class="btn btn-primary" onclick="showToast('📅 Panel scheduled for ${featured.publishDate}. Follow our channel for release alerts!')">
+                  🔔 Notify Me
+                </button>
+              ` : `
+                <a href="${featured.youtubeUrl}" target="_blank" rel="noopener" class="btn btn-primary">
+                  ${svgPlay} Watch Conversation
+                </a>
+              `}
+              <button class="btn btn-outline" onclick="window.shareConversation('${encodeURIComponent(featured.title)}','${featured.id}')">
+                ${svgShare} Share
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      featuredContainer.innerHTML = '';
+    }
+  }
+
+  // Filter episodes for grid
+  let filtered = allEpisodes;
+  if (filter === 'Upcoming') {
+    filtered = allEpisodes.filter(c => c.status === 'Upcoming');
+  } else if (filter && filter !== 'all') {
+    filtered = allEpisodes.filter(c => c.category === filter);
+  }
+
+  if (!filtered.length) {
+    gridContainer.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:48px 24px;background:#fff;border-radius:16px;border:1px solid var(--color-lightgray);">
+        <div style="font-size:2.4rem;margin-bottom:10px;">🎙️</div>
+        <h3 style="font-family:var(--font-heading);margin-bottom:6px;">No Conversations in this Category</h3>
+        <p style="color:var(--color-mediumgray);font-size:0.92rem;max-width:360px;margin:0 auto 16px;">More round-table episodes are currently in production with our preachers network.</p>
+        <button class="btn btn-outline btn-sm" onclick="document.querySelector('[data-conv-filter=\\'all\\']')?.click()">View All Episodes</button>
+      </div>`;
+    return;
+  }
+
+  gridContainer.innerHTML = filtered.map(c => {
+    const isUpcoming = c.status === 'Upcoming';
+    return `
+      <div class="conversation-card">
+        <div class="conv-card-thumb-wrap" onclick="${isUpcoming ? `showToast('📅 This panel is coming soon!')` : `window.open('${c.youtubeUrl}','_blank')`}">
+          <img src="${c.thumbnailUrl}" alt="${c.title}" class="conv-card-thumb" loading="lazy"
+               onerror="this.src='https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80'">
+          <div class="conv-card-play-overlay">
+            <div class="conv-card-play-icon">
+              ${isUpcoming ? '<span style="font-size:1.1rem;">⏳</span>' : svgPlay}
+            </div>
+          </div>
+          <span class="conv-card-duration">${c.duration}</span>
+        </div>
+        <div class="conv-card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span class="conv-category-badge" style="font-size:0.7rem;padding:2px 8px;">${c.category}</span>
+            <span class="conv-status-badge" style="font-size:0.68rem;">${c.status}</span>
+          </div>
+          <h3 class="conv-card-title">${c.title}</h3>
+          <div class="conv-card-panelists">
+            <span>👥 ${c.panelists}</span>
+          </div>
+          ${c.scriptures ? `<div class="conv-card-scripture">📖 ${c.scriptures}</div>` : ''}
+          <p class="conv-card-desc">${c.summary}</p>
+          <div class="conv-card-footer">
+            <span style="font-size:0.75rem;color:var(--color-mediumgray);">${c.publishDate}</span>
+            <div style="display:flex;gap:6px;">
+              <a href="${c.youtubeUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-primary" style="padding:6px 12px;font-size:0.8rem;">
+                ${isUpcoming ? 'Details' : 'Watch'}
+              </a>
+              <button class="btn btn-sm btn-outline" onclick="window.shareConversation('${encodeURIComponent(c.title)}','${c.id}')" title="Share Episode" style="padding:6px 10px;">
+                ${svgShare}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  observeNewCards(gridContainer);
+}
+window.renderConversationsHub = renderConversationsHub;
+
+export function shareConversation(titleEnc, id) {
+  const title = decodeURIComponent(titleEnc);
+  const url = `${window.location.origin}/#conversations`;
+  if (navigator.share) {
+    navigator.share({ title: `The Conversation: ${title}`, text: `Watch "${title}" on 2-Minute Sermon`, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(`${title} - Watch on 2-Minute Sermon: ${url}`);
+    showToast(`🔗 Link copied for "${title}"`);
+  }
+}
+window.shareConversation = shareConversation;
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 export function showToast(msg, duration = 4000) {

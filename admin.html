@@ -80,6 +80,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           Leadership &amp; Team
         </button>
+        <button class="admin-nav-item" data-panel="conversations">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          The Conversation
+        </button>
         <button class="admin-nav-item" data-panel="partners">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           Ministry Partners
@@ -515,6 +519,99 @@
               <h2 class="admin-card-title" style="margin:0;">Who is Who Roster (<span id="leadersCount">0</span>)</h2>
             </div>
             <div class="admin-scroll-list" id="adminLeadersList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: The Conversation ── -->
+      <div class="admin-panel" id="panel-conversations">
+        <div class="admin-split-grid">
+          <div class="admin-card">
+            <h2 class="admin-card-title" id="convFormHeading">Publish Conversation Episode</h2>
+            <p class="admin-card-sub">Publish round-table dialogues, theological discussions, and Q&amp;A panels with YouTube links &amp; thumbnails.</p>
+
+            <form id="addConversationForm" style="margin-top:16px;">
+              <input type="hidden" id="editConvId">
+
+              <div class="admin-form-group">
+                <label>Episode Title</label>
+                <input type="text" id="newConvTitle" placeholder="e.g. Should Women be Allowed to Preach?" class="admin-input" required>
+              </div>
+
+              <div class="admin-form-group">
+                <label>YouTube Video URL or Embed ID</label>
+                <input type="text" id="newConvYoutubeUrl" placeholder="https://www.youtube.com/watch?v=SJFqqNvTeh8" class="admin-input" required>
+                <span class="admin-form-hint">Paste full YouTube URL. Thumbnail and embed ID will be extracted automatically.</span>
+              </div>
+
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Category / Theological Focus</label>
+                  <select id="newConvCategory" class="admin-input">
+                    <option value="Biblical Leadership">Biblical Leadership</option>
+                    <option value="Spiritual Gifts">Spiritual Gifts</option>
+                    <option value="Christian Living &amp; Giving">Christian Living &amp; Giving</option>
+                    <option value="Theology &amp; Doctrine">Theology &amp; Doctrine</option>
+                    <option value="Apologetics &amp; Culture">Apologetics &amp; Culture</option>
+                    <option value="Faith &amp; Family">Faith &amp; Family</option>
+                  </select>
+                </div>
+                <div class="admin-form-group">
+                  <label>Duration</label>
+                  <input type="text" id="newConvDuration" placeholder="e.g. 28:45 or Coming Up" class="admin-input" required>
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Panelists / Guest Ministers</label>
+                <input type="text" id="newConvPanelists" placeholder="e.g. Pastor Anany Kasongo, Pastor Bellarmee Milosi &amp; Guest Ministers" class="admin-input" required>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Scripture References (Optional)</label>
+                <input type="text" id="newConvScriptures" placeholder="e.g. 1 Timothy 2:11–12, Galatians 3:28" class="admin-input">
+              </div>
+
+              <div class="admin-form-row">
+                <div class="admin-form-group">
+                  <label>Status</label>
+                  <select id="newConvStatus" class="admin-input">
+                    <option value="Published">Published (Live)</option>
+                    <option value="Upcoming">Upcoming (Coming Soon / Panel Completed)</option>
+                  </select>
+                </div>
+                <div class="admin-form-group">
+                  <label>Publish Date</label>
+                  <input type="date" id="newConvDate" class="admin-input">
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Summary / Core Questions Explored</label>
+                <textarea id="newConvSummary" rows="3" placeholder="Summary of the biblical debate, historical context, and pastoral reflections..." class="admin-input" required></textarea>
+              </div>
+
+              <div class="admin-form-group" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                <input type="checkbox" id="newConvFeatured" style="width:18px;height:18px;cursor:pointer;">
+                <label for="newConvFeatured" style="margin:0;cursor:pointer;font-weight:600;">Spotlight as Featured Episode on page header</label>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:16px;">
+                <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitConv" style="flex:1;">
+                  ➕ Publish Conversation
+                </button>
+                <button type="button" class="admin-btn admin-btn-outline" id="btnCancelConvEdit" style="display:none;">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <h2 class="admin-card-title" style="margin:0;">Episodes &amp; Panels (<span id="convCount">0</span>)</h2>
+            </div>
+            <div class="admin-scroll-list" id="adminConversationsList"></div>
           </div>
         </div>
       </div>
