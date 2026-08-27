@@ -32,6 +32,14 @@ body.seasonal-disabled #seasonal-canvas {
 }
 
 /* --------------------------------------------------------------------------
+   Seasonal Hero Background Images
+   -------------------------------------------------------------------------- */
+body[data-season="christmas"] .hero-section {
+  background-image: url('/assets/hero-bg-christmas.jpg');
+  background-position: center 40%;
+}
+
+/* --------------------------------------------------------------------------
    Atmospheric Ambient Background Glows
    -------------------------------------------------------------------------- */
 /* Christmas: Warm Hearth & Northern Sky Ambient Glow */
