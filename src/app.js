@@ -101,6 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
         counter.textContent = `${list.length}+`;
       }
     }
+    const missionSermonsEl = document.getElementById('missionSermonsCount');
+    if (missionSermonsEl) {
+      const list = sermons();
+      if (list && list.length) {
+        const count = Math.max(50, list.length);
+        missionSermonsEl.textContent = `${count}+`;
+      }
+    }
   };
   updateHeroStats();
 
