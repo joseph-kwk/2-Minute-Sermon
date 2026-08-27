@@ -1685,6 +1685,155 @@ textarea.text-input { resize: vertical; }
 }
 
 /* ==========================================================================
+   MOBILE PEAK UI/UX RESPONSIVE ENHANCEMENTS (SCOPED TO <= 768px)
+   Does NOT affect desktop layout in any way.
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Prevent horizontal page overflow */
+  html, body {
+    overflow-x: hidden !important;
+  }
+
+  /* Universal container gutter padding */
+  .container, .content-narrow, .hero-container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  /* Centered Hero Typography & Buttons */
+  .hero-title {
+    font-size: 2.1rem !important;
+    text-align: center;
+    line-height: 1.25;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem !important;
+    text-align: center;
+    max-width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 32px;
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 40px;
+  }
+
+  .hero-cta-group .btn {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Hero Stats Card Centering & Padding */
+  .hero-stats-row {
+    width: calc(100% - 16px);
+    max-width: 380px;
+    margin: 0 auto;
+    padding: 22px 20px;
+    flex-direction: column;
+    gap: 16px;
+    border-radius: 20px;
+    text-align: center;
+  }
+
+  /* About Subnav Horizontal Scroll Gutter */
+  .about-subnav-bar {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 12px;
+    gap: 8px;
+    justify-content: flex-start;
+    border-radius: 14px;
+    white-space: nowrap;
+  }
+  .about-tab-btn {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    padding: 8px 14px;
+  }
+
+  /* Impact Grid Centering & Spacing */
+  .about-impact-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 8px;
+  }
+
+  .impact-card {
+    text-align: center;
+    padding: 24px 20px;
+    border-radius: 14px;
+  }
+
+  /* Daily Verse Card Mobile Polish */
+  .daily-verse-card {
+    padding: 28px 20px !important;
+    border-radius: 16px !important;
+    text-align: center;
+  }
+
+  /* Sermon Cards & Grids */
+  .sermons-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+
+  .sermon-card {
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .sermon-card-body {
+    padding: 18px 16px;
+  }
+
+  .sermon-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Contact & Prayer Forms */
+  .contact-form-wrap, .prayer-hub-card {
+    padding: 24px 18px !important;
+    border-radius: 16px;
+  }
+
+  /* Footer Layout & Bottom Alignment */
+  .footer-bottom-container {
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .seasonal-footer-control {
+    margin: 12px auto 0 !important;
+    display: inline-flex;
+    justify-content: center;
+  }
+
+  .seasonal-scripture-banner {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+}
+
+/* ==========================================================================
    ACCESSIBILITY (a11y) & REDUCED MOTION
    ========================================================================== */
 :focus-visible {
