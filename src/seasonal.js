@@ -460,7 +460,8 @@ class SeasonalManager {
   }
 
   updateSeasonalLogos() {
-    const logos = document.querySelectorAll('.logo-img-main, .footer-logo, .admin-auth-logo, .admin-sidebar-logo');
+    // 1. Swap all logo images across main site and admin portal
+    const logos = document.querySelectorAll('.logo-img-main, .footer-logo, .admin-auth-logo, .admin-sidebar-logo, img[src*="logo.png"]');
     logos.forEach(logo => {
       if (!logo.dataset.defaultSrc) {
         logo.dataset.defaultSrc = logo.getAttribute('src');
@@ -471,6 +472,18 @@ class SeasonalManager {
         logo.src = logo.dataset.defaultSrc;
       }
     });
+
+    // 2. Swap social share meta preview cards (OpenGraph & Twitter)
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    if (ogImage) {
+      if (!ogImage.dataset.defaultContent) ogImage.dataset.defaultContent = ogImage.content;
+      ogImage.content = this.activeSeason === 'christmas' ? '/assets/logo-christmas.png' : ogImage.dataset.defaultContent;
+    }
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    if (twitterImage) {
+      if (!twitterImage.dataset.defaultContent) twitterImage.dataset.defaultContent = twitterImage.content;
+      twitterImage.content = this.activeSeason === 'christmas' ? '/assets/logo-christmas.png' : twitterImage.dataset.defaultContent;
+    }
   }
 
   updateSeasonalFavicon() {
@@ -520,12 +533,20 @@ class SeasonalManager {
     if (this.ctx && this.canvas) {
       this.ctx.clearRect(0, 0, this.width, this.height);
     }
-    const logos = document.querySelectorAll('.logo-img-main, .footer-logo, .admin-auth-logo, .admin-sidebar-logo');
+    const logos = document.querySelectorAll('.logo-img-main, .footer-logo, .admin-auth-logo, .admin-sidebar-logo, img[src*="logo.png"]');
     logos.forEach(logo => {
       if (logo.dataset.defaultSrc) {
         logo.src = logo.dataset.defaultSrc;
       }
     });
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    if (ogImage && ogImage.dataset.defaultContent) {
+      ogImage.content = ogImage.dataset.defaultContent;
+    }
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    if (twitterImage && twitterImage.dataset.defaultContent) {
+      twitterImage.content = twitterImage.dataset.defaultContent;
+    }
     const faviconLink = document.querySelector('link[rel="icon"]');
     if (faviconLink && faviconLink.dataset.defaultHref) {
       faviconLink.href = faviconLink.dataset.defaultHref;
