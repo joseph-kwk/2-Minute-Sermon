@@ -42,27 +42,49 @@ html, body { height: 100%; font-family: var(--font-body); }
 }
 .admin-auth-card {
   background: #1a1a20; border: 1px solid var(--admin-border);
-  border-radius: 20px; padding: 52px 48px;
-  width: 100%; max-width: 420px; text-align: center;
-  box-shadow: 0 40px 90px rgba(0,0,0,0.7);
+  border-radius: 22px; padding: 56px 52px;
+  width: 100%; max-width: 480px; text-align: center;
+  box-shadow: 0 40px 90px rgba(0,0,0,0.75), 0 0 30px rgba(198, 40, 40, 0.06);
   animation: slideUp 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
 }
 .admin-auth-logo-wrap {
   display: inline-block;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 /* screen: white logo bg disappears on dark card */
-.admin-auth-logo { height: 72px; width: auto; object-fit: contain; display: block; mix-blend-mode: screen; }
-.admin-auth-title { font-family: var(--font-heading); font-size: 1.9rem; color: #fff; margin-bottom: 6px; }
-.admin-auth-subtitle { font-size: 0.9rem; color: var(--admin-muted); margin-bottom: 36px; }
-.admin-auth-form { display: flex; flex-direction: column; gap: 12px; }
+.admin-auth-logo { height: 80px; width: auto; object-fit: contain; display: block; mix-blend-mode: screen; }
+.admin-auth-title { font-family: var(--font-heading); font-size: 2.1rem; color: #fff; margin-bottom: 10px; font-weight: 700; }
+.admin-auth-subtitle { font-size: 0.95rem; color: var(--admin-muted); margin-bottom: 38px; line-height: 1.5; }
+.admin-auth-form { display: flex; flex-direction: column; gap: 20px; }
 .admin-auth-input {
-  width: 100%; padding: 14px 16px; border-radius: var(--radius);
-  border: 1.5px solid var(--admin-border); background: rgba(255,255,255,0.04);
+  width: 100%; padding: 16px 20px; border-radius: 12px;
+  border: 1.5px solid var(--admin-border); background: rgba(255,255,255,0.05);
   color: #fff; font-size: 1rem; outline: none; font-family: var(--font-body);
   transition: border-color var(--transition), box-shadow var(--transition);
 }
-.admin-auth-input::placeholder { color: rgba(255,255,255,0.25); }
+.admin-auth-input:focus {
+  border-color: var(--color-sermon-red, #C62828);
+  box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.18);
+  background: rgba(255,255,255,0.07);
+}
+.admin-auth-input::placeholder { color: rgba(255,255,255,0.3); }
+.admin-auth-form .admin-btn {
+  padding: 16px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.admin-auth-hint {
+  margin-top: 32px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+}
 .admin-auth-logout-notice {
   background: rgba(46, 125, 50, 0.15);
   border: 1px solid rgba(76, 175, 80, 0.35);
