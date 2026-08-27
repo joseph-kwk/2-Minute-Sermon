@@ -1,0 +1,312 @@
+/* ==========================================================================
+   2-MINUTE SERMON — CINEMATIC SEASONAL DECORATIONS
+   Epic, Aesthetic, Non-Intrusive Seasonal Ambiance System
+   Inspired by Holiday Cinematography, Times Square Gala & Resurrection Dawn
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Canvas Overlay
+   -------------------------------------------------------------------------- */
+#seasonal-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none !important;
+  z-index: 10;
+  opacity: 0.92;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide when effects are disabled or user prefers reduced motion */
+body[data-season="off"] #seasonal-canvas,
+body.seasonal-disabled #seasonal-canvas {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #seasonal-canvas {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Atmospheric Ambient Background Glows
+   -------------------------------------------------------------------------- */
+/* Christmas: Warm Hearth & Northern Sky Ambient Glow */
+body[data-season="christmas"]::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 600px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(198, 40, 40, 0.09) 0%, rgba(217, 119, 6, 0.06) 45%, rgba(30, 58, 43, 0.03) 70%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientBreathe 8s ease-in-out infinite alternate;
+}
+
+/* New Year: Midnight Gala Champagne Ambient Glow */
+body[data-season="newyear"]::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 600px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(217, 119, 6, 0.1) 0%, rgba(245, 158, 11, 0.06) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientBreathe 7s ease-in-out infinite alternate;
+}
+
+/* Easter: Resurrection Dawn Light Rays Ambient Glow */
+body[data-season="easter"]::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 650px;
+  background: radial-gradient(ellipse at 20% 0%, rgba(245, 158, 11, 0.1) 0%, rgba(124, 58, 237, 0.07) 40%, rgba(5, 150, 105, 0.04) 70%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientBreathe 9s ease-in-out infinite alternate;
+}
+
+@keyframes ambientBreathe {
+  0% { opacity: 0.75; transform: translateY(-5px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   Seasonal Scripture Banner
+   -------------------------------------------------------------------------- */
+.seasonal-scripture-banner {
+  width: 100%;
+  padding: 8px 16px;
+  text-align: center;
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  font-size: 0.92rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--color-charcoal, #161616);
+  transition: all 0.4s ease;
+  z-index: 9;
+}
+
+body[data-season="christmas"] .seasonal-scripture-banner {
+  background: rgba(198, 40, 40, 0.08);
+  border-bottom: 1px solid rgba(198, 40, 40, 0.2);
+  color: #8B0000;
+}
+
+body[data-season="newyear"] .seasonal-scripture-banner {
+  background: rgba(217, 119, 6, 0.08);
+  border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+  color: #92400E;
+}
+
+body[data-season="easter"] .seasonal-scripture-banner {
+  background: rgba(124, 58, 237, 0.08);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  color: #5B21B6;
+}
+
+body[data-season="off"] .seasonal-scripture-banner {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Seasonal Navigation & Header Accents
+   -------------------------------------------------------------------------- */
+/* Christmas Navbar Touch */
+body[data-season="christmas"] .navbar {
+  box-shadow: 0 4px 25px rgba(198, 40, 40, 0.14);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, rgba(198,40,40,0.8), rgba(217,119,6,0.9), rgba(255,255,255,0.7), rgba(217,119,6,0.9), rgba(30,58,43,0.8)) 1;
+}
+
+/* New Year Navbar Touch */
+body[data-season="newyear"] .navbar {
+  box-shadow: 0 4px 25px rgba(217, 119, 6, 0.18);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, #D97706, #F59E0B, #FFFFFF, #F59E0B, #D97706) 1;
+}
+
+/* Easter Navbar Touch */
+body[data-season="easter"] .navbar {
+  box-shadow: 0 4px 25px rgba(124, 58, 237, 0.15);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, rgba(124,58,237,0.7), rgba(245,158,11,0.85), rgba(255,255,255,0.8), rgba(5,150,105,0.7)) 1;
+}
+
+/* --------------------------------------------------------------------------
+   Seasonal Hero Cards & Frost Glass Shimmers
+   -------------------------------------------------------------------------- */
+/* Christmas Frost & Gold Leaf Border */
+body[data-season="christmas"] .hero-card-featured {
+  position: relative;
+  box-shadow: 0 16px 48px rgba(198, 40, 40, 0.16);
+}
+body[data-season="christmas"] .hero-card-featured::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: var(--radius-lg, 14px);
+  background: linear-gradient(135deg, rgba(198, 40, 40, 0.4), rgba(217, 119, 6, 0.5), rgba(255, 255, 255, 0.6), rgba(30, 58, 43, 0.3));
+  z-index: -1;
+  pointer-events: none;
+  animation: borderGlint 6s linear infinite;
+}
+
+/* New Year Champagne Shimmer */
+body[data-season="newyear"] .hero-card-featured {
+  position: relative;
+  box-shadow: 0 16px 48px rgba(217, 119, 6, 0.2);
+}
+body[data-season="newyear"] .hero-card-featured::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: var(--radius-lg, 14px);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.5), rgba(255, 255, 255, 0.8), rgba(245, 158, 11, 0.5));
+  z-index: -1;
+  pointer-events: none;
+  animation: borderGlint 5s linear infinite;
+}
+
+/* Easter Resurrection Dawn Glow */
+body[data-season="easter"] .hero-card-featured {
+  position: relative;
+  box-shadow: 0 16px 48px rgba(124, 58, 237, 0.16);
+}
+body[data-season="easter"] .hero-card-featured::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: var(--radius-lg, 14px);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(245, 158, 11, 0.5), rgba(255, 255, 255, 0.6), rgba(5, 150, 105, 0.3));
+  z-index: -1;
+  pointer-events: none;
+  animation: borderGlint 7s linear infinite;
+}
+
+@keyframes borderGlint {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(15deg) brightness(1.2); }
+  100% { filter: hue-rotate(0deg) brightness(1); }
+}
+
+/* --------------------------------------------------------------------------
+   Audio Player Seasonal Accent Glows
+   -------------------------------------------------------------------------- */
+body[data-season="christmas"] .audio-player-card,
+body[data-season="christmas"] .audio-player-mini {
+  box-shadow: 0 8px 32px rgba(198, 40, 40, 0.18), 0 0 16px rgba(217, 119, 6, 0.12);
+}
+
+body[data-season="newyear"] .audio-player-card,
+body[data-season="newyear"] .audio-player-mini {
+  box-shadow: 0 8px 32px rgba(217, 119, 6, 0.22), 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+body[data-season="easter"] .audio-player-card,
+body[data-season="easter"] .audio-player-mini {
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.18), 0 0 16px rgba(245, 158, 11, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   Seasonal Header Badges
+   -------------------------------------------------------------------------- */
+.seasonal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-left: 14px;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  animation: seasonalPulse 3.5s infinite ease-in-out;
+  transition: all 0.3s ease;
+}
+
+body[data-season="christmas"] .seasonal-badge {
+  background: rgba(198, 40, 40, 0.12);
+  color: #C62828;
+  border: 1px solid rgba(198, 40, 40, 0.3);
+}
+
+body[data-season="newyear"] .seasonal-badge {
+  background: rgba(217, 119, 6, 0.12);
+  color: #D97706;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+body[data-season="easter"] .seasonal-badge {
+  background: rgba(124, 58, 237, 0.12);
+  color: #7C3AED;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+body[data-season="off"] .seasonal-badge {
+  display: none !important;
+}
+
+@keyframes seasonalPulse {
+  0%, 100% { opacity: 0.88; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+/* --------------------------------------------------------------------------
+   Footer Season Control Switcher
+   -------------------------------------------------------------------------- */
+.seasonal-footer-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8rem;
+  color: #A3A3A3;
+  margin-top: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.seasonal-footer-control label {
+  font-weight: 500;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.seasonal-footer-control select {
+  background: rgba(0, 0, 0, 0.5);
+  color: #FAFAFA;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.seasonal-footer-control select:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
