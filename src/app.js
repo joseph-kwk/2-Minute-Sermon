@@ -90,7 +90,19 @@ document.addEventListener('DOMContentLoaded', () => {
     populateDropdownFilterOptions();
     setupDailyVerse();
     updateFooterSocialLinks();
+    updateHeroStats();
   };
+
+  const updateHeroStats = () => {
+    const counter = document.getElementById('homePreachersCount');
+    if (counter) {
+      const list = preachers();
+      if (list && list.length) {
+        counter.textContent = `${list.length}+`;
+      }
+    }
+  };
+  updateHeroStats();
 
   window.addEventListener('storage', refreshAllUI);
   window.addEventListener('2ms:sermons:updated', refreshAllUI);
