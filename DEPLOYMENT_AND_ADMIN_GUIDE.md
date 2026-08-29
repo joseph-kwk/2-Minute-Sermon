@@ -79,8 +79,8 @@ Go to **[formspree.io](https://formspree.io)** and sign up (free).
    - `messagingSenderId`
    - `appId`
 
-### Step 4 — Add keys to Vercel / Netlify
-In your hosting provider dashboard (Vercel / Netlify) under **Environment Variables**, add these 6 keys:
+### Step 4 — Add keys to your `.env` file
+In your project's `.env` file, paste the values matching these keys:
 
 | Environment Variable Key | Description |
 |---|---|
@@ -91,7 +91,7 @@ In your hosting provider dashboard (Vercel / Netlify) under **Environment Variab
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Your Firebase `messagingSenderId` |
 | `VITE_FIREBASE_APP_ID` | Your Firebase `appId` |
 
-Once added, redeploy your site. Every sermon, daily verse, preacher, and event published in *The Steward* will now sync across the globe in real time! ✅
+> 💡 When you run `npm run build`, Vite automatically packages these configuration keys into your `dist/` folder so Firebase Hosting serves them seamlessly. Every sermon, daily verse, preacher, and event published in *The Steward* will now sync across the globe in real time! ✅
 
 ---
 

@@ -224,12 +224,10 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 
 .dropdown-menu {
   position: absolute; top: calc(100% + 10px); left: 0; width: 270px;
-  background-color: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-lightgray);
   border-radius: var(--radius-lg);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
   padding: 8px; display: none; flex-direction: column; z-index: 200;
   transform-origin: top left;
 }
