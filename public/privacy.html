@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | 2-Minute Sermon</title>
+  <meta name="description" content="Privacy Policy for 2-Minute Sermon Ministry. Learn how we handle your data when you use our site, subscribe to our newsletter, or submit prayer requests.">
+  <link rel="canonical" href="https://www.2minutesermon.org/privacy">
+  <meta name="theme-color" content="#C62828">
+  <link rel="icon" type="image/png" href="/assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #C62828;
+      --gold: #D97706;
+      --charcoal: #161616;
+      --charcoal-card: #1E1E1E;
+      --charcoal-border: #2A2A2A;
+      --medgray: #9CA3AF;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-heading: 'Playfair Display', Georgia, serif;
+    }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: var(--font-body); background-color: var(--charcoal); color: #E5E7EB; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .site-header { background: #111; border-bottom: 1px solid var(--charcoal-border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .site-header .logo-wrap { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .site-header .logo-wrap img { height: 40px; width: 40px; object-fit: contain; border-radius: 8px; }
+    .site-header .logo-name { font-family: var(--font-heading); font-size: 1.15rem; color: #fff; font-weight: 600; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--medgray); text-decoration: none; transition: color 0.15s; }
+    .back-link:hover { color: #fff; text-decoration: none; }
+    .back-link svg { width: 16px; height: 16px; }
+
+    .page-hero { background: linear-gradient(135deg, #1a0a0a 0%, #200e0e 60%, #161616 100%); border-bottom: 1px solid var(--charcoal-border); padding: 64px 24px 48px; text-align: center; }
+    .page-hero .tag { display: inline-block; background: rgba(198,40,40,0.12); color: var(--red); border: 1px solid rgba(198,40,40,0.25); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 14px; border-radius: 999px; margin-bottom: 20px; }
+    .page-hero h1 { font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); color: #fff; margin-bottom: 16px; }
+    .page-hero .subtitle { color: var(--medgray); font-size: 1rem; max-width: 560px; margin: 0 auto; }
+    .effective-date { display: inline-block; margin-top: 20px; font-size: 0.8rem; color: #6B7280; background: rgba(255,255,255,0.04); border: 1px solid var(--charcoal-border); padding: 4px 14px; border-radius: 999px; }
+
+    .content-wrap { max-width: 800px; margin: 0 auto; padding: 56px 24px 80px; }
+
+    .toc { background: var(--charcoal-card); border: 1px solid var(--charcoal-border); border-left: 3px solid var(--red); border-radius: 10px; padding: 24px 28px; margin-bottom: 48px; }
+    .toc h2 { font-family: var(--font-body); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--medgray); margin-bottom: 12px; }
+    .toc ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+    .toc li { font-size: 0.9rem; }
+    .toc a { color: #D1D5DB; }
+    .toc a:hover { color: var(--gold); }
+
+    .policy-section { margin-bottom: 48px; }
+    .policy-section h2 { font-family: var(--font-heading); font-size: 1.5rem; color: #fff; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--charcoal-border); }
+    .policy-section p { margin-bottom: 14px; color: #D1D5DB; font-size: 0.975rem; }
+    .policy-section ul, .policy-section ol { padding-left: 22px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .policy-section li { color: #D1D5DB; font-size: 0.975rem; }
+    .highlight-box { background: rgba(217,119,6,0.07); border: 1px solid rgba(217,119,6,0.2); border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-size: 0.9rem; color: #FCD34D; }
+
+    .page-footer { background: #111; border-top: 1px solid var(--charcoal-border); padding: 32px 24px; text-align: center; }
+    .page-footer p { font-size: 0.85rem; color: #6B7280; margin-bottom: 12px; }
+    .page-footer .footer-links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .page-footer .footer-links a { font-size: 0.85rem; color: var(--medgray); text-decoration: none; }
+    .page-footer .footer-links a:hover { color: #fff; }
+    .page-footer .footer-links a[aria-current] { color: #fff; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <a href="/" class="logo-wrap">
+      <img src="/assets/logo.png" alt="2-Minute Sermon">
+      <span class="logo-name">2-Minute Sermon</span>
+    </a>
+    <a href="/" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Back to Site
+    </a>
+  </header>
+
+  <section class="page-hero">
+    <span class="tag">Legal</span>
+    <h1>Privacy Policy</h1>
+    <p class="subtitle">We are committed to protecting your personal information and your right to privacy.</p>
+    <span class="effective-date">Effective Date: August 31, 2026</span>
+  </section>
+
+  <div class="content-wrap">
+
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#who-we-are">Who We Are</a></li>
+        <li><a href="#data-collected">What Information We Collect</a></li>
+        <li><a href="#how-we-use">How We Use Your Information</a></li>
+        <li><a href="#third-parties">Third-Party Services</a></li>
+        <li><a href="#data-storage">Data Storage &amp; Browser Storage</a></li>
+        <li><a href="#cookies">Cookies &amp; Tracking</a></li>
+        <li><a href="#your-rights">Your Rights</a></li>
+        <li><a href="#children">Children's Privacy</a></li>
+        <li><a href="#changes">Changes to This Policy</a></li>
+        <li><a href="#contact-us">Contact Us</a></li>
+      </ol>
+    </nav>
+
+    <section class="policy-section" id="who-we-are">
+      <h2>1. Who We Are</h2>
+      <p>2-Minute Sermon Ministry ("we," "us," or "our") operates the website at <a href="https://www.2minutesermon.org">www.2minutesermon.org</a>. We are a Christian ministry dedicated to delivering short, scripture-rooted devotional messages from ordained ministers worldwide.</p>
+      <p>This Privacy Policy describes how we collect, use, and protect your personal information when you visit our site or interact with our ministry online.</p>
+    </section>
+
+    <section class="policy-section" id="data-collected">
+      <h2>2. What Information We Collect</h2>
+      <p>We only collect information you voluntarily provide to us. We do <strong>not</strong> run advertising trackers, sell data, or build user profiles.</p>
+      <ul>
+        <li><strong>Email Address</strong> — When you subscribe to our daily devotional newsletter or register for updates.</li>
+        <li><strong>Name &amp; Email (Prayer Requests)</strong> — When you submit a prayer request. Your name is optional; email is requested for pastoral follow-up only.</li>
+        <li><strong>Name, Email &amp; Message (Contact Form)</strong> — When you use our Contact page to reach the ministry team.</li>
+        <li><strong>Administrator Content</strong> — If you are an administrator using The Steward (admin portal), we store content you create (sermons, verses, events) in our secure cloud database.</li>
+      </ul>
+    </section>
+
+    <section class="policy-section" id="how-we-use">
+      <h2>3. How We Use Your Information</h2>
+      <ul>
+        <li><strong>Newsletter email</strong> — To deliver daily devotional messages you signed up for. You may unsubscribe at any time using the link in any email.</li>
+        <li><strong>Prayer request email &amp; name</strong> — Shared confidentially with our ministerial prayer team only. We will never publish your prayer request publicly without your explicit consent.</li>
+        <li><strong>Contact form submissions</strong> — Reviewed by our ministry team to respond to your inquiry. We retain these for a reasonable period to support our response.</li>
+      </ul>
+      <div class="highlight-box">
+        🙏 We will never sell, rent, or share your personal information with any third party for commercial purposes.
+      </div>
+    </section>
+
+    <section class="policy-section" id="third-parties">
+      <h2>4. Third-Party Services</h2>
+      <p>Our website relies on a small number of trusted third-party services to operate. Each has its own privacy policy:</p>
+      <ul>
+        <li><strong>Firebase (Google)</strong> — We use Firebase Hosting to serve this website and Firebase Firestore as our content database. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy →</a></li>
+        <li><strong>Formspree</strong> — Our contact and prayer forms are processed by Formspree, which forwards submissions to our ministry email inbox. <a href="https://formspree.io/legal/privacy-policy" target="_blank" rel="noopener">Formspree Privacy Policy →</a></li>
+        <li><strong>YouTube (Google)</strong> — Sermon videos on our site are embedded from YouTube. YouTube may set cookies or collect data when you interact with video embeds. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy →</a></li>
+        <li><strong>Google Fonts</strong> — Our site loads fonts from Google Fonts, which may log your IP address as part of the font delivery request.</li>
+      </ul>
+    </section>
+
+    <section class="policy-section" id="data-storage">
+      <h2>5. Data Storage &amp; Browser Storage</h2>
+      <p>Our site uses your browser's <strong>localStorage</strong> (built-in browser storage) to remember content preferences — for example, seasonal display settings or the last daily verse you viewed. This data stays entirely on your device and is not transmitted to us.</p>
+      <p>Content administrators also use localStorage as a local cache for the CMS. All published content is securely synchronized to our Firebase cloud database.</p>
+    </section>
+
+    <section class="policy-section" id="cookies">
+      <h2>6. Cookies &amp; Tracking</h2>
+      <p>We do <strong>not</strong> use advertising cookies, analytics tracking cookies, or any third-party tracking pixels on our website.</p>
+      <p>Your browser may receive cookies related to YouTube video embeds (from Google) when you play a sermon video. These are controlled by YouTube/Google, not by us. You can manage or clear these cookies through your browser settings.</p>
+    </section>
+
+    <section class="policy-section" id="your-rights">
+      <h2>7. Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li>Request a copy of any personal data we hold about you.</li>
+        <li>Request deletion of your personal data from our records.</li>
+        <li>Unsubscribe from our newsletter at any time using the unsubscribe link in any email we send.</li>
+        <li>Ask us to stop using your prayer request for any further follow-up communications.</li>
+      </ul>
+      <p>To exercise any of these rights, please contact us using the form at <a href="/#contact">2minutesermon.org/#contact</a>.</p>
+    </section>
+
+    <section class="policy-section" id="children">
+      <h2>8. Children's Privacy</h2>
+      <p>Our website is a general ministry resource not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe your child has submitted personal information to us, please contact us immediately so we can delete it.</p>
+    </section>
+
+    <section class="policy-section" id="changes">
+      <h2>9. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. When we do, we will revise the "Effective Date" at the top of this page. We encourage you to review this policy periodically to stay informed about how we protect your information.</p>
+    </section>
+
+    <section class="policy-section" id="contact-us">
+      <h2>10. Contact Us</h2>
+      <p>If you have any questions or concerns about this Privacy Policy or your personal data, please reach out:</p>
+      <ul>
+        <li><strong>Ministry:</strong> 2-Minute Sermon Ministry</li>
+        <li><strong>Website:</strong> <a href="https://www.2minutesermon.org">www.2minutesermon.org</a></li>
+        <li><strong>Contact Form:</strong> <a href="/#contact">2minutesermon.org/#contact</a></li>
+      </ul>
+    </section>
+
+  </div>
+
+  <footer class="page-footer">
+    <p>© 2026 2-Minute Sermon Ministry. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/privacy" aria-current="page">Privacy Policy</a>
+      <a href="/terms">Terms of Use</a>
+      <a href="/sitemap">Sitemap</a>
+    </div>
+  </footer>
+
+</body>
+</html>
