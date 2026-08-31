@@ -10,11 +10,12 @@
 | Site is built and working locally | ✅ Done |
 | CMS ("The Steward") is working locally | ✅ Done |
 | Code is clean and production-ready | ✅ Done |
+| Legal pages (Privacy Policy, Terms, Sitemap) | ✅ Done |
 | GitHub repository exists | ✅ Done |
-| All changes pushed to GitHub | ⬜ To do |
-| Site deployed and live on the internet | ⬜ To do |
-| Custom domain connected | ⬜ To do |
-| Contact & newsletter emails being received | ⬜ To do |
+| All changes pushed to GitHub | ✅ Done |
+| Site deployed and live on the internet | ⬜ Awaiting domain credentials |
+| Custom domain connected | ⬜ Awaiting domain credentials |
+| Contact & newsletter emails being received | ⬜ To do after deployment |
 
 ---
 
@@ -97,7 +98,7 @@ In your project's `.env` file, paste the values matching these keys:
 
 ## Phase 4 — Deploy the Site
 
-Choose your hosting provider below. **Firebase Hosting** is recommended because it keeps your website and Firestore cloud database together under one roof.
+> **Firebase Hosting** is used for this project — it keeps your website and Firestore cloud database together under one roof, and includes a free SSL certificate automatically.
 
 ---
 
@@ -148,7 +149,7 @@ From this point on, Contact forms deliver to your inbox and footer icons link di
 
 ## Phase 6 — Connect Your Custom Domain
 
-> You need a domain registered somewhere (Namecheap, GoDaddy, Google Domains, Cloudflare, etc.)
+> **Domain registrar for this project: Squarespace** (formerly Google Domains — Google sold its domain business to Squarespace in 2023). Log in at [domains.squarespace.com](https://domains.squarespace.com) with the Google account that originally bought the domain.
 
 ### Step 1 — Add the domain in your hosting dashboard
 
@@ -199,8 +200,8 @@ The Steward (`/admin.html`) is protected by a secure, environment-gated passphra
 
 | Setting | Details |
 |---|---|
-| **Local dev password** | Defined in `.env`: `VITE_ADMIN_PASSWORD=Steward2026!` |
-| **Live site password** | Defined in `.env` or project settings: `VITE_ADMIN_PASSWORD` |
+| **Current password** | Defined in `.env`: `VITE_ADMIN_PASSWORD=sermon2026` |
+| **Live site password** | Same value must be set in `.env` before running `npm run build` |
 | **Login Experience** | Aesthetic card overlay with instant feedback & shake animation on error |
 
 > ⚠️ **Never** commit your password to GitHub. `.env` is automatically ignored by `.gitignore`.
