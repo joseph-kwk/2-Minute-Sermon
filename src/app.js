@@ -778,6 +778,7 @@ function normalizeUrl(url) {
 }
 
 const DEFAULT_MINISTRY_EMAIL = 'info2minutesermon@gmail.com';
+const DEFAULT_FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkjnbzgw';
 const DEFAULT_YT_CHANNEL     = 'https://www.youtube.com/c/2MinuteSermonP';
 const DEFAULT_FB_PAGE        = 'https://www.facebook.com/2minutesermon';
 const DEFAULT_IG_PAGE        = 'https://www.instagram.com/2_minutesermon/';
@@ -794,6 +795,9 @@ function getMinistrySettings() {
       if (!parsed.newsletterEmail || parsed.newsletterEmail.includes('@2minutesermon.org')) {
         parsed.newsletterEmail = DEFAULT_MINISTRY_EMAIL;
       }
+      if (!parsed.endpointUrl) {
+        parsed.endpointUrl = DEFAULT_FORMSPREE_ENDPOINT;
+      }
       if (!parsed.youtubeUrl || parsed.youtubeUrl === 'https://youtube.com' || parsed.youtubeUrl === 'https://youtube.com/') {
         parsed.youtubeUrl = DEFAULT_YT_CHANNEL;
       }
@@ -809,7 +813,7 @@ function getMinistrySettings() {
   return {
     contactEmail: DEFAULT_MINISTRY_EMAIL,
     newsletterEmail: DEFAULT_MINISTRY_EMAIL,
-    endpointUrl: '',
+    endpointUrl: DEFAULT_FORMSPREE_ENDPOINT,
     youtubeUrl: DEFAULT_YT_CHANNEL,
     facebookUrl: DEFAULT_FB_PAGE,
     instagramUrl: DEFAULT_IG_PAGE,
