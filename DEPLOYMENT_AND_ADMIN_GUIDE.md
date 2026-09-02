@@ -15,7 +15,7 @@
 | All changes pushed to GitHub | ✅ Done |
 | Site deployed and live on Firebase Hosting | ✅ Done (`minute-sermon-d8e16.web.app`) |
 | Custom domain connected | ✅ Done (`2minutesermon.org` & `www.2minutesermon.org`) |
-| Contact & newsletter emails being received | ⬜ Ready for Formspree endpoint in The Steward |
+| Contact & newsletter emails being received | ✅ Done (Formspree endpoint active) |
 
 ---
 
