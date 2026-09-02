@@ -13,9 +13,9 @@
 | Legal pages (Privacy Policy, Terms, Sitemap) | ✅ Done |
 | GitHub repository exists | ✅ Done |
 | All changes pushed to GitHub | ✅ Done |
-| Site deployed and live on the internet | ⬜ Awaiting domain credentials |
-| Custom domain connected | ⬜ Awaiting domain credentials |
-| Contact & newsletter emails being received | ⬜ To do after deployment |
+| Site deployed and live on Firebase Hosting | ✅ Done (`minute-sermon-d8e16.web.app`) |
+| Custom domain connected | ✅ Done (`2minutesermon.org` & `www.2minutesermon.org`) |
+| Contact & newsletter emails being received | ⬜ Ready for Formspree endpoint in The Steward |
 
 ---
 
