@@ -876,7 +876,7 @@ function setupNewsletterForm() {
     if (endpointUrl) {
       await postToEndpoint(endpointUrl, { type: 'newsletter', email, _subject: 'New Newsletter Subscriber' });
     }
-    showToast('🎉 Thank you for subscribing to daily 2-Minute Sermons!');
+    showToast('🎉 Thank you for subscribing to weekly 2-Minute Sermons!');
     form.reset();
   });
 }
