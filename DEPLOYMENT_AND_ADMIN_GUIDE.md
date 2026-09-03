@@ -200,7 +200,7 @@ The Steward (`/admin.html`) is protected by a secure, environment-gated passphra
 
 | Setting | Details |
 |---|---|
-| **Current password** | Defined in `.env`: `VITE_ADMIN_PASSWORD=sermon2026` |
+| **Current password** | Defined in `.env`: `VITE_ADMIN_PASSWORD=Serm0n$26` |
 | **Live site password** | Same value must be set in `.env` before running `npm run build` |
 | **Login Experience** | Aesthetic card overlay with instant feedback & shake animation on error |
 

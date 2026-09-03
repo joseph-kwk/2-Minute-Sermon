@@ -19,7 +19,7 @@ let pendingPrayers = [
   { id:'pr-2', name:'David K.', email:'david@example.com', urgency:'Family', msg:'Praying for guidance and peace during a difficult season.', date:'2026-08-23' }
 ];
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Steward2026!';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Serm0n$26';
 let authenticated   = false;
 let activePanel     = 'dashboard';
 
