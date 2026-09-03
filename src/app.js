@@ -27,7 +27,7 @@ let pendingPrayers = [
 ];
 
 // Admin Auth
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Serm0n$26';
+const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
 let adminAuthenticated = false;
 
 // SVG helpers
@@ -940,7 +940,7 @@ function openAdminPortal() {
     const pass = (document.getElementById('adminAuthPass')?.value || '').trim();
     const errEl = document.getElementById('adminAuthError');
 
-    if (pass === ADMIN_PASSWORD || pass === 'Serm0n$26' || pass === 'sermon2026') {
+    if (VALID_PASSWORDS.includes(pass)) {
       adminAuthenticated = true;
       overlay.style.animation = 'fadeOut 0.25s ease forwards';
       setTimeout(() => { overlay.remove(); switchView('admin'); }, 250); 
