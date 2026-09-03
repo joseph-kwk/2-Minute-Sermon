@@ -14,12 +14,12 @@ import {
 } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID || ''
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCcgvBZ-xPO_84F1Xf1a7yzro1zvw42F-8',
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'minute-sermon-d8e16.firebaseapp.com',
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID || 'minute-sermon-d8e16',
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'minute-sermon-d8e16.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1038526641606',
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID || '1:1038526641606:web:64178acc20c4cc756f6ec7'
 };
 
 let app = null;
