@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAboutTeamRoster();
     renderAboutPartners();
     populateDropdownFilterOptions();
-    setupDailyVerse();
+    renderDailyVerse();
     updateFooterSocialLinks();
     updateHeroStats();
   };
@@ -657,30 +657,15 @@ window.addEventListener('keydown', e => {
 });
 
 // ─── DAILY VERSE ──────────────────────────────────────────────────────────────
-function setupDailyVerse() {
+export function renderDailyVerse() {
   const verse = getVerseForDate(getTodayDateStr());
+  if (!verse) return;
 
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setEl('dvDateDisplay', verse.publishDate);
   setEl('dvQuoteDisplay', `"${verse.verseText}"`);
   setEl('dvRefDisplay', `— ${verse.book} ${verse.chapter}:${verse.verse}`);
   setEl('dvReflectionDisplay', verse.reflection);
-
-  document.getElementById('dvListenBtn')?.addEventListener('click', () => {
-    if (!('speechSynthesis' in window)) { showToast('TTS not supported on this browser.'); return; }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(`${verse.book} chapter ${verse.chapter} verse ${verse.verse}. ${verse.verseText}`);
-    u.rate = 0.9;
-    window.speechSynthesis.speak(u);
-    showToast('🔊 Reading Today\'s Verse aloud…');
-  });
-
-  document.getElementById('dvCopyBtn')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(`"${verse.verseText}" — ${verse.book} ${verse.chapter}:${verse.verse}`);
-    showToast('📋 Verse copied to clipboard!');
-  });
-
-  document.getElementById('dvShareBtn')?.addEventListener('click', () => shareSermon(`Daily Verse: ${verse.book}`, 'daily-verse'));
 
   const full = document.getElementById('dailyVerseFullContainer');
   if (full) {
@@ -708,6 +693,44 @@ function setupDailyVerse() {
     setTimeout(() => full.querySelectorAll('.reveal-on-scroll').forEach(el => el.classList.add('revealed')), 100);
   }
 }
+window.renderDailyVerse = renderDailyVerse;
+
+export function setupDailyVerse() {
+  renderDailyVerse();
+
+  const listenBtn = document.getElementById('dvListenBtn');
+  if (listenBtn && !listenBtn.dataset.bound) {
+    listenBtn.dataset.bound = 'true';
+    listenBtn.addEventListener('click', () => {
+      const verse = getVerseForDate(getTodayDateStr());
+      if (!verse) return;
+      if (!('speechSynthesis' in window)) { showToast('TTS not supported on this browser.'); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(`${verse.book} chapter ${verse.chapter} verse ${verse.verse}. ${verse.verseText}`);
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+      showToast('🔊 Reading Today\'s Verse aloud…');
+    });
+  }
+
+  const copyBtn = document.getElementById('dvCopyBtn');
+  if (copyBtn && !copyBtn.dataset.bound) {
+    copyBtn.dataset.bound = 'true';
+    copyBtn.addEventListener('click', () => {
+      const verse = getVerseForDate(getTodayDateStr());
+      if (!verse) return;
+      navigator.clipboard.writeText(`"${verse.verseText}" — ${verse.book} ${verse.chapter}:${verse.verse}`);
+      showToast('📋 Verse copied to clipboard!');
+    });
+  }
+
+  const shareBtn = document.getElementById('dvShareBtn');
+  if (shareBtn && !shareBtn.dataset.bound) {
+    shareBtn.dataset.bound = 'true';
+    shareBtn.addEventListener('click', () => shareDailyVerse());
+  }
+}
+window.setupDailyVerse = setupDailyVerse;
 
 // ─── PRAYER FORM ──────────────────────────────────────────────────────────────
 function setupPrayerForm() {
@@ -1558,13 +1581,46 @@ export function renderConversationsHub(filter = 'all') {
 }
 window.renderConversationsHub = renderConversationsHub;
 
+export function shareDailyVerse() {
+  const verse = getVerseForDate(getTodayDateStr());
+  if (!verse) return;
+  const shareTitle = `Daily Verse: ${verse.book} ${verse.chapter}:${verse.verse}`;
+  const shareText = `📖 Today's Verse — ${verse.book} ${verse.chapter}:${verse.verse}\n\n"${verse.verseText}"\n\n🕊️ Reflection: ${verse.reflection}\n\n✨ Read and listen on 2-Minute Sermon:`;
+  const url = `${window.location.origin}/#daily-verse`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: shareTitle,
+      text: `${shareText}\n${url}`,
+      url: url
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(`${shareText}\n${url}`);
+    showToast('🔗 Daily Verse link & scripture copied to clipboard!');
+  }
+}
+window.shareDailyVerse = shareDailyVerse;
+
 export function shareConversation(titleEnc, id) {
   const title = decodeURIComponent(titleEnc);
+  const convList = conversations() || [];
+  const c = convList.find(item => String(item.id) === String(id) || item.title === title);
   const url = `${window.location.origin}/#conversations`;
+
+  let shareText = `💬 The Conversation: "${title}" on 2-Minute Sermon`;
+  if (c) {
+    const panelistsStr = Array.isArray(c.panelists) ? c.panelists.join(', ') : (c.panelists || 'Pastoral Panel');
+    shareText = `💬 The Conversation: "${c.title}"\n👥 Panelists: ${panelistsStr}\n🕊️ Watch here:`;
+  }
+
   if (navigator.share) {
-    navigator.share({ title: `The Conversation: ${title}`, text: `Watch "${title}" on 2-Minute Sermon`, url }).catch(() => {});
+    navigator.share({
+      title: `The Conversation: ${title}`,
+      text: `${shareText}\n${url}`,
+      url: url
+    }).catch(() => {});
   } else {
-    navigator.clipboard.writeText(`${title} - Watch on 2-Minute Sermon: ${url}`);
+    navigator.clipboard.writeText(`${shareText}\n${url}`);
     showToast(`🔗 Link copied for "${title}"`);
   }
 }
@@ -1586,11 +1642,23 @@ export function showToast(msg, duration = 4000) {
 window.showToast = showToast;
 
 export function shareSermon(title, id) {
+  const sermonList = sermons() || [];
+  const s = sermonList.find(item => String(item.id) === String(id));
   const url = `${window.location.origin}/#sermon-${id}`;
+
+  let shareText = `🎙️ Watch "${title}" on 2-Minute Sermon`;
+  if (s) {
+    shareText = `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture}\n🕊️ Experience spiritual growth in 2 minutes:`;
+  }
+
   if (navigator.share) {
-    navigator.share({ title, text: `Watch "${title}" on 2-Minute Sermon`, url }).catch(() => {});
+    navigator.share({
+      title: s ? `${s.title} | 2-Minute Sermon` : title,
+      text: `${shareText}\n${url}`,
+      url: url
+    }).catch(() => {});
   } else {
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(`${shareText}\n${url}`);
     showToast(`🔗 Link copied for "${title}"`);
   }
 }
