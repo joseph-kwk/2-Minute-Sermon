@@ -373,6 +373,7 @@ function setupHeroVideo() {
   video.muted = true;
   video.loop = true;
   video.playsInline = true;
+  video.preload = 'auto';
   video.setAttribute('playsinline', '');
   video.setAttribute('muted', '');
   video.setAttribute('aria-hidden', 'true');
@@ -388,18 +389,38 @@ function setupHeroVideo() {
     console.warn('Hero video autoplay prevented (user interaction might be needed):', err);
   });
 
+  // Performance Guard: Pause video when scrolled out of view to ensure 0% lag on rest of page
+  let videoInView = true;
+  let videoEnabled = true;
+  const videoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      videoInView = entry.isIntersecting;
+      if (videoInView && videoEnabled) {
+        if (video.paused) video.play().catch(() => {});
+      } else {
+        if (!video.paused) video.pause();
+      }
+    });
+  }, { threshold: 0.05 });
+  videoObserver.observe(heroSection);
+
+  // ─── AMBIENT GOLDEN LIGHT PARTICLES ────────────────────────
+  setupHeroParticles(heroSection, videoObserver);
+
+  // ─── SMOOTH SCROLL PARALLAX ────────────────────────────────
+  setupHeroParallax(heroSection, video);
+
   // Interactive toggle badge in bottom-right corner of hero
   const badge = document.createElement('button');
   badge.className = 'localhost-video-badge';
   badge.title = 'Click to toggle hero video background / static image';
   badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Active</span>`;
 
-  let videoEnabled = true;
   badge.addEventListener('click', () => {
     videoEnabled = !videoEnabled;
     if (videoEnabled) {
       video.style.display = 'block';
-      video.play().catch(() => {});
+      if (videoInView) video.play().catch(() => {});
       badge.classList.remove('is-paused');
       badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Active</span>`;
     } else {
@@ -411,6 +432,126 @@ function setupHeroVideo() {
   });
 
   heroSection.appendChild(badge);
+}
+
+// ─── GOLDEN SUN-MOTE CANVAS PARTICLES ─────────────────────────────────────────
+function setupHeroParticles(heroSection, sectionObserver) {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'hero-particles-canvas';
+  heroSection.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let width = (canvas.width = heroSection.offsetWidth);
+  let height = (canvas.height = heroSection.offsetHeight);
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = heroSection.offsetWidth;
+    height = canvas.height = heroSection.offsetHeight;
+  }, { passive: true });
+
+  const PARTICLE_COUNT = 36;
+  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    radius: Math.random() * 2.4 + 1.0,
+    baseAlpha: Math.random() * 0.45 + 0.25,
+    alphaSpeed: Math.random() * 0.02 + 0.01,
+    alphaOffset: Math.random() * Math.PI * 2,
+    vx: (Math.random() - 0.45) * 0.35,
+    vy: -(Math.random() * 0.45 + 0.2), // gentle upward drift
+    wobbleSpeed: Math.random() * 0.02 + 0.005,
+    wobbleAmp: Math.random() * 1.2 + 0.4,
+    color: Math.random() > 0.4 ? '251, 191, 36' : '245, 158, 11' // Amber & Gold
+  }));
+
+  let animFrameId = null;
+  let isRunning = true;
+  let time = 0;
+
+  function render() {
+    if (!isRunning) return;
+    time += 0.02;
+    ctx.clearRect(0, 0, width, height);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = particles[i];
+      p.y += p.vy;
+      p.x += p.vx + Math.sin(time * p.wobbleSpeed + p.alphaOffset) * 0.25;
+
+      // Wrap around edges seamlessly
+      if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
+      if (p.x < -10) p.x = width + 10;
+      if (p.x > width + 10) p.x = -10;
+
+      const currentAlpha = p.baseAlpha + Math.sin(time * p.alphaSpeed * 60 + p.alphaOffset) * 0.2;
+      const safeAlpha = Math.max(0.08, Math.min(0.85, currentAlpha));
+
+      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2);
+      gradient.addColorStop(0, `rgba(${p.color}, ${safeAlpha})`);
+      gradient.addColorStop(0.5, `rgba(${p.color}, ${safeAlpha * 0.5})`);
+      gradient.addColorStop(1, `rgba(${p.color}, 0)`);
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    animFrameId = requestAnimationFrame(render);
+  }
+
+  // Auto-pause particle loop when hero is off-screen for 100% smooth browsing
+  const particleObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        if (!isRunning) {
+          isRunning = true;
+          animFrameId = requestAnimationFrame(render);
+        }
+      } else {
+        isRunning = false;
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+      }
+    });
+  }, { threshold: 0.05 });
+  particleObserver.observe(heroSection);
+
+  animFrameId = requestAnimationFrame(render);
+}
+
+// ─── SMOOTH HERO SCROLL PARALLAX ─────────────────────────────────────────────
+function setupHeroParallax(heroSection, video) {
+  const container = heroSection.querySelector('.hero-container');
+  let ticking = false;
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const heroHeight = heroSection.offsetHeight;
+
+        if (scrollY <= heroHeight + 50) {
+          // Subtle downward parallax on video background (0.28x speed)
+          if (video) {
+            const videoOffset = scrollY * 0.28;
+            video.style.transform = `translate3d(-50%, calc(-50% + ${videoOffset}px), 0)`;
+          }
+
+          // Gentle fade and upward shift for hero text container
+          if (container) {
+            const textOffset = scrollY * 0.14;
+            const opacity = Math.max(0, 1 - (scrollY / (heroHeight * 0.78)));
+            container.style.transform = `translate3d(0, ${textOffset}px, 0)`;
+            container.style.opacity = opacity.toFixed(2);
+          }
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
 }
 
 function setupPromoVideo() {
