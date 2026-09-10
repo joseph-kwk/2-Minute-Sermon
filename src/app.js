@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupHeroCtas();
   setupHeroVideo();
   setupPromoVideo();
+  setupPersistentMiniPlayer();
+  setupScriptureCardGenerator();
   setupSermonFilters();
   setupDailyVerse();
   setupPrayerForm();
@@ -554,6 +556,464 @@ function setupHeroParallax(heroSection, video) {
   }, { passive: true });
 }
 
+// ─── V2: PERSISTENT FLOATING MINI-PLAYER ("Listen While You Browse") ──────────
+let currentMiniSermon = null;
+let miniPlayerAudio = null;
+let miniPlayerTimer = null;
+let isAudioPlaying = false;
+let currentPlayheadSec = 0;
+const SERMON_PLAY_DURATION = 120; // 2 minutes
+
+export function setupPersistentMiniPlayer() {
+  const player = document.getElementById('persistentMiniPlayer');
+  if (!player) return;
+
+  miniPlayerAudio = document.getElementById('miniPlayerAudio');
+  const playBtn   = document.getElementById('miniPlayerPlayBtn');
+  const rewindBtn = document.getElementById('miniPlayerRewindBtn');
+  const fwdBtn    = document.getElementById('miniPlayerForwardBtn');
+  const expandBtn = document.getElementById('miniPlayerExpandBtn');
+  const closeBtn  = document.getElementById('miniPlayerCloseBtn');
+  const trackBar  = document.getElementById('miniPlayerTrack');
+
+  // Play / Pause toggle
+  playBtn?.addEventListener('click', toggleMiniPlayerPlayback);
+
+  // Rewind 15s
+  rewindBtn?.addEventListener('click', () => {
+    seekMiniPlayer(Math.max(0, currentPlayheadSec - 15));
+  });
+
+  // Forward 15s
+  fwdBtn?.addEventListener('click', () => {
+    seekMiniPlayer(Math.min(SERMON_PLAY_DURATION, currentPlayheadSec + 15));
+  });
+
+  // Expand into Full Sermon Details Modal
+  expandBtn?.addEventListener('click', () => {
+    if (currentMiniSermon) {
+      openSermonModal(currentMiniSermon.id);
+    }
+  });
+
+  // Close Player
+  closeBtn?.addEventListener('click', () => {
+    stopMiniPlayer();
+    player.hidden = true;
+    player.classList.remove('is-visible', 'is-playing');
+  });
+
+  // Click on Scrubber Track
+  trackBar?.addEventListener('click', (e) => {
+    const rect = trackBar.getBoundingClientRect();
+    const clickRatio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    seekMiniPlayer(Math.round(clickRatio * SERMON_PLAY_DURATION));
+  });
+}
+
+function formatMinSec(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+export function playSermonInMiniPlayer(sermonId) {
+  const s = sermons().find(x => x.id === sermonId);
+  if (!s) return;
+
+  currentMiniSermon = s;
+  const player = document.getElementById('persistentMiniPlayer');
+  if (!player) return;
+
+  // Populate metadata
+  const thumb = document.getElementById('miniPlayerThumb');
+  if (thumb) {
+    thumb.src = s.thumbnailUrl || '/assets/logo.png';
+    thumb.onerror = () => { thumb.src = '/assets/logo.png'; };
+  }
+  const title = document.getElementById('miniPlayerTitle');
+  if (title) title.textContent = s.title;
+
+  const preacher = document.getElementById('miniPlayerPreacher');
+  if (preacher) preacher.textContent = `${s.preacherName} • ${s.scripture}`;
+
+  const badge = document.getElementById('miniPlayerBadge');
+  if (badge) badge.textContent = `🎧 ${s.primarySeason.toUpperCase()}`;
+
+  const durTag = document.getElementById('miniPlayerDuration');
+  if (durTag) durTag.textContent = s.duration || '2:00';
+
+  const totalTime = document.getElementById('miniPlayerTotalTime');
+  if (totalTime) totalTime.textContent = s.duration || '2:00';
+
+  // Reset playhead
+  currentPlayheadSec = 0;
+  updateMiniPlayerUI();
+
+  // Show player with smooth entrance
+  player.hidden = false;
+  requestAnimationFrame(() => {
+    player.classList.add('is-visible');
+  });
+
+  startMiniPlayerPlayback();
+  showToast(`🎧 Now Playing: ${s.title}`);
+}
+window.playSermonInMiniPlayer = playSermonInMiniPlayer;
+
+function startMiniPlayerPlayback() {
+  isAudioPlaying = true;
+  const player = document.getElementById('persistentMiniPlayer');
+  player?.classList.add('is-playing');
+
+  const playBtn = document.getElementById('miniPlayerPlayBtn');
+  if (playBtn) {
+    playBtn.querySelector('.mini-icon-play').style.display = 'none';
+    playBtn.querySelector('.mini-icon-pause').style.display = 'block';
+  }
+
+  // Play audio track if provided, or synthetic calming devotion audio tone
+  if (miniPlayerAudio && currentMiniSermon?.audioUrl) {
+    miniPlayerAudio.src = currentMiniSermon.audioUrl;
+    miniPlayerAudio.play().catch(() => {});
+  }
+
+  clearInterval(miniPlayerTimer);
+  miniPlayerTimer = setInterval(() => {
+    if (isAudioPlaying) {
+      currentPlayheadSec += 1;
+      if (currentPlayheadSec >= SERMON_PLAY_DURATION) {
+        currentPlayheadSec = SERMON_PLAY_DURATION;
+        pauseMiniPlayerPlayback();
+      }
+      updateMiniPlayerUI();
+    }
+  }, 1000);
+}
+
+function pauseMiniPlayerPlayback() {
+  isAudioPlaying = false;
+  const player = document.getElementById('persistentMiniPlayer');
+  player?.classList.remove('is-playing');
+
+  const playBtn = document.getElementById('miniPlayerPlayBtn');
+  if (playBtn) {
+    playBtn.querySelector('.mini-icon-play').style.display = 'block';
+    playBtn.querySelector('.mini-icon-pause').style.display = 'none';
+  }
+
+  if (miniPlayerAudio && !miniPlayerAudio.paused) {
+    miniPlayerAudio.pause();
+  }
+}
+
+function toggleMiniPlayerPlayback() {
+  if (isAudioPlaying) {
+    pauseMiniPlayerPlayback();
+  } else {
+    if (currentPlayheadSec >= SERMON_PLAY_DURATION) {
+      currentPlayheadSec = 0;
+    }
+    startMiniPlayerPlayback();
+  }
+}
+
+function seekMiniPlayer(targetSec) {
+  currentPlayheadSec = targetSec;
+  if (miniPlayerAudio && miniPlayerAudio.duration) {
+    miniPlayerAudio.currentTime = (targetSec / SERMON_PLAY_DURATION) * miniPlayerAudio.duration;
+  }
+  updateMiniPlayerUI();
+}
+
+function stopMiniPlayer() {
+  pauseMiniPlayerPlayback();
+  clearInterval(miniPlayerTimer);
+  currentPlayheadSec = 0;
+  currentMiniSermon = null;
+}
+
+function updateMiniPlayerUI() {
+  const curTimeEl = document.getElementById('miniPlayerCurrentTime');
+  if (curTimeEl) curTimeEl.textContent = formatMinSec(currentPlayheadSec);
+
+  const progEl = document.getElementById('miniPlayerProgress');
+  if (progEl) {
+    const pct = ((currentPlayheadSec / SERMON_PLAY_DURATION) * 100).toFixed(1);
+    progEl.style.width = `${pct}%`;
+  }
+}
+
+// ─── V2: SCRIPTURE CARD GENERATOR ("Share as Image") ──────────────────────────
+let activeCardVerse = null;
+let activeCardTheme = 'midnight';
+let activeCardRatio = 'story'; // 'story' (9:16) or 'square' (1:1)
+
+export function setupScriptureCardGenerator() {
+  const modal = document.getElementById('scriptureCardModal');
+  if (!modal) return;
+
+  // Aspect ratio switchers
+  modal.querySelectorAll('.ratio-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCardRatio = btn.getAttribute('data-ratio') || 'story';
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
+    });
+  });
+
+  // Theme switchers
+  modal.querySelectorAll('.theme-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.theme-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCardTheme = btn.getAttribute('data-theme') || 'midnight';
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
+    });
+  });
+
+  // Download High-Res PNG
+  document.getElementById('cardDownloadBtn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas || !activeCardVerse) return;
+
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeBook = (activeCardVerse.book || 'Scripture').replace(/\s+/g, '-');
+      a.href = url;
+      a.download = `2-Minute-Sermon-${safeBook}-${activeCardVerse.chapter || '1'}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 Scripture card downloaded in high resolution!');
+    }, 'image/png');
+  });
+
+  // Native Share (Mobile Instagram / WhatsApp / System Sheet)
+  document.getElementById('cardNativeShareBtn')?.addEventListener('click', async () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas || !activeCardVerse) return;
+
+    canvas.toBlob(async blob => {
+      if (!blob) return;
+      const safeBook = (activeCardVerse.book || 'Scripture').replace(/\s+/g, '-');
+      const file = new File([blob], `2ms-verse-${safeBook}.png`, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: `${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}`,
+            text: `"${activeCardVerse.verseText}" — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\nShared via 2minutesermon.org`,
+            files: [file]
+          });
+          showToast('✨ Shared successfully!');
+        } catch (err) {
+          // User dismissed share dialog
+        }
+      } else {
+        // Fallback to download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `2ms-verse-${safeBook}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('📥 Image downloaded! Share it to your Instagram or WhatsApp story.');
+      }
+    }, 'image/png');
+  });
+
+  // Copy Image to Clipboard
+  document.getElementById('cardCopyBtn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas) return;
+
+    canvas.toBlob(async blob => {
+      if (!blob) return;
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+        showToast('📋 Image copied to clipboard!');
+      } catch (err) {
+        showToast('⚠️ Direct image copy not supported on this browser. Try Download!');
+      }
+    }, 'image/png');
+  });
+
+  // Close Card Modal
+  document.getElementById('closeCardModalBtn')?.addEventListener('click', closeScriptureCardModal);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeScriptureCardModal();
+  });
+}
+
+export function openScriptureCardModal(verse) {
+  activeCardVerse = verse || getVerseForDate(getTodayDateStr());
+  if (!activeCardVerse) return;
+
+  const modal = document.getElementById('scriptureCardModal');
+  if (!modal) return;
+
+  modal.hidden = false;
+  renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
+}
+window.openScriptureCardModal = openScriptureCardModal;
+window.openScriptureCardForVerse = (verse) => openScriptureCardModal(verse);
+
+export function closeScriptureCardModal() {
+  const modal = document.getElementById('scriptureCardModal');
+  if (modal) modal.hidden = true;
+}
+window.closeScriptureCardModal = closeScriptureCardModal;
+
+// ─── CANVAS RENDERING ENGINE FOR HIGH-DPI SCRIPTURE CARDS ────────────────────
+function renderScriptureCardToCanvas(verse, theme, ratio) {
+  const canvas = document.getElementById('scriptureExportCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Dimensions
+  const isStory = ratio === 'story';
+  const width  = 1080;
+  const height = isStory ? 1920 : 1080;
+
+  canvas.width  = width;
+  canvas.height = height;
+
+  // Background Styles by Theme
+  if (theme === 'midnight') {
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#0a0c10');
+    bgGrad.addColorStop(0.5, '#121620');
+    bgGrad.addColorStop(1, '#08090d');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Warm radial aura at top
+    const aura = ctx.createRadialGradient(width / 2, height * 0.22, 10, width / 2, height * 0.22, width * 0.7);
+    aura.addColorStop(0, 'rgba(245, 158, 11, 0.16)');
+    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(0, 0, width, height);
+  } else if (theme === 'dawn') {
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, '#1e0c24');
+    bgGrad.addColorStop(0.4, '#581c3c');
+    bgGrad.addColorStop(0.75, '#9f1239');
+    bgGrad.addColorStop(1, '#d97706');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+  } else if (theme === 'parchment') {
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#faf4e8');
+    bgGrad.addColorStop(0.5, '#f5ebe0');
+    bgGrad.addColorStop(1, '#eedecb');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+  } else if (theme === 'emerald') {
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#042f2e');
+    bgGrad.addColorStop(0.5, '#064e3b');
+    bgGrad.addColorStop(1, '#022c22');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    const aura = ctx.createRadialGradient(width / 2, height * 0.45, 20, width / 2, height * 0.45, width * 0.6);
+    aura.addColorStop(0, 'rgba(52, 211, 153, 0.14)');
+    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  // Card Border Frame
+  const margin = isStory ? 72 : 60;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = theme === 'parchment' ? 'rgba(120, 53, 15, 0.22)' : 'rgba(255, 255, 255, 0.16)';
+  ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
+
+  // Top Category Pill
+  ctx.textAlign = 'center';
+  ctx.font = '600 24px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = theme === 'parchment' ? '#b45309' : '#f59e0b';
+  ctx.letterSpacing = '3px';
+  const topY = isStory ? 240 : 160;
+  ctx.fillText('• DAILY SCRIPTURE ENCOURAGEMENT •', width / 2, topY);
+
+  // Decorative Cross / Symbol
+  ctx.font = '28px -apple-system, sans-serif';
+  ctx.fillText('✝', width / 2, topY + 46);
+
+  // Scripture Quote
+  const quoteText = `"${verse.verseText}"`;
+  const maxLineWidth = width - margin * 2 - 120;
+  const quoteFontSize = isStory ? (quoteText.length > 120 ? 46 : 56) : (quoteText.length > 120 ? 42 : 50);
+  ctx.font = `italic 600 ${quoteFontSize}px "Playfair Display", Georgia, serif`;
+  ctx.fillStyle = theme === 'parchment' ? '#1c1917' : '#ffffff';
+
+  const lines = wrapCanvasText(ctx, quoteText, maxLineWidth);
+  const lineHeight = quoteFontSize * 1.5;
+  const totalTextHeight = lines.length * lineHeight;
+  let startY = (height / 2) - (totalTextHeight / 2) - 40;
+  if (!isStory) startY = (height / 2) - (totalTextHeight / 2) - 30;
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], width / 2, startY + (i * lineHeight));
+  }
+
+  // Scripture Reference
+  const refY = startY + (lines.length * lineHeight) + 60;
+  ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = theme === 'parchment' ? '#991b1b' : '#f59e0b';
+  ctx.fillText(`— ${verse.book} ${verse.chapter}:${verse.verse}`, width / 2, refY);
+
+  // Reflection snippet (if exists)
+  if (verse.reflection) {
+    ctx.font = '400 italic 26px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+    ctx.fillStyle = theme === 'parchment' ? 'rgba(41, 37, 36, 0.75)' : 'rgba(255, 255, 255, 0.75)';
+    const refLines = wrapCanvasText(ctx, `"${verse.reflection}"`, maxLineWidth - 60);
+    const refStart = refY + 54;
+    for (let j = 0; j < Math.min(3, refLines.length); j++) {
+      ctx.fillText(refLines[j], width / 2, refStart + (j * 38));
+    }
+  }
+
+  // Footer Branding
+  const footerY = isStory ? height - 160 : height - 110;
+  ctx.font = '700 24px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = theme === 'parchment' ? '#78350f' : '#ffffff';
+  ctx.fillText('2-MINUTE SERMON', width / 2, footerY);
+
+  ctx.font = '500 18px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = theme === 'parchment' ? 'rgba(120, 53, 15, 0.65)' : 'rgba(255, 255, 255, 0.55)';
+  ctx.fillText('www.2minutesermon.org • Scripture in a Few Minutes', width / 2, footerY + 30);
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const width = ctx.measureText(currentLine + ' ' + word).width;
+    if (width < maxWidth) {
+      currentLine += ' ' + word;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  lines.push(currentLine);
+  return lines;
+}
+
 function setupPromoVideo() {
   const posterWrap = document.getElementById('promoPosterWrap');
   posterWrap?.addEventListener('click', () => playPromoVideo());
@@ -613,6 +1073,9 @@ function createSermonCardHtml(s) {
         <div class="sermon-card-footer">
           <button class="btn btn-primary btn-sm" onclick="window.openSermonModal('${s.id}')">
             ${svgPlay} Watch
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen in background while you browse">
+            🎧 Listen
           </button>
           <button class="btn btn-outline btn-sm" onclick="window.shareSermon('${s.title}', '${s.id}')">
             ${svgShare} Share
@@ -799,6 +1262,9 @@ export function openSermonModal(sermonId) {
           <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           Watch on YouTube
         </a>
+        <button class="btn btn-secondary" onclick="window.playSermonInMiniPlayer('${s.id}'); window.closeSermonModal();">
+          🎧 Listen While You Browse
+        </button>
         <button class="btn btn-outline" onclick="window.shareSermon('${s.title}','${s.id}')">
           ${svgShare} Share
         </button>
@@ -933,6 +1399,15 @@ export function setupDailyVerse() {
   if (shareBtn && !shareBtn.dataset.bound) {
     shareBtn.dataset.bound = 'true';
     shareBtn.addEventListener('click', () => shareDailyVerse());
+  }
+
+  const shareImgBtn = document.getElementById('dvShareImageBtn');
+  if (shareImgBtn && !shareImgBtn.dataset.bound) {
+    shareImgBtn.dataset.bound = 'true';
+    shareImgBtn.addEventListener('click', () => {
+      const verse = getVerseForDate(getTodayDateStr());
+      if (verse) openScriptureCardModal(verse);
+    });
   }
 }
 window.setupDailyVerse = setupDailyVerse;

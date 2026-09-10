@@ -319,6 +319,10 @@
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                 Share Verse
               </button>
+              <button class="btn btn-sm btn-primary" id="dvShareImageBtn" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                Share as Image
+              </button>
             </div>
           </div>
         </div>
@@ -1109,6 +1113,142 @@
     <div class="modal-dialog modal-lg">
       <button class="modal-close-btn" id="closeSermonModalBtn" aria-label="Close modal">✕</button>
       <div class="sermon-modal-body" id="sermonModalBody"></div>
+    </div>
+  <!-- Persistent "Listen While You Browse" Floating Mini-Player -->
+  <aside class="persistent-mini-player" id="persistentMiniPlayer" hidden aria-label="Audio player for 2-Minute Sermon">
+    <div class="mini-player-bar">
+      <!-- Media Artwork & Animated Equalizer -->
+      <div class="mini-player-media-wrap">
+        <img id="miniPlayerThumb" src="/assets/logo.png" alt="Sermon Artwork" class="mini-player-thumb">
+        <div class="mini-player-equalizer" id="miniPlayerEqualizer" aria-hidden="true">
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+        </div>
+      </div>
+
+      <!-- Track Details -->
+      <div class="mini-player-details">
+        <div class="mini-player-header-row">
+          <span class="mini-player-badge" id="miniPlayerBadge">🎧 DEVOTIONAL AUDIO</span>
+          <span class="mini-player-duration-tag" id="miniPlayerDuration">2:00</span>
+        </div>
+        <div class="mini-player-title" id="miniPlayerTitle">Select a sermon to listen</div>
+        <div class="mini-player-preacher" id="miniPlayerPreacher">2-Minute Sermon Ministry</div>
+
+        <!-- Scrubber Progress Bar -->
+        <div class="mini-player-scrubber-row">
+          <span class="mini-player-time" id="miniPlayerCurrentTime">0:00</span>
+          <div class="mini-player-track" id="miniPlayerTrack" role="slider" aria-label="Audio playback progress" tabindex="0">
+            <div class="mini-player-progress" id="miniPlayerProgress"></div>
+          </div>
+          <span class="mini-player-time" id="miniPlayerTotalTime">2:00</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="mini-player-controls">
+        <button class="mini-btn" id="miniPlayerRewindBtn" title="Rewind 15 seconds" aria-label="Rewind 15 seconds">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-9-7 9-7v14z"></path><path d="M22 19l-9-7 9-7v14z"></path></svg>
+          <span class="mini-btn-label">15s</span>
+        </button>
+
+        <button class="mini-btn mini-btn-play" id="miniPlayerPlayBtn" title="Play / Pause" aria-label="Play or Pause">
+          <svg class="mini-icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg class="mini-icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+
+        <button class="mini-btn" id="miniPlayerForwardBtn" title="Forward 15 seconds" aria-label="Forward 15 seconds">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 19l9-7-9-7v14z"></path><path d="M2 19l9-7-9-7v14z"></path></svg>
+          <span class="mini-btn-label">15s</span>
+        </button>
+
+        <button class="mini-btn mini-btn-expand" id="miniPlayerExpandBtn" title="Expand Full Sermon" aria-label="Expand Full Sermon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        </button>
+
+        <button class="mini-btn mini-btn-close" id="miniPlayerCloseBtn" title="Close Player" aria-label="Close Player">✕</button>
+      </div>
+    </div>
+    <!-- Underlying audio element -->
+    <audio id="miniPlayerAudio" preload="auto"></audio>
+  </aside>
+
+  <!-- Scripture Card Generator Modal -->
+  <div class="modal-backdrop" id="scriptureCardModal" hidden>
+    <div class="modal-dialog modal-card-generator">
+      <button class="modal-close-btn" id="closeCardModalBtn" aria-label="Close modal">✕</button>
+      <div class="card-generator-wrap">
+        <div class="card-generator-header">
+          <span class="badge badge-season">✨ Share the Word</span>
+          <h2 class="card-generator-title">Create Shareable Scripture Card</h2>
+          <p class="card-generator-subtitle">Export a high-resolution image tailored for Instagram Stories, WhatsApp Status, or direct messaging.</p>
+        </div>
+
+        <div class="card-generator-body">
+          <!-- Preview Frame -->
+          <div class="card-preview-viewport">
+            <div class="card-preview-stage" id="cardPreviewStage">
+              <canvas id="scriptureExportCanvas" class="scripture-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Customization Controls -->
+          <div class="card-controls-panel">
+            <div class="control-group">
+              <label class="control-label">Aspect Ratio</label>
+              <div class="aspect-ratio-selector">
+                <button class="ratio-btn active" data-ratio="story">
+                  <span class="ratio-icon ratio-story"></span>
+                  <span>Story / Status (9:16)</span>
+                </button>
+                <button class="ratio-btn" data-ratio="square">
+                  <span class="ratio-icon ratio-square"></span>
+                  <span>Square Feed (1:1)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Card Theme &amp; Mood</label>
+              <div class="theme-palette-grid">
+                <button class="theme-pill active" data-theme="midnight" title="Midnight Sanctuary">
+                  <span class="theme-swatch swatch-midnight"></span>
+                  <span>Midnight Sanctuary</span>
+                </button>
+                <button class="theme-pill" data-theme="dawn" title="Dawn Grace">
+                  <span class="theme-swatch swatch-dawn"></span>
+                  <span>Dawn Grace</span>
+                </button>
+                <button class="theme-pill" data-theme="parchment" title="Sacred Parchment">
+                  <span class="theme-swatch swatch-parchment"></span>
+                  <span>Sacred Parchment</span>
+                </button>
+                <button class="theme-pill" data-theme="emerald" title="Living Water">
+                  <span class="theme-swatch swatch-emerald"></span>
+                  <span>Living Hope</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card-export-actions">
+              <button class="btn btn-primary btn-block" id="cardDownloadBtn">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download High-Res Image (PNG)
+              </button>
+              <button class="btn btn-secondary btn-block" id="cardNativeShareBtn">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Share to Instagram / WhatsApp
+              </button>
+              <button class="btn btn-outline btn-block" id="cardCopyBtn">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy Image to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
