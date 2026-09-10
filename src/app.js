@@ -562,7 +562,59 @@ let miniPlayerAudio = null;
 let miniPlayerTimer = null;
 let isAudioPlaying = false;
 let currentPlayheadSec = 0;
-const SERMON_PLAY_DURATION = 120; // 2 minutes
+let sermonTotalDuration = 120; // dynamically set per sermon
+
+let ambientAudioCtx = null;
+let ambientGain = null;
+let ambientOscillators = [];
+
+function startDevotionalAmbiance() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!ambientAudioCtx) ambientAudioCtx = new AudioCtx();
+    if (ambientAudioCtx.state === 'suspended') ambientAudioCtx.resume();
+
+    stopDevotionalAmbiance();
+
+    ambientGain = ambientAudioCtx.createGain();
+    ambientGain.gain.setValueAtTime(0.001, ambientAudioCtx.currentTime);
+    ambientGain.gain.exponentialRampToValueAtTime(0.06, ambientAudioCtx.currentTime + 1.2);
+
+    const filter = ambientAudioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, ambientAudioCtx.currentTime);
+
+    // Warm sacred ambient frequencies (D major meditative chords)
+    const freqs = [146.83, 220.00, 293.66];
+    ambientOscillators = freqs.map(f => {
+      const osc = ambientAudioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, ambientAudioCtx.currentTime);
+      osc.connect(filter);
+      osc.start();
+      return osc;
+    });
+
+    filter.connect(ambientGain);
+    ambientGain.connect(ambientAudioCtx.destination);
+  } catch (_) {}
+}
+
+function stopDevotionalAmbiance() {
+  if (ambientGain && ambientAudioCtx) {
+    try {
+      ambientGain.gain.exponentialRampToValueAtTime(0.0001, ambientAudioCtx.currentTime + 0.4);
+      setTimeout(() => {
+        ambientOscillators.forEach(o => { try { o.stop(); o.disconnect(); } catch (_) {} });
+        ambientOscillators = [];
+      }, 400);
+    } catch (_) {
+      ambientOscillators.forEach(o => { try { o.stop(); o.disconnect(); } catch (_) {} });
+      ambientOscillators = [];
+    }
+  }
+}
 
 export function setupPersistentMiniPlayer() {
   const player = document.getElementById('persistentMiniPlayer');
@@ -586,7 +638,7 @@ export function setupPersistentMiniPlayer() {
 
   // Forward 15s
   fwdBtn?.addEventListener('click', () => {
-    seekMiniPlayer(Math.min(SERMON_PLAY_DURATION, currentPlayheadSec + 15));
+    seekMiniPlayer(Math.min(sermonTotalDuration, currentPlayheadSec + 15));
   });
 
   // Expand into Full Sermon Details Modal
@@ -607,7 +659,7 @@ export function setupPersistentMiniPlayer() {
   trackBar?.addEventListener('click', (e) => {
     const rect = trackBar.getBoundingClientRect();
     const clickRatio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    seekMiniPlayer(Math.round(clickRatio * SERMON_PLAY_DURATION));
+    seekMiniPlayer(Math.round(clickRatio * sermonTotalDuration));
   });
 }
 
@@ -622,6 +674,8 @@ export function playSermonInMiniPlayer(sermonId) {
   if (!s) return;
 
   currentMiniSermon = s;
+  sermonTotalDuration = s.durationSec || 120;
+
   const player = document.getElementById('persistentMiniPlayer');
   if (!player) return;
 
@@ -676,14 +730,16 @@ function startMiniPlayerPlayback() {
   if (miniPlayerAudio && currentMiniSermon?.audioUrl) {
     miniPlayerAudio.src = currentMiniSermon.audioUrl;
     miniPlayerAudio.play().catch(() => {});
+  } else {
+    startDevotionalAmbiance();
   }
 
   clearInterval(miniPlayerTimer);
   miniPlayerTimer = setInterval(() => {
     if (isAudioPlaying) {
       currentPlayheadSec += 1;
-      if (currentPlayheadSec >= SERMON_PLAY_DURATION) {
-        currentPlayheadSec = SERMON_PLAY_DURATION;
+      if (currentPlayheadSec >= sermonTotalDuration) {
+        currentPlayheadSec = sermonTotalDuration;
         pauseMiniPlayerPlayback();
       }
       updateMiniPlayerUI();
@@ -705,13 +761,14 @@ function pauseMiniPlayerPlayback() {
   if (miniPlayerAudio && !miniPlayerAudio.paused) {
     miniPlayerAudio.pause();
   }
+  stopDevotionalAmbiance();
 }
 
 function toggleMiniPlayerPlayback() {
   if (isAudioPlaying) {
     pauseMiniPlayerPlayback();
   } else {
-    if (currentPlayheadSec >= SERMON_PLAY_DURATION) {
+    if (currentPlayheadSec >= sermonTotalDuration) {
       currentPlayheadSec = 0;
     }
     startMiniPlayerPlayback();
@@ -721,7 +778,7 @@ function toggleMiniPlayerPlayback() {
 function seekMiniPlayer(targetSec) {
   currentPlayheadSec = targetSec;
   if (miniPlayerAudio && miniPlayerAudio.duration) {
-    miniPlayerAudio.currentTime = (targetSec / SERMON_PLAY_DURATION) * miniPlayerAudio.duration;
+    miniPlayerAudio.currentTime = (targetSec / sermonTotalDuration) * miniPlayerAudio.duration;
   }
   updateMiniPlayerUI();
 }
@@ -739,7 +796,7 @@ function updateMiniPlayerUI() {
 
   const progEl = document.getElementById('miniPlayerProgress');
   if (progEl) {
-    const pct = ((currentPlayheadSec / SERMON_PLAY_DURATION) * 100).toFixed(1);
+    const pct = ((currentPlayheadSec / sermonTotalDuration) * 100).toFixed(1);
     progEl.style.width = `${pct}%`;
   }
 }
