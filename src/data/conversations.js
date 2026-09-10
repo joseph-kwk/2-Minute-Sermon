@@ -1,7 +1,7 @@
 // The Conversation Episodes Store
 // Persisted in localStorage ('2ms_conversations') and synced via Firestore when configured.
 
-import { isFirebaseConfigured, saveDocument } from '../firebase.js';
+import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
 export function extractVideoId(url) {
   if (!url) return '';
@@ -20,67 +20,83 @@ export function ytThumb(videoId) {
 export const INITIAL_CONVERSATIONS = [
   {
     id: 'conv-1',
-    title: 'Should Women be Allowed to Preach?',
-    slug: 'should-women-be-allowed-to-preach',
-    youtubeUrl: 'https://www.youtube.com/watch?v=SJFqqNvTeh8',
-    youtubeEmbedId: 'SJFqqNvTeh8',
-    thumbnailUrl: 'https://img.youtube.com/vi/SJFqqNvTeh8/hqdefault.jpg',
-    panelists: 'Pastor Anany Kasongo, Pastor Bellarmee Milosi & Guest Ministers',
-    category: 'Biblical Leadership',
-    scriptures: '1 Timothy 2:11–12, Galatians 3:28, Romans 16:1–7',
-    duration: '28:45',
-    durationSec: 1725,
-    publishDate: '2026-08-15',
+    title: 'Meeting Jesus Without Meeting Jesus',
+    slug: 'meeting-jesus-without-meeting-jesus',
+    youtubeUrl: 'https://www.youtube.com/watch?v=gdxWYvV7hkg',
+    youtubeEmbedId: 'gdxWYvV7hkg',
+    thumbnailUrl: 'https://img.youtube.com/vi/gdxWYvV7hkg/hqdefault.jpg',
+    panelists: 'Pastor Bellarmee Milosi',
+    category: 'Theology & Christian Walk',
+    scriptures: 'Acts 9:1–9, John 20:29, 2 Corinthians 5:7',
+    duration: '32:35',
+    durationSec: 1955,
+    publishDate: '2024-05-10',
     status: 'Published',
     featured: true,
-    summary: 'A deep biblical dialogue examining historical context, apostolic teachings, and cultural interpretations regarding women in pastoral and pulpit leadership.'
+    summary: 'An in-depth 2-Minute PLUS dialogue exploring how believers encounter the transformational presence of the living Christ beyond physical sight.'
   },
   {
     id: 'conv-2',
-    title: 'Is Speaking in Tongues Biblical for Today?',
-    slug: 'is-speaking-in-tongues-biblical',
-    youtubeUrl: 'https://www.youtube.com/watch?v=SJFqqNvTeh8',
-    youtubeEmbedId: 'SJFqqNvTeh8',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=800&q=80',
-    panelists: 'Lievin Nsuka & Evangelist Narcisse Kyakutala',
-    category: 'Spiritual Gifts',
-    scriptures: '1 Corinthians 12–14, Acts 2:1–11, Mark 16:17',
-    duration: '34:10',
-    durationSec: 2050,
-    publishDate: '2026-08-01',
+    title: "2-Minute Sermon PLUS: God's Response",
+    slug: 'gods-response',
+    youtubeUrl: 'https://www.youtube.com/watch?v=w9EIlMTPRn4',
+    youtubeEmbedId: 'w9EIlMTPRn4',
+    thumbnailUrl: 'https://img.youtube.com/vi/w9EIlMTPRn4/hqdefault.jpg',
+    panelists: 'Esther Gomes',
+    category: 'Prayer & Faith',
+    scriptures: 'Jeremiah 33:3, Psalm 91:15, Isaiah 65:24',
+    duration: '11:22',
+    durationSec: 682,
+    publishDate: '2024-09-12',
     status: 'Published',
-    featured: false,
-    summary: 'Exploring the purpose, theological distinction between private prayer language and public prophetic tongues, and the role of the Holy Spirit in contemporary believers.'
+    featured: true,
+    summary: 'A powerful teaching examining how God responds to our petitions in seasons of silence, waiting, and unexpected grace.'
   },
   {
     id: 'conv-3',
-    title: 'Is Tithing a Mandatory Law for Us Christians?',
-    slug: 'is-tithing-a-mandatory-law-for-christians',
-    youtubeUrl: 'https://www.youtube.com/watch?v=SJFqqNvTeh8',
-    youtubeEmbedId: 'SJFqqNvTeh8',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=800&q=80',
-    panelists: 'Pastor Anany Kasongo & Guest Panelists',
-    category: 'Christian Living & Giving',
-    scriptures: 'Malachi 3:8–10, Genesis 14:20, 2 Corinthians 9:6–8',
-    duration: 'Coming Up',
-    durationSec: 0,
-    publishDate: '2026-09-05',
-    status: 'Upcoming',
+    title: "Gospel Proclamation: The Lord's Prayer",
+    slug: 'the-lords-prayer',
+    youtubeUrl: 'https://www.youtube.com/watch?v=803r0P8kW7g',
+    youtubeEmbedId: '803r0P8kW7g',
+    thumbnailUrl: 'https://img.youtube.com/vi/803r0P8kW7g/hqdefault.jpg',
+    panelists: 'Pastor Anany Kasongo',
+    category: 'Kingdom Teaching',
+    scriptures: 'Matthew 6:9–13, Luke 11:1–4',
+    duration: '3:44',
+    durationSec: 224,
+    publishDate: '2024-10-23',
+    status: 'Published',
     featured: false,
-    summary: 'If the tithe is rooted in the Old Covenant, do Christians still have an obligation to give a tenth? An honest panel conversation on grace-based giving vs. legalistic requirement.'
+    summary: 'A biblical exposition of the model prayer Christ gave His followers, unpacking the majesty of God\'s kingdom and daily provision.'
   }
 ];
 
 const STORAGE_KEY = '2ms_conversations';
+
+// ── Real-time Firebase Firestore Sync ───────────────────────────────────────
+if (isFirebaseConfigured()) {
+  seedCollectionIfEmpty('conversations', INITIAL_CONVERSATIONS);
+  subscribeCollection('conversations', (remoteConversations) => {
+    if (remoteConversations && remoteConversations.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteConversations));
+        window.dispatchEvent(new CustomEvent('2ms:conversations:updated', { detail: remoteConversations }));
+        window.dispatchEvent(new Event('storage'));
+      } catch (_) {}
+    }
+  });
+}
 
 export function getConversations() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+      const hasPlaceholders = Array.isArray(parsed) && parsed.some(c => c.youtubeEmbedId === 'SJFqqNvTeh8');
+      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (_) {}
+  saveConversations(INITIAL_CONVERSATIONS);
   return INITIAL_CONVERSATIONS;
 }
 
@@ -106,9 +122,15 @@ export function upsertConversation(item) {
     list.unshift(item);
   }
   saveConversations(list);
+  if (isFirebaseConfigured()) {
+    saveDocument('conversations', item.id, item);
+  }
 }
 
 export function deleteConversation(id) {
   const list = getConversations().filter(c => c.id !== id);
   saveConversations(list);
+  if (isFirebaseConfigured()) {
+    deleteDocument('conversations', id);
+  }
 }

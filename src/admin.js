@@ -12,7 +12,7 @@ import { getConversations, saveConversations, upsertConversation, deleteConversa
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
-const preachers = getPreachers();
+let preachers = getPreachers();
 const scheduledDailyVerses = getDailyVerses();
 let pendingPrayers = [
   { id:'pr-1', name:'Sarah M.', email:'sarah@example.com', urgency:'Health & Healing', msg:'Please pray for my mother recovering from surgery.', date:'2026-08-22' },
@@ -42,8 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Real-time Cloud Data Sync Listeners for Admin ─────────────────────────
   const refreshAdminView = () => {
+    preachers = getPreachers();
     populateSelects();
     renderDashboardStats();
+    renderSermonsList();
     renderVerseQueue();
     renderPreachersList();
     renderLeadershipList();
@@ -473,8 +475,10 @@ function populateSelects() {
   const preacherSel = document.getElementById('adminPreacher');
   const seasonSel   = document.getElementById('adminSeason');
 
-  if (preacherSel)
-    preacherSel.innerHTML = preachers.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  if (preacherSel) {
+    const list = getPreachers();
+    preacherSel.innerHTML = list.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
 
   if (seasonSel)
     seasonSel.innerHTML = seasons.filter(s => s.slug !== 'all')
@@ -850,7 +854,7 @@ function setupConversationsManager() {
     const summary = document.getElementById('newConvSummary').value.trim();
     const featured = document.getElementById('newConvFeatured').checked;
 
-    const embedId = extractVideoId(rawUrl) || 'SJFqqNvTeh8';
+    const embedId = extractVideoId(rawUrl) || 'gdxWYvV7hkg';
     const finalUrl = rawUrl.startsWith('http') ? rawUrl : `https://www.youtube.com/watch?v=${embedId}`;
     const thumbnailUrl = ytThumb(embedId);
 

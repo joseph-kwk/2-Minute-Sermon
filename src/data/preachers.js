@@ -3,43 +3,93 @@ const STORAGE_KEY = '2ms_preachers';
 const seedPreachers = [
   {
     id: "p1",
-    name: "Pastor John Doe",
-    slug: "john-doe",
-    denomination: "Nondenominational",
-    country: "United States",
-    specialties: ["Faith", "Encouragement", "Spiritual Growth"],
-    photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
-    bio: "Pastor John has been serving in pastoral ministry for over 15 years, passionate about communicating scripture in concise, actionable daily messages."
+    name: "Pastor Anany Kasongo",
+    slug: "anany-kasongo",
+    denomination: "Baptist / Methodist",
+    country: "United Kingdom",
+    specialties: ["Faith", "Kingdom Authority", "Prayer"],
+    photoUrl: "https://ui-avatars.com/api/?name=Anany+Kasongo&background=C62828&color=fff&size=200",
+    bio: "Board's President & Founder. Assistant Pastor at Allington Baptist Church, Accredited Preacher in the Britain Methodist Church, Co-founder of Crossover Project UK."
   },
   {
     id: "p2",
-    name: "Rev. Sarah Jenkins",
-    slug: "sarah-jenkins",
-    denomination: "Methodist",
-    country: "United Kingdom",
-    specialties: ["Grace", "Prayer", "Hope"],
-    photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
-    bio: "Rev. Sarah leads community worship and international prayer initiatives, bringing warm, scripture-rooted encouragement to listeners worldwide."
+    name: "Pastor Bellarmee Milosi",
+    slug: "bellarmee-milosi",
+    denomination: "United Methodist",
+    country: "United States / Philippines",
+    specialties: ["Hope", "Spiritual Growth", "Worship"],
+    photoUrl: "https://ui-avatars.com/api/?name=Bellarmee+Milosi&background=C62828&color=fff&size=200",
+    bio: "Executive Coordinator & Co-Founder. Licensed Pastor in the United Methodist Church, Gospel Singer/Songwriter & Worship Leader."
   },
   {
     id: "p3",
-    name: "Dr. Marcus Vance",
-    slug: "marcus-vance",
-    denomination: "Baptist",
-    country: "Canada",
-    specialties: ["Discipleship", "Scripture Exposition", "Healing"],
-    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    bio: "Dr. Vance is a biblical theologian and author dedicated to making deep theological truths accessible in under 2 minutes."
+    name: "Preacher Lievin Nsuka",
+    slug: "lievin-nsuka",
+    denomination: "Evangelical",
+    country: "Democratic Republic of Congo",
+    specialties: ["Grace", "Salvation", "Discipleship"],
+    photoUrl: "https://ui-avatars.com/api/?name=Lievin+Nsuka&background=2E7D32&color=fff&size=200",
+    bio: "Senior Preacher's Network Coordinator. Passionate about communicating Christ crucified with clarity and depth."
   },
   {
     id: "p4",
-    name: "Minister David King",
-    slug: "david-king",
+    name: "Preacher Kerith Meya",
+    slug: "kerith-meya",
+    denomination: "Evangelical",
+    country: "United States",
+    specialties: ["Faith", "Hope", "Encouragement"],
+    photoUrl: "https://ui-avatars.com/api/?name=Kerith+Meya&background=6A1B9A&color=fff&size=200",
+    bio: "Associate Preacher's Network Coordinator. Dedicated to helping believers trust God through impossible situations."
+  },
+  {
+    id: "p5",
+    name: "Evangelist Narcisse Kyakutala",
+    slug: "narcisse-kyakutala",
     denomination: "Pentecostal",
-    country: "South Africa",
-    specialties: ["Holy Spirit", "Forgiveness", "Youth Ministry"],
-    photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-    bio: "Minister David inspires young believers and families through dynamic, high-energy video devotions rooted in Psalms and the Gospels."
+    country: "United States",
+    specialties: ["Grace", "Salvation", "Holy Spirit"],
+    photoUrl: "https://ui-avatars.com/api/?name=Narcisse+Kyakutala&background=1565C0&color=fff&size=200",
+    bio: "Contributing minister preaching the transformative power of God's unmerited grace."
+  },
+  {
+    id: "p6",
+    name: "Minister Carolyn Kwon",
+    slug: "carolyn-kwon",
+    denomination: "Nondenominational",
+    country: "United States",
+    specialties: ["Healing", "Restoration", "Grace"],
+    photoUrl: "https://ui-avatars.com/api/?name=Carolyn+Kwon&background=EF6C00&color=fff&size=200",
+    bio: "Contributing minister bringing hope and divine restoration messages to hurting hearts worldwide."
+  },
+  {
+    id: "p7",
+    name: "Pastor Olalekan",
+    slug: "pastor-olalekan",
+    denomination: "Nondenominational",
+    country: "Nigeria",
+    specialties: ["Faith", "Encouragement", "Prayer"],
+    photoUrl: "https://ui-avatars.com/api/?name=Pastor+Olalekan&background=00838F&color=fff&size=200",
+    bio: "Contributing preacher delivering the foundational 'Good Shepherd' devotions for 2-Minute Sermon."
+  },
+  {
+    id: "p8",
+    name: "Rev. Ivan Milosi",
+    slug: "rev-ivan-milosi",
+    denomination: "Methodist",
+    country: "United States",
+    specialties: ["Teaching", "Hope", "Spiritual Discipline"],
+    photoUrl: "https://ui-avatars.com/api/?name=Ivan+Milosi&background=4527A0&color=fff&size=200",
+    bio: "Contributing minister exploring discipleship, hearing God's voice, and Christian living."
+  },
+  {
+    id: "p9",
+    name: "Evangelist Paul Besong",
+    slug: "paul-besong",
+    denomination: "Evangelical",
+    country: "Cameroon / UK",
+    specialties: ["Evangelism", "Hope", "Encouragement"],
+    photoUrl: "https://ui-avatars.com/api/?name=Paul+Besong&background=D84315&color=fff&size=200",
+    bio: "Contributing minister delivering the Freestyle Sermon series on God's new seasons."
   }
 ];
 
@@ -59,11 +109,15 @@ if (isFirebaseConfigured()) {
   });
 }
 
-/** Read preachers from localStorage; seeds from static data on first run. */
+/** Read preachers from localStorage; seeds from static data on first run or auto-upgrades legacy placeholders. */
 export function getPreachers() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const hasLegacy = Array.isArray(parsed) && parsed.some(p => p.name === 'Pastor John Doe' || p.name === 'Rev. Sarah Jenkins');
+      if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch (_) { /* storage unavailable */ }
   savePreachers(seedPreachers);
   return [...seedPreachers];
