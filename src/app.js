@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupExploreDropdown();
   setupMobileDrawer();
   setupHeroCtas();
+  setupHeroVideo();
   setupPromoVideo();
   setupSermonFilters();
   setupDailyVerse();
@@ -347,6 +348,69 @@ function setupHeroCtas() {
       setupDailyVerse();
     }
   });
+}
+
+// ─── LOCALHOST HERO VIDEO BACKGROUND TEST ────────────────────────────────────
+function setupHeroVideo() {
+  const isLocalhost = Boolean(
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]' ||
+    window.location.hostname.endsWith('.localhost') ||
+    window.location.hostname.match(/^192\.168\.\d+\.\d+$/) ||
+    window.location.hostname.match(/^10\.\d+\.\d+\.\d+$/)
+  );
+
+  if (!isLocalhost) return;
+
+  const heroSection = document.querySelector('.hero-section');
+  if (!heroSection) return;
+
+  // Create video element (loaded only on localhost)
+  const video = document.createElement('video');
+  video.className = 'hero-video-bg';
+  video.autoplay = true;
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('muted', '');
+  video.setAttribute('aria-hidden', 'true');
+  video.src = '/assets/hero-bg-video.mp4';
+
+  video.addEventListener('canplay', () => {
+    video.classList.add('is-playing');
+  });
+
+  // Prepend before overlay so gradient overlay remains on top
+  heroSection.prepend(video);
+  video.play().catch(err => {
+    console.warn('Hero video autoplay prevented (user interaction might be needed):', err);
+  });
+
+  // Interactive toggle badge in bottom-right corner of hero
+  const badge = document.createElement('button');
+  badge.className = 'localhost-video-badge';
+  badge.title = 'Click to toggle hero video background / static image';
+  badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Active</span>`;
+
+  let videoEnabled = true;
+  badge.addEventListener('click', () => {
+    videoEnabled = !videoEnabled;
+    if (videoEnabled) {
+      video.style.display = 'block';
+      video.play().catch(() => {});
+      badge.classList.remove('is-paused');
+      badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Active</span>`;
+    } else {
+      video.pause();
+      video.style.display = 'none';
+      badge.classList.add('is-paused');
+      badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Paused</span>`;
+    }
+  });
+
+  heroSection.appendChild(badge);
 }
 
 function setupPromoVideo() {
