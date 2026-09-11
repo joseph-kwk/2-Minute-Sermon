@@ -175,11 +175,20 @@ function observeNewCards(container) {
   });
 }
 
-// ─── HEADER SCROLL SHADOW ─────────────────────────────────────────────────────
+// ─── HEADER SCROLL SHADOW & READING PROGRESS ──────────────────────────────────
 function setupHeaderScroll() {
   const header = document.getElementById('appHeader');
+  const progressBar = document.getElementById('headerScrollProgress');
+
   window.addEventListener('scroll', () => {
-    header?.classList.toggle('scrolled', window.scrollY > 20);
+    const scrollY = window.scrollY;
+    header?.classList.toggle('scrolled', scrollY > 20);
+
+    if (progressBar) {
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+      progressBar.style.width = `${Math.min(100, Math.max(0, progress)).toFixed(1)}%`;
+    }
   }, { passive: true });
 }
 
