@@ -1517,7 +1517,7 @@ window.playPromoVideo = playPromoVideo;
 function renderHomeSermons() {
   const container = document.getElementById('homeSermonsGrid');
   if (!container) return;
-  container.innerHTML = sermons().slice(0, 6).map(s => createSermonCardHtml(s)).join('');
+  container.innerHTML = sermons().slice(0, 6).map(s => createSermonCardHtml(s, false)).join('');
   observeNewCards(container);
 }
 
@@ -1556,14 +1556,15 @@ function updateFavoritesCountBadge() {
 let activeDurationFilter = 'all'; // 'all', 'under1', '1to2', 'over2', 'favorites'
 let activeViewMode = 'grid'; // 'grid' or 'list'
 
-function createSermonCardHtml(s) {
+function createSermonCardHtml(s, showFavorite = true) {
   const isFav = savedFavorites.includes(s.id);
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
+        ${showFavorite ? `
         <button class="sermon-card-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Favorite sermon">
           ★
-        </button>
+        </button>` : ''}
         <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-img" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>

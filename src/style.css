@@ -661,49 +661,325 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .badge-scripture { background: #E3F2FD; color: #1565C0; }
 
 /* ==========================================================================
-   DAILY VERSE CARD
+   DAILY VERSE CARD (Sacred Obsidian & Radiant Gold Sanctuary)
    ========================================================================== */
+.section-daily-verse-widget {
+  padding: 48px 0 36px;
+}
 .daily-verse-card {
-  background: var(--color-white); border: 1px solid var(--color-lightgray);
-  border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-md); text-align: center;
-  position: relative; overflow: hidden;
-  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+  background: linear-gradient(145deg, #0d0f15 0%, #151923 50%, #0a0c12 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 26px;
+  padding: 48px 42px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(245, 158, 11, 0.09);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .daily-verse-card::before {
-  content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%;
-  background: linear-gradient(180deg, var(--color-sermon-red) 0%, var(--color-gold) 100%);
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #f59e0b 20%, #ef4444 50%, #f59e0b 80%, transparent 100%);
 }
-.daily-verse-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.daily-verse-card::after {
+  content: '';
+  position: absolute;
+  top: -120px; left: 50%; transform: translateX(-50%);
+  width: 500px; height: 260px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(229, 57, 53, 0.05) 50%, transparent 75%);
+  pointer-events: none;
+}
+.daily-verse-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.65), 0 0 50px rgba(245, 158, 11, 0.20);
+}
 
-.verse-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.verse-label { font-weight: 700; color: var(--color-sermon-red); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px; }
-.verse-date { font-size: 0.85rem; color: var(--color-mediumgray); }
-.verse-quote { font-family: var(--font-heading); font-size: 1.65rem; font-style: italic; color: var(--color-charcoal); margin-bottom: 14px; line-height: 1.45; }
-.verse-meta { font-weight: 700; color: var(--color-sermon-red); margin-bottom: 18px; font-size: 1rem; }
-.verse-reflection { font-size: 0.97rem; color: var(--color-mediumgray); max-width: 700px; margin: 0 auto 28px; line-height: 1.7; }
-.verse-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.verse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.verse-label {
+  font-weight: 700;
+  color: #fbbf24;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+.verse-date {
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+.verse-quote {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-style: italic;
+  color: #f8fafc;
+  margin: 0 auto 16px;
+  max-width: 820px;
+  line-height: 1.45;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
+}
+.verse-meta {
+  font-weight: 700;
+  color: #f59e0b;
+  margin-bottom: 18px;
+  font-size: 1.05rem;
+  letter-spacing: 0.6px;
+}
+.verse-reflection {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.76);
+  max-width: 720px;
+  margin: 0 auto 30px;
+  line-height: 1.7;
+}
+.verse-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.verse-actions .btn-outline {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.verse-actions .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
 
 /* ==========================================================================
-   CHANNEL TILES
+   BROWSE SERMON CHANNELS (Atmospheric Jewel-Tone Glass Hub)
    ========================================================================== */
-.tiles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; margin-top: 28px; }
-.tile-card {
-  background: var(--color-white); border: 1px solid var(--color-lightgray);
-  border-radius: var(--radius-lg); padding: 30px 26px; cursor: pointer;
-  transition: all var(--transition-normal); display: flex; flex-direction: column;
+.section-tiles {
+  background: linear-gradient(180deg, #090a0f 0%, #11141c 50%, #0a0b10 100%);
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
 }
-.tile-card:hover { transform: translateY(-5px); border-color: var(--color-sermon-red); box-shadow: var(--shadow-lg); }
+.section-tiles::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 35%, rgba(168, 85, 247, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 85% 40%, rgba(245, 158, 11, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.section-header-center {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.section-tag-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+.section-tiles .section-title {
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.section-tiles .section-desc {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+.tile-card {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  border-radius: 22px;
+  padding: 30px 26px;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+.tile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.tile-channel-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 16px;
+}
 .tile-icon-box {
-  width: 54px; height: 54px; border-radius: var(--radius-md);
-  background: var(--color-sermon-red-light); color: var(--color-sermon-red);
-  display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all var(--transition-spring);
 }
-.tile-card:hover .tile-icon-box { background: var(--color-sermon-red); color: var(--color-white); transform: scale(1.1) rotate(-3deg); }
-.tile-title { font-size: 1.2rem; margin-bottom: 8px; }
-.tile-desc { font-size: 0.88rem; color: var(--color-mediumgray); margin-bottom: 18px; line-height: 1.5; flex-grow: 1; }
-.tile-link { font-size: 0.88rem; font-weight: 700; color: var(--color-sermon-red); transition: gap var(--transition-fast); }
-.tile-card:hover .tile-link::after { content: ' ›'; }
+.tile-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55);
+}
+.tile-card:hover .tile-icon-box {
+  transform: scale(1.1) rotate(-3deg);
+}
+.tile-title {
+  font-size: 1.25rem;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.tile-desc {
+  font-size: 0.90rem;
+  color: rgba(255, 255, 255, 0.68);
+  margin-bottom: 22px;
+  line-height: 1.55;
+  flex-grow: 1;
+}
+.tile-link {
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap var(--transition-fast);
+}
+.tile-card:hover .tile-link {
+  gap: 10px;
+}
+
+/* Individual Channel Themes */
+/* 1. Seasons Hub (Regal Amethyst & Gold) */
+.tile-card-seasons .tile-icon-box {
+  background: rgba(168, 85, 247, 0.16);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+.tile-card-seasons .badge-seasons {
+  background: rgba(168, 85, 247, 0.18);
+  color: #e9d5ff;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+.tile-card-seasons .tile-link { color: #c084fc; }
+.tile-card-seasons:hover {
+  border-color: rgba(168, 85, 247, 0.65);
+  box-shadow: 0 24px 50px rgba(0,0,0,0.55), 0 0 30px rgba(168, 85, 247, 0.25);
+}
+.tile-card-seasons:hover .tile-icon-box {
+  background: #9333ea;
+  color: #fff;
+}
+
+/* 2. Topics & Themes (Sacred Radiant Amber) */
+.tile-card-topics .tile-icon-box {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.tile-card-topics .badge-topics {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fef08a;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.tile-card-topics .tile-link { color: #fbbf24; }
+.tile-card-topics:hover {
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 24px 50px rgba(0,0,0,0.55), 0 0 30px rgba(245, 158, 11, 0.25);
+}
+.tile-card-topics:hover .tile-icon-box {
+  background: #d97706;
+  color: #fff;
+}
+
+/* 3. Preachers Directory (Celestial Sapphire) */
+.tile-card-preachers .tile-icon-box {
+  background: rgba(56, 189, 248, 0.16);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+.tile-card-preachers .badge-preachers {
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+.tile-card-preachers .tile-link { color: #38bdf8; }
+.tile-card-preachers:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 24px 50px rgba(0,0,0,0.55), 0 0 30px rgba(56, 189, 248, 0.25);
+}
+.tile-card-preachers:hover .tile-icon-box {
+  background: #0284c7;
+  color: #fff;
+}
+
+/* 4. Prayers & Requests (Living Hope Emerald) */
+.tile-card-prayers .tile-icon-box {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.tile-card-prayers .badge-prayers {
+  background: rgba(16, 185, 129, 0.18);
+  color: #a7f3d0;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.tile-card-prayers .tile-link { color: #34d399; }
+.tile-card-prayers:hover {
+  border-color: rgba(16, 185, 129, 0.65);
+  box-shadow: 0 24px 50px rgba(0,0,0,0.55), 0 0 30px rgba(16, 185, 129, 0.25);
+}
+.tile-card-prayers:hover .tile-icon-box {
+  background: #059669;
+  color: #fff;
+}
 
 /* Cursor pointer on ALL interactive cards */
 .sermon-card, .hub-card, .tile-card, .impact-card, .daily-verse-card,
