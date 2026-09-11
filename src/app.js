@@ -1112,7 +1112,51 @@ export function setupScriptureCardGenerator() {
   modal.addEventListener('click', e => {
     if (e.target === modal) closeScriptureCardModal();
   });
+  modal.addEventListener('wheel', e => {
+    if (e.target === modal || modal.scrollHeight <= modal.clientHeight) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  modal.addEventListener('touchmove', e => {
+    if (e.target === modal || modal.scrollHeight <= modal.clientHeight) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 }
+
+let scrollLockCount = 0;
+let lockedScrollY = 0;
+
+export function lockPageScroll() {
+  scrollLockCount++;
+  if (scrollLockCount === 1) {
+    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+  }
+}
+window.lockPageScroll = lockPageScroll;
+
+export function unlockPageScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    const restoreY = lockedScrollY;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    window.scrollTo(0, restoreY);
+  }
+}
+window.unlockPageScroll = unlockPageScroll;
 
 export function openScriptureCardModal(verse) {
   activeCardVerse = verse || getVerseForDate(getTodayDateStr());
@@ -1121,6 +1165,7 @@ export function openScriptureCardModal(verse) {
   const modal = document.getElementById('scriptureCardModal');
   if (!modal) return;
 
+  lockPageScroll();
   modal.hidden = false;
   renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
 }
@@ -1129,7 +1174,10 @@ window.openScriptureCardForVerse = (verse) => openScriptureCardModal(verse);
 
 export function closeScriptureCardModal() {
   const modal = document.getElementById('scriptureCardModal');
-  if (modal) modal.hidden = true;
+  if (modal && !modal.hidden) {
+    modal.hidden = true;
+    unlockPageScroll();
+  }
 }
 window.closeScriptureCardModal = closeScriptureCardModal;
 
@@ -1841,6 +1889,7 @@ export function openSermonModal(sermonId) {
       </div>
     </div>`;
 
+  lockPageScroll();
   modal.hidden = false;
   document.title = `${s.title} — 2-Minute Sermon`;
 
@@ -1870,6 +1919,7 @@ function closeSermonModal() {
   const modal = document.getElementById('sermonModal');
   if (modal && !modal.hidden) {
     modal.hidden = true;
+    unlockPageScroll();
     document.getElementById('sermonModalBody').innerHTML = '';
     const schemaScript = document.getElementById('dynamicSermonSchema');
     if (schemaScript) schemaScript.remove();
@@ -1880,15 +1930,23 @@ window.closeSermonModal = closeSermonModal;
 
 document.getElementById('closeSermonModalBtn')?.addEventListener('click', closeSermonModal);
 
-// Modal backdrop click
-document.getElementById('sermonModal')?.addEventListener('click', e => {
-  if (e.target === document.getElementById('sermonModal')) closeSermonModal();
+// Modal backdrop click & scroll isolation
+const sermonModalEl = document.getElementById('sermonModal');
+sermonModalEl?.addEventListener('click', e => {
+  if (e.target === sermonModalEl) closeSermonModal();
 });
+sermonModalEl?.addEventListener('wheel', e => {
+  if (e.target === sermonModalEl) e.preventDefault();
+}, { passive: false });
+sermonModalEl?.addEventListener('touchmove', e => {
+  if (e.target === sermonModalEl) e.preventDefault();
+}, { passive: false });
 
 // Keyboard Accessibility: Escape key closes modals and menus
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeSermonModal();
+    closeScriptureCardModal();
     closeDropdown();
     closeMobileDrawer();
   }

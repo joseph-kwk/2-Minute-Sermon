@@ -1984,13 +1984,21 @@ textarea.text-input { resize: vertical; }
 /* ==========================================================================
    MODALS
    ========================================================================== */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
   z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px;
+  overscroll-behavior: contain;
+  overflow-y: auto;
 }
 .modal-dialog {
   background: var(--color-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
   width: 100%; position: relative; max-height: 90vh; overflow-y: auto;
+  overscroll-behavior: contain;
   animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .modal-lg { max-width: 920px; }
