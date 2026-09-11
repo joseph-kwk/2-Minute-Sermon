@@ -577,6 +577,161 @@ let ambientAudioCtx = null;
 let ambientGain = null;
 let ambientOscillators = [];
 
+// Real YouTube Audio Bridge state
+let ytAudioPlayer = null;
+let isYtAudioApiReady = false;
+let isYtPlayerReady = false;
+let currentYtVideoId = null;
+let ytProgressInterval = null;
+
+function loadYouTubeIframeApi() {
+  if (window.YT && window.YT.Player) {
+    isYtAudioApiReady = true;
+    return Promise.resolve(window.YT);
+  }
+  return new Promise((resolve) => {
+    let existingTag = document.getElementById('yt-iframe-api-script');
+    if (!existingTag) {
+      existingTag = document.createElement('script');
+      existingTag.id = 'yt-iframe-api-script';
+      existingTag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(existingTag);
+    }
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prevReady === 'function') prevReady();
+      isYtAudioApiReady = true;
+      resolve(window.YT);
+    };
+    if (window.YT && window.YT.Player) {
+      isYtAudioApiReady = true;
+      resolve(window.YT);
+    }
+  });
+}
+
+function handleYtPlayerStateChange(event) {
+  const YT = window.YT;
+  if (!YT) return;
+
+  const player = document.getElementById('persistentMiniPlayer');
+  const playBtn = document.getElementById('miniPlayerPlayBtn');
+  const badgeText = document.getElementById('miniPlayerBadgeText');
+
+  if (event.data === YT.PlayerState.PLAYING) {
+    isAudioPlaying = true;
+    player?.classList.add('is-playing');
+    if (badgeText) badgeText.textContent = '🎧 REAL YOUTUBE AUDIO';
+
+    if (playBtn) {
+      playBtn.querySelector('.mini-icon-play').style.display = 'none';
+      playBtn.querySelector('.mini-icon-pause').style.display = 'block';
+    }
+
+    try {
+      const dur = ytAudioPlayer?.getDuration();
+      if (dur && dur > 0 && dur < 7200) {
+        sermonTotalDuration = Math.round(dur);
+        const totalTimeEl = document.getElementById('miniPlayerTotalTime');
+        if (totalTimeEl) totalTimeEl.textContent = formatMinSec(sermonTotalDuration);
+        const durTag = document.getElementById('miniPlayerDuration');
+        if (durTag) durTag.textContent = formatMinSec(sermonTotalDuration);
+      }
+    } catch (_) {}
+
+    startYtProgressLoop();
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    isAudioPlaying = false;
+    player?.classList.remove('is-playing');
+    if (playBtn) {
+      playBtn.querySelector('.mini-icon-play').style.display = 'block';
+      playBtn.querySelector('.mini-icon-pause').style.display = 'none';
+    }
+    stopYtProgressLoop();
+  } else if (event.data === YT.PlayerState.ENDED) {
+    isAudioPlaying = false;
+    player?.classList.remove('is-playing');
+    if (playBtn) {
+      playBtn.querySelector('.mini-icon-play').style.display = 'block';
+      playBtn.querySelector('.mini-icon-pause').style.display = 'none';
+    }
+    currentPlayheadSec = 0;
+    updateMiniPlayerUI();
+    stopYtProgressLoop();
+  }
+}
+
+function startYtProgressLoop() {
+  stopYtProgressLoop();
+  ytProgressInterval = setInterval(() => {
+    if (ytAudioPlayer && isAudioPlaying) {
+      try {
+        const cur = ytAudioPlayer.getCurrentTime();
+        if (typeof cur === 'number' && !isNaN(cur)) {
+          currentPlayheadSec = Math.round(cur);
+          updateMiniPlayerUI();
+        }
+      } catch (_) {}
+    }
+  }, 350);
+}
+
+function stopYtProgressLoop() {
+  if (ytProgressInterval) {
+    clearInterval(ytProgressInterval);
+    ytProgressInterval = null;
+  }
+}
+
+function playYouTubeAudioBridge(videoId, startSec = 0) {
+  currentYtVideoId = videoId;
+  stopDevotionalAmbiance();
+
+  loadYouTubeIframeApi().then((YT) => {
+    if (!ytAudioPlayer) {
+      ytAudioPlayer = new YT.Player('miniPlayerYtIframe', {
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          start: startSec,
+          origin: window.location.origin
+        },
+        events: {
+          onReady: (event) => {
+            isYtPlayerReady = true;
+            try {
+              event.target.playVideo();
+            } catch (_) {}
+          },
+          onStateChange: handleYtPlayerStateChange,
+          onError: (err) => {
+            console.warn('[YouTube Audio Bridge] Player error, falling back to soothing ambiance:', err);
+            startDevotionalAmbiance();
+          }
+        }
+      });
+    } else {
+      try {
+        ytAudioPlayer.loadVideoById({
+          videoId: videoId,
+          startSeconds: startSec
+        });
+        ytAudioPlayer.playVideo();
+      } catch (e) {
+        console.warn('[YouTube Audio Bridge] Could not load video:', e);
+      }
+    }
+  });
+}
+
 function startDevotionalAmbiance() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -628,6 +783,9 @@ function stopDevotionalAmbiance() {
 export function setupPersistentMiniPlayer() {
   const player = document.getElementById('persistentMiniPlayer');
   if (!player) return;
+
+  // Warm up the YouTube IFrame API ahead of time
+  loadYouTubeIframeApi().catch(() => {});
 
   miniPlayerAudio = document.getElementById('miniPlayerAudio');
   const playBtn   = document.getElementById('miniPlayerPlayBtn');
@@ -682,6 +840,12 @@ export function playSermonInMiniPlayer(sermonId) {
   const s = sermons().find(x => x.id === sermonId);
   if (!s) return;
 
+  // If already playing this sermon, just toggle
+  if (currentMiniSermon && currentMiniSermon.id === s.id && isAudioPlaying) {
+    pauseMiniPlayerPlayback();
+    return;
+  }
+
   currentMiniSermon = s;
   sermonTotalDuration = s.durationSec || 120;
 
@@ -700,8 +864,10 @@ export function playSermonInMiniPlayer(sermonId) {
   const preacher = document.getElementById('miniPlayerPreacher');
   if (preacher) preacher.textContent = `${s.preacherName} • ${s.scripture}`;
 
-  const badge = document.getElementById('miniPlayerBadge');
-  if (badge) badge.textContent = `🎧 ${s.primarySeason.toUpperCase()}`;
+  const badgeText = document.getElementById('miniPlayerBadgeText');
+  if (badgeText) {
+    badgeText.textContent = `🎧 REAL YOUTUBE AUDIO`;
+  }
 
   const durTag = document.getElementById('miniPlayerDuration');
   if (durTag) durTag.textContent = s.duration || '2:00';
@@ -720,7 +886,7 @@ export function playSermonInMiniPlayer(sermonId) {
   });
 
   startMiniPlayerPlayback();
-  showToast(`🎧 Now Playing: ${s.title}`);
+  showToast(`🎧 Streaming YouTube Audio: ${s.title}`);
 }
 window.playSermonInMiniPlayer = playSermonInMiniPlayer;
 
@@ -735,17 +901,29 @@ function startMiniPlayerPlayback() {
     playBtn.querySelector('.mini-icon-pause').style.display = 'block';
   }
 
-  // Play audio track if provided, or synthetic calming devotion audio tone
-  if (miniPlayerAudio && currentMiniSermon?.audioUrl) {
+  // If we have a sermon with youtubeEmbedId, route audio through YouTube bridge
+  const videoId = currentMiniSermon?.youtubeEmbedId;
+  if (videoId) {
+    if (ytAudioPlayer && currentYtVideoId === videoId) {
+      try {
+        ytAudioPlayer.playVideo();
+      } catch (_) {
+        playYouTubeAudioBridge(videoId, currentPlayheadSec);
+      }
+    } else {
+      playYouTubeAudioBridge(videoId, currentPlayheadSec);
+    }
+  } else if (miniPlayerAudio && currentMiniSermon?.audioUrl) {
     miniPlayerAudio.src = currentMiniSermon.audioUrl;
     miniPlayerAudio.play().catch(() => {});
   } else {
     startDevotionalAmbiance();
   }
 
+  // Backup fallback timer in case YouTube progress ticks are paused
   clearInterval(miniPlayerTimer);
   miniPlayerTimer = setInterval(() => {
-    if (isAudioPlaying) {
+    if (isAudioPlaying && !ytAudioPlayer) {
       currentPlayheadSec += 1;
       if (currentPlayheadSec >= sermonTotalDuration) {
         currentPlayheadSec = sermonTotalDuration;
@@ -767,6 +945,13 @@ function pauseMiniPlayerPlayback() {
     playBtn.querySelector('.mini-icon-pause').style.display = 'none';
   }
 
+  if (ytAudioPlayer) {
+    try {
+      ytAudioPlayer.pauseVideo();
+    } catch (_) {}
+  }
+  stopYtProgressLoop();
+
   if (miniPlayerAudio && !miniPlayerAudio.paused) {
     miniPlayerAudio.pause();
   }
@@ -785,15 +970,26 @@ function toggleMiniPlayerPlayback() {
 }
 
 function seekMiniPlayer(targetSec) {
-  currentPlayheadSec = targetSec;
+  currentPlayheadSec = Math.max(0, Math.min(sermonTotalDuration, targetSec));
+  if (ytAudioPlayer) {
+    try {
+      ytAudioPlayer.seekTo(currentPlayheadSec, true);
+    } catch (_) {}
+  }
   if (miniPlayerAudio && miniPlayerAudio.duration) {
-    miniPlayerAudio.currentTime = (targetSec / sermonTotalDuration) * miniPlayerAudio.duration;
+    miniPlayerAudio.currentTime = (currentPlayheadSec / sermonTotalDuration) * miniPlayerAudio.duration;
   }
   updateMiniPlayerUI();
 }
 
 function stopMiniPlayer() {
   pauseMiniPlayerPlayback();
+  if (ytAudioPlayer) {
+    try {
+      ytAudioPlayer.stopVideo();
+    } catch (_) {}
+  }
+  stopYtProgressLoop();
   clearInterval(miniPlayerTimer);
   currentPlayheadSec = 0;
   currentMiniSermon = null;

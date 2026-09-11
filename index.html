@@ -1145,7 +1145,7 @@
       <!-- Track Details -->
       <div class="mini-player-details">
         <div class="mini-player-header-row">
-          <span class="mini-player-badge" id="miniPlayerBadge">🎧 DEVOTIONAL AUDIO</span>
+          <span class="mini-player-badge" id="miniPlayerBadge"><span class="yt-live-pulse" id="miniPlayerPulse"></span><span id="miniPlayerBadgeText">🎧 YOUTUBE AUDIO</span></span>
           <span class="mini-player-duration-tag" id="miniPlayerDuration">2:00</span>
         </div>
         <div class="mini-player-title" id="miniPlayerTitle">Select a sermon to listen</div>
@@ -1187,6 +1187,10 @@
     </div>
     <!-- Underlying audio element -->
     <audio id="miniPlayerAudio" preload="auto"></audio>
+    <!-- Real YouTube Audio Bridge IFrame Container -->
+    <div id="miniPlayerYtContainer" class="mini-player-yt-container" aria-hidden="true">
+      <div id="miniPlayerYtIframe"></div>
+    </div>
   </aside>
 
   <!-- Scripture Card Generator Modal -->
