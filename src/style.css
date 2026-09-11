@@ -2110,27 +2110,115 @@ textarea.text-input { resize: vertical; }
 .admin-prayer-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
 
 /* ==========================================================================
-   NEWSLETTER & FOOTER
+   NEWSLETTER SECTION (Warm Stone Devotional Delivery)
    ========================================================================== */
 .newsletter-section {
-  background: linear-gradient(135deg, var(--color-charcoal) 0%, #1f1f1f 100%);
-  padding: 80px 0; text-align: center; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #fbfaf8 0%, #ede8e0 50%, #f6f3ee 100%);
+  padding: 84px 0 76px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 .newsletter-section::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 100%, rgba(198,40,40,0.1) 0%, transparent 70%);
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(245, 158, 11, 0.09) 0%, transparent 55%),
+    radial-gradient(circle at 85% 75%, rgba(198, 40, 40, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 15% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 45%);
+  pointer-events: none;
 }
-.newsletter-container { max-width: 640px; position: relative; z-index: 1; }
-.newsletter-title { font-size: 2.1rem; color: var(--color-white); margin-bottom: 10px; }
-.newsletter-subtitle { font-size: 1rem; color: rgba(255,255,255,0.65); margin-bottom: 28px; }
-.newsletter-form { display: flex; gap: 12px; max-width: 500px; margin: 0 auto; }
+.newsletter-container {
+  max-width: 660px;
+  position: relative;
+  z-index: 1;
+}
+.newsletter-tag-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--color-sermon-red);
+  background: rgba(198, 40, 40, 0.08);
+  border: 1px solid rgba(198, 40, 40, 0.22);
+  padding: 5px 15px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+.newsletter-title {
+  font-size: 2.25rem;
+  color: #181b22;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+.newsletter-subtitle {
+  font-size: 1.05rem;
+  color: #555e6d;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+.newsletter-form {
+  display: flex;
+  gap: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+}
 .newsletter-input {
-  flex: 1; padding: 14px 18px; border: 1.5px solid rgba(255,255,255,0.15);
-  border-radius: var(--radius-md); background: rgba(255,255,255,0.07); color: white; outline: none;
-  transition: border-color var(--transition-fast);
+  flex: 1;
+  padding: 15px 20px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #181b22;
+  outline: none;
+  font-size: 0.95rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+  transition: all var(--transition-fast);
 }
-.newsletter-input::placeholder { color: rgba(255,255,255,0.4); }
-.newsletter-input:focus { border-color: var(--color-sermon-red); }
+.newsletter-input::placeholder {
+  color: #94a3b8;
+}
+.newsletter-input:focus {
+  border-color: var(--color-sermon-red);
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.12), 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.newsletter-btn {
+  padding: 15px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #c62828 0%, #d32f2f 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(198, 40, 40, 0.35);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.newsletter-btn:hover {
+  background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(198, 40, 40, 0.45);
+}
+.newsletter-perks {
+  margin-top: 16px;
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.newsletter-perks span {
+  color: #475569;
+}
 
 .app-footer {
   background-color: #0d0f13;
