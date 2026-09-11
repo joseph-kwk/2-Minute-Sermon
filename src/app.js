@@ -1317,10 +1317,49 @@ function renderHomeSermons() {
   observeNewCards(container);
 }
 
+// ─── FAVORITES & DEVOTIONAL QUEUE ──────────────────────────────────────────
+const FAVORITES_STORAGE_KEY = '2ms_favorites';
+let savedFavorites = [];
+try {
+  savedFavorites = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '[]');
+} catch (_) {
+  savedFavorites = [];
+}
+
+export function toggleSermonFavorite(sermonId) {
+  const idx = savedFavorites.indexOf(sermonId);
+  if (idx > -1) {
+    savedFavorites.splice(idx, 1);
+    showToast('Removed from Saved Devotionals');
+  } else {
+    savedFavorites.push(sermonId);
+    showToast('★ Saved to Your Devotional Queue');
+  }
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(savedFavorites));
+  } catch (_) {}
+  updateFavoritesCountBadge();
+  filterAndRenderSermons();
+  renderHomeSermons();
+}
+window.toggleSermonFavorite = toggleSermonFavorite;
+
+function updateFavoritesCountBadge() {
+  const badge = document.getElementById('sermonFavCount');
+  if (badge) badge.textContent = savedFavorites.length;
+}
+
+let activeDurationFilter = 'all'; // 'all', 'under1', '1to2', 'over2', 'favorites'
+let activeViewMode = 'grid'; // 'grid' or 'list'
+
 function createSermonCardHtml(s) {
+  const isFav = savedFavorites.includes(s.id);
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
+        <button class="sermon-card-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Favorite sermon">
+          ★
+        </button>
         <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-img" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
@@ -1348,8 +1387,47 @@ function createSermonCardHtml(s) {
   `;
 }
 
-// ─── SERMON FILTERS ───────────────────────────────────────────────────────────
+function createSermonListRowHtml(s) {
+  const isFav = savedFavorites.includes(s.id);
+  return `
+    <div class="sermon-list-row" data-sermon-id="${s.id}">
+      <div class="sermon-list-left">
+        <button class="sermon-list-play-btn" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen now while you browse" aria-label="Listen to sermon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-list-thumb" loading="lazy" onerror="this.src='/assets/logo.png'">
+        <div class="sermon-list-info">
+          <h4 class="sermon-list-title" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="View Details">${s.title}</h4>
+          <div class="sermon-list-meta">
+            <span><strong>${s.preacherName}</strong></span>
+            <span>&bull;</span>
+            <span>${s.scripture}</span>
+            <span>&bull;</span>
+            <span class="badge badge-season" style="font-size:0.72rem;padding:2px 8px;">${s.primarySeason}</span>
+            <span>&bull;</span>
+            <span>⏱️ ${s.duration}</span>
+          </div>
+        </div>
+      </div>
+      <div class="sermon-list-actions">
+        <button class="sermon-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}">
+          ★
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.openSermonModal('${s.id}')">
+          Watch
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')">
+          🎧 Listen
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ─── SERMON FILTERS & VIEWS ───────────────────────────────────────────────────
 function setupSermonFilters() {
+  updateFavoritesCountBadge();
+
   const searchInput = document.getElementById('sermonSearchInput');
   const clearBtn    = document.getElementById('searchClearBtn');
 
@@ -1360,6 +1438,49 @@ function setupSermonFilters() {
   clearBtn?.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
     if (clearBtn) clearBtn.hidden = true;
+    filterAndRenderSermons();
+  });
+
+  // Duration quick filter chips
+  document.querySelectorAll('.duration-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+      document.getElementById('favFilterChip')?.classList.remove('active');
+      btn.classList.add('active');
+      activeDurationFilter = btn.dataset.duration || 'all';
+      filterAndRenderSermons();
+    });
+  });
+
+  // Favorites filter chip
+  const favChip = document.getElementById('favFilterChip');
+  favChip?.addEventListener('click', () => {
+    const isCurrentlyActive = favChip.classList.contains('active');
+    document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+    if (isCurrentlyActive) {
+      favChip.classList.remove('active');
+      document.querySelector('.duration-chip[data-duration="all"]')?.classList.add('active');
+      activeDurationFilter = 'all';
+    } else {
+      favChip.classList.add('active');
+      activeDurationFilter = 'favorites';
+    }
+    filterAndRenderSermons();
+  });
+
+  // View Mode Switcher (Grid vs Audio List)
+  const gridBtn = document.getElementById('viewModeGridBtn');
+  const listBtn = document.getElementById('viewModeListBtn');
+  gridBtn?.addEventListener('click', () => {
+    activeViewMode = 'grid';
+    gridBtn.classList.add('active');
+    listBtn?.classList.remove('active');
+    filterAndRenderSermons();
+  });
+  listBtn?.addEventListener('click', () => {
+    activeViewMode = 'list';
+    listBtn.classList.add('active');
+    gridBtn?.classList.remove('active');
     filterAndRenderSermons();
   });
 
@@ -1377,6 +1498,10 @@ function setupSermonFilters() {
     const sort = document.getElementById('filterSort');
     if (sort) sort.value = 'newest';
     activeSeasonChip = 'all';
+    activeDurationFilter = 'all';
+    document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+    document.querySelector('.duration-chip[data-duration="all"]')?.classList.add('active');
+    document.getElementById('favFilterChip')?.classList.remove('active');
     renderSeasonChips();
     filterAndRenderSermons();
   });
@@ -1430,11 +1555,27 @@ function filterAndRenderSermons() {
   const sort       = document.getElementById('filterSort')?.value || 'newest';
 
   let results = sermons().filter(s => {
+    // Season filter
     if (activeSeasonChip !== 'all') {
       const primary   = s.primarySeason.toLowerCase().includes(activeSeasonChip);
       const secondary = s.secondarySeasons?.some(x => x.toLowerCase().includes(activeSeasonChip));
       if (!primary && !secondary) return false;
     }
+
+    // Duration & Favorites quick filters
+    if (activeDurationFilter === 'favorites') {
+      if (!savedFavorites.includes(s.id)) return false;
+    } else if (activeDurationFilter === 'under1') {
+      const sec = s.durationSec || 120;
+      if (sec >= 60) return false;
+    } else if (activeDurationFilter === '1to2') {
+      const sec = s.durationSec || 120;
+      if (sec < 60 || sec > 120) return false;
+    } else if (activeDurationFilter === 'over2') {
+      const sec = s.durationSec || 120;
+      if (sec <= 120) return false;
+    }
+
     if (topic !== 'all' && !s.topics.includes(topic)) return false;
     if (preacher !== 'all' && s.preacherName !== preacher) return false;
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
@@ -1449,6 +1590,7 @@ function filterAndRenderSermons() {
   if (sort === 'newest') results.sort((a,b) => new Date(b.publishDate) - new Date(a.publishDate));
   else if (sort === 'views') results.sort((a,b) => b.views - a.views);
   else if (sort === 'title') results.sort((a,b) => a.title.localeCompare(b.title));
+  else if (sort === 'duration') results.sort((a,b) => (a.durationSec || 120) - (b.durationSec || 120));
 
   const countEl = document.getElementById('resultsCount');
   if (countEl) countEl.textContent = results.length;
@@ -1457,6 +1599,7 @@ function filterAndRenderSermons() {
   if (!grid) return;
 
   if (!results.length) {
+    grid.className = 'sermons-grid';
     grid.innerHTML = `
       <div class="sermons-empty-state" style="grid-column:1/-1;text-align:center;padding:56px 24px;background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 4px 20px rgba(0,0,0,0.04);">
         <div style="font-size:2.8rem;margin-bottom:14px;">🔍</div>
@@ -1467,7 +1610,13 @@ function filterAndRenderSermons() {
         </button>
       </div>`;
   } else {
-    grid.innerHTML = results.map(s => createSermonCardHtml(s)).join('');
+    if (activeViewMode === 'list') {
+      grid.className = 'sermons-list-view';
+      grid.innerHTML = results.map(s => createSermonListRowHtml(s)).join('');
+    } else {
+      grid.className = 'sermons-grid';
+      grid.innerHTML = results.map(s => createSermonCardHtml(s)).join('');
+    }
     observeNewCards(grid);
   }
 }

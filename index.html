@@ -410,6 +410,19 @@
 
           <div class="season-chips-container" id="seasonChipsContainer"></div>
 
+          <!-- Quick Filters: Duration & Favorites -->
+          <div class="quick-filter-chips-row">
+            <span class="quick-filter-label">Length:</span>
+            <button class="chip duration-chip active" data-duration="all">All</button>
+            <button class="chip duration-chip" data-duration="under1">⚡ Under 1 Min</button>
+            <button class="chip duration-chip" data-duration="1to2">⏱️ 1–2 Mins</button>
+            <button class="chip duration-chip" data-duration="over2">📖 2+ Mins</button>
+            <div class="quick-filter-separator"></div>
+            <button class="chip fav-filter-chip" id="favFilterChip" data-fav-only="false">
+              ★ Saved (<span id="sermonFavCount">0</span>)
+            </button>
+          </div>
+
           <div class="filters-row">
             <div class="filter-group">
               <label for="filterTopic">Topic</label>
@@ -443,13 +456,26 @@
                 <option value="newest">Newest First</option>
                 <option value="views">Most Viewed</option>
                 <option value="title">Alphabetical</option>
+                <option value="duration">Duration (Shortest First)</option>
               </select>
             </div>
           </div>
         </div>
 
         <div class="results-count-bar">
-          <span>Showing <strong id="resultsCount">0</strong> sermons</span>
+          <div class="results-count-left">
+            <span>Showing <strong id="resultsCount">0</strong> sermons</span>
+          </div>
+          <div class="view-mode-toggle" id="viewModeToggle" role="group" aria-label="View Layout Mode">
+            <button class="view-mode-btn active" id="viewModeGridBtn" data-mode="grid" title="Visual Cards View">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Grid</span>
+            </button>
+            <button class="view-mode-btn" id="viewModeListBtn" data-mode="list" title="Audio Podcast List View">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <span>Audio List</span>
+            </button>
+          </div>
           <button class="btn-link" id="resetFiltersBtn">Reset Filters</button>
         </div>
 
