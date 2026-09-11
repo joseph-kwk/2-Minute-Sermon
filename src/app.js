@@ -1352,41 +1352,25 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   const accentTextColor  = isLight ? '#78350f' : tpl.accentColor;
   const mutedTextColor   = isLight ? 'rgba(41, 37, 36, 0.75)' : 'rgba(255, 255, 255, 0.78)';
 
-  // 5. Card Architectural Frame
-  const frameMargin = isStory ? 64 : 54;
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = isLight ? 'rgba(120, 53, 15, 0.22)' : 'rgba(255, 255, 255, 0.16)';
-  ctx.strokeRect(frameMargin, frameMargin, width - frameMargin * 2, height - frameMargin * 2);
-
-  // 6. Header Badge & Sacred Symbol
-  const topY = isStory ? 220 : 140;
-  ctx.textAlign = 'center';
-  ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = accentTextColor;
-  ctx.letterSpacing = '3px';
-  ctx.fillText(tpl.badgeText, width / 2, topY);
-
-  ctx.font = '26px -apple-system, sans-serif';
-  ctx.fillText('✝', width / 2, topY + 44);
-
-  // 7. Auto-Scaling Font Loop (Rule 2)
+  // 5. Auto-Scaling Font Loop for Scripture Quote (The Hero Content)
   const quoteText = `"${verse.verseText}"`;
-  const maxAvailableH = safeH - 110; // reserve space for scripture reference
+  const maxAvailableH = safeH - 80;
   const { fontSize, lines, lineHeight, totalHeight } = fitTextInSafeZone(
-    ctx, quoteText, safeW - 40, maxAvailableH, 24, isStory ? 56 : 48
+    ctx, quoteText, safeW - 40, maxAvailableH, 26, isStory ? 58 : 50
   );
 
   // Vertical centering calculation within the Safe Zone
-  const contentTotalH = totalHeight + 80;
-  const startY = safeY + Math.max(10, Math.round((safeH - contentTotalH) / 2)) + fontSize;
+  const contentTotalH = totalHeight + 70;
+  const startY = safeY + Math.max(20, Math.round((safeH - contentTotalH) / 2)) + fontSize;
 
   // Set Readability Shadow on Text
-  ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.14)' : 'rgba(0, 0, 0, 0.75)';
-  ctx.shadowBlur = isLight ? 4 : 12;
+  ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.10)' : 'rgba(0, 0, 0, 0.70)';
+  ctx.shadowBlur = isLight ? 4 : 14;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 2;
 
   // Render Scripture Quote Lines
+  ctx.textAlign = 'center';
   ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
   ctx.fillStyle = primaryTextColor;
 
@@ -1394,37 +1378,39 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
     ctx.fillText(lines[i], width / 2, startY + (i * lineHeight));
   }
 
-  // 8. Render Scripture Reference Badge
-  const refY = startY + (lines.length - 1) * lineHeight + 60;
-  ctx.font = '700 34px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  // 6. Render Scripture Reference (Clean, Elegant, Tracked Small-Caps)
+  const refY = startY + (lines.length - 1) * lineHeight + 56;
+  ctx.font = '700 30px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
   ctx.fillStyle = accentTextColor;
-  ctx.shadowBlur = isLight ? 3 : 8;
-  ctx.fillText(`— ${verse.book} ${verse.chapter}:${verse.verse}`, width / 2, refY);
+  ctx.letterSpacing = '3px';
+  ctx.shadowBlur = isLight ? 2 : 8;
+  const bookRef = `${verse.book} ${verse.chapter}:${verse.verse}`.toUpperCase();
+  ctx.fillText(bookRef, width / 2, refY);
 
-  // Reset shadow for crisp UI elements
+  // Reset shadow for clean vector logo & imprint
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
 
-  // 9. Official Site Logo & Brand Watermark
-  const footerY = isStory ? height - 160 : height - 110;
+  // 7. Minimalist Social Media Footer Imprint (Clean, High-End Watermark)
+  const footerY = isStory ? height - 140 : height - 80;
   const logo = await getCachedLogo();
 
   if (logo) {
-    const logoSize = 56;
+    const logoSize = 44;
     const logoX = (width - logoSize) / 2;
-    const logoY = footerY - 72;
+    const logoY = footerY - 54;
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
   }
 
-  ctx.font = '700 22px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = isLight ? '#78350f' : '#ffffff';
-  ctx.letterSpacing = '1.5px';
+  ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = isLight ? '#78350f' : 'rgba(255, 255, 255, 0.90)';
+  ctx.letterSpacing = '2px';
   ctx.fillText('2-MINUTE SERMON', width / 2, footerY);
 
-  ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = mutedTextColor;
-  ctx.letterSpacing = '0.5px';
-  ctx.fillText('2minutesermon.com • Scripture in a Few Minutes', width / 2, footerY + 28);
+  ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = isLight ? 'rgba(120, 53, 15, 0.65)' : 'rgba(255, 255, 255, 0.55)';
+  ctx.letterSpacing = '1px';
+  ctx.fillText('2minutesermon.com', width / 2, footerY + 22);
 }
 
 function wrapCanvasText(ctx, text, maxWidth) {
