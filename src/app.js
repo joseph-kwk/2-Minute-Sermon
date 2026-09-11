@@ -621,7 +621,7 @@ function handleYtPlayerStateChange(event) {
   if (event.data === YT.PlayerState.PLAYING) {
     isAudioPlaying = true;
     player?.classList.add('is-playing');
-    if (badgeText) badgeText.textContent = '🎧 REAL YOUTUBE AUDIO';
+    if (badgeText) badgeText.textContent = '🎧 AUDIO FROM YOUTUBE';
 
     if (playBtn) {
       playBtn.querySelector('.mini-icon-play').style.display = 'none';
@@ -866,7 +866,7 @@ export function playSermonInMiniPlayer(sermonId) {
 
   const badgeText = document.getElementById('miniPlayerBadgeText');
   if (badgeText) {
-    badgeText.textContent = `🎧 REAL YOUTUBE AUDIO`;
+    badgeText.textContent = `🎧 AUDIO FROM YOUTUBE`;
   }
 
   const durTag = document.getElementById('miniPlayerDuration');
@@ -886,7 +886,7 @@ export function playSermonInMiniPlayer(sermonId) {
   });
 
   startMiniPlayerPlayback();
-  showToast(`🎧 Streaming YouTube Audio: ${s.title}`);
+  showToast(`🎧 Audio from YouTube: ${s.title}`);
 }
 window.playSermonInMiniPlayer = playSermonInMiniPlayer;
 
@@ -1133,15 +1133,141 @@ export function closeScriptureCardModal() {
 }
 window.closeScriptureCardModal = closeScriptureCardModal;
 
-// ─── CANVAS RENDERING ENGINE FOR HIGH-DPI SCRIPTURE CARDS ────────────────────
-function renderScriptureCardToCanvas(verse, theme, ratio) {
+// ─── TEMPLATE-DRIVEN LAYOUT ENGINE FOR SCRIPTURE CARDS ────────────────────────
+const SCRIPTURE_CARD_TEMPLATES = {
+  midnight: {
+    id: 'midnight',
+    name: 'Midnight Sanctuary',
+    imageUrl: '/assets/hero-bg.jpg',
+    fallbackGrad: ['#090a0f', '#12151e', '#07080b'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#f59e0b',
+    badgeText: '• DAILY SCRIPTURE ENCOURAGEMENT •'
+  },
+  dawn: {
+    id: 'dawn',
+    name: 'Dawn Grace',
+    imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#1e0c24', '#581c3c', '#9f1239', '#d97706'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#fbbf24',
+    badgeText: '• MORNING DEVOTION •'
+  },
+  parchment: {
+    id: 'parchment',
+    name: 'Sacred Parchment',
+    imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#faf4e8', '#f5ebe0', '#eedecb'],
+    safeZone: {
+      story:  { xPercent: 0.12, yPercent: 0.28, widthPercent: 0.76, heightPercent: 0.44 },
+      square: { xPercent: 0.10, yPercent: 0.22, widthPercent: 0.80, heightPercent: 0.54 }
+    },
+    accentColor: '#78350f',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  },
+  emerald: {
+    id: 'emerald',
+    name: 'Living Hope',
+    imageUrl: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#042f2e', '#064e3b', '#022c22'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#34d399',
+    badgeText: '• LIVING WORD •'
+  }
+};
+
+const cardImageCache = {};
+let logoImgCache = null;
+
+function getCachedCardImage(url) {
+  if (!url) return Promise.resolve(null);
+  if (cardImageCache[url] && cardImageCache[url].complete && cardImageCache[url].naturalWidth > 0) {
+    return Promise.resolve(cardImageCache[url]);
+  }
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      cardImageCache[url] = img;
+      resolve(img);
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+function getCachedLogo() {
+  if (logoImgCache && logoImgCache.complete && logoImgCache.naturalWidth > 0) {
+    return Promise.resolve(logoImgCache);
+  }
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      logoImgCache = img;
+      resolve(img);
+    };
+    img.onerror = () => resolve(null);
+    img.src = '/assets/logo.png';
+  });
+}
+
+function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 24, maxFontSize = 62) {
+  let fontSize = maxFontSize;
+  let lines = [];
+  let lineHeight = Math.round(fontSize * 1.45);
+  let totalHeight = 0;
+
+  while (fontSize >= minFontSize) {
+    ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
+    lineHeight = Math.round(fontSize * 1.45);
+    lines = wrapCanvasText(ctx, text, maxW);
+    totalHeight = lines.length * lineHeight;
+
+    if (totalHeight <= maxH) {
+      break;
+    }
+    fontSize -= 2;
+  }
+
+  return { fontSize, lines, lineHeight, totalHeight };
+}
+
+function analyzeSafeZoneLuminance(ctx, x, y, w, h) {
+  try {
+    const imgData = ctx.getImageData(x, y, w, h);
+    const d = imgData.data;
+    let totalLum = 0;
+    let samples = 0;
+    for (let i = 0; i < d.length; i += 16 * 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+      totalLum += 0.299 * r + 0.587 * g + 0.114 * b;
+      samples++;
+    }
+    return samples > 0 ? (totalLum / samples) : 60;
+  } catch (_) {
+    return 60;
+  }
+}
+
+async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story') {
   const canvas = document.getElementById('scriptureExportCanvas');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // Dimensions
   const isStory = ratio === 'story';
   const width  = 1080;
   const height = isStory ? 1920 : 1080;
@@ -1149,118 +1275,162 @@ function renderScriptureCardToCanvas(verse, theme, ratio) {
   canvas.width  = width;
   canvas.height = height;
 
-  // Background Styles by Theme
-  if (theme === 'midnight') {
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#0a0c10');
-    bgGrad.addColorStop(0.5, '#121620');
-    bgGrad.addColorStop(1, '#08090d');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+  const tpl = SCRIPTURE_CARD_TEMPLATES[themeId] || SCRIPTURE_CARD_TEMPLATES.midnight;
 
-    // Warm radial aura at top
-    const aura = ctx.createRadialGradient(width / 2, height * 0.22, 10, width / 2, height * 0.22, width * 0.7);
-    aura.addColorStop(0, 'rgba(245, 158, 11, 0.16)');
-    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = aura;
-    ctx.fillRect(0, 0, width, height);
-  } else if (theme === 'dawn') {
-    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, '#1e0c24');
-    bgGrad.addColorStop(0.4, '#581c3c');
-    bgGrad.addColorStop(0.75, '#9f1239');
-    bgGrad.addColorStop(1, '#d97706');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-  } else if (theme === 'parchment') {
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#faf4e8');
-    bgGrad.addColorStop(0.5, '#f5ebe0');
-    bgGrad.addColorStop(1, '#eedecb');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-  } else if (theme === 'emerald') {
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#042f2e');
-    bgGrad.addColorStop(0.5, '#064e3b');
-    bgGrad.addColorStop(1, '#022c22');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+  // 1. Draw Background Image or Fallback Gradient
+  const bgImg = await getCachedCardImage(tpl.imageUrl);
+  if (bgImg) {
+    // Cover-fit image to canvas
+    const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
+    const targetRatio = width / height;
+    let renderW, renderH, offsetX, offsetY;
 
-    const aura = ctx.createRadialGradient(width / 2, height * 0.45, 20, width / 2, height * 0.45, width * 0.6);
-    aura.addColorStop(0, 'rgba(52, 211, 153, 0.14)');
-    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = aura;
+    if (imgRatio > targetRatio) {
+      renderH = height;
+      renderW = height * imgRatio;
+      offsetX = (width - renderW) / 2;
+      offsetY = 0;
+    } else {
+      renderW = width;
+      renderH = width / imgRatio;
+      offsetX = 0;
+      offsetY = (height - renderH) / 2;
+    }
+    ctx.drawImage(bgImg, offsetX, offsetY, renderW, renderH);
+
+    // Deep rich overlay to ensure photograph serves as atmosphere
+    const imgTint = ctx.createLinearGradient(0, 0, 0, height);
+    if (themeId === 'parchment') {
+      imgTint.addColorStop(0, 'rgba(250, 244, 232, 0.75)');
+      imgTint.addColorStop(1, 'rgba(238, 222, 203, 0.88)');
+    } else {
+      imgTint.addColorStop(0, 'rgba(5, 7, 12, 0.72)');
+      imgTint.addColorStop(0.5, 'rgba(10, 14, 22, 0.55)');
+      imgTint.addColorStop(1, 'rgba(5, 7, 12, 0.82)');
+    }
+    ctx.fillStyle = imgTint;
+    ctx.fillRect(0, 0, width, height);
+  } else {
+    // Rich fallback gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    tpl.fallbackGrad.forEach((col, idx) => {
+      grad.addColorStop(idx / (tpl.fallbackGrad.length - 1), col);
+    });
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
   }
 
-  // Card Border Frame
-  const margin = isStory ? 72 : 60;
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = theme === 'parchment' ? 'rgba(120, 53, 15, 0.22)' : 'rgba(255, 255, 255, 0.16)';
-  ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
+  // 2. Define "Safe Zone" Bounding Box
+  const sz = isStory ? tpl.safeZone.story : tpl.safeZone.square;
+  const safeX = Math.round(width * sz.xPercent);
+  const safeY = Math.round(height * sz.yPercent);
+  const safeW = Math.round(width * sz.widthPercent);
+  const safeH = Math.round(height * sz.heightPercent);
 
-  // Top Category Pill
+  // 3. Dynamic Readability Filter (Scrim Layer)
+  const scrim = ctx.createRadialGradient(
+    safeX + safeW / 2, safeY + safeH / 2, 40,
+    safeX + safeW / 2, safeY + safeH / 2, safeW * 0.70
+  );
+  if (themeId === 'parchment') {
+    scrim.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
+    scrim.addColorStop(0.7, 'rgba(255, 255, 255, 0.35)');
+    scrim.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+  } else {
+    scrim.addColorStop(0, 'rgba(0, 0, 0, 0.72)');
+    scrim.addColorStop(0.65, 'rgba(0, 0, 0, 0.45)');
+    scrim.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+  }
+  ctx.fillStyle = scrim;
+  ctx.fillRect(safeX - 30, safeY - 30, safeW + 60, safeH + 60);
+
+  // 4. Contrast Analysis for Text Color
+  const avgLum = analyzeSafeZoneLuminance(ctx, safeX, safeY, safeW, safeH);
+  const isLight = (themeId === 'parchment') || (avgLum > 135);
+
+  const primaryTextColor = isLight ? '#1c1917' : '#ffffff';
+  const accentTextColor  = isLight ? '#78350f' : tpl.accentColor;
+  const mutedTextColor   = isLight ? 'rgba(41, 37, 36, 0.75)' : 'rgba(255, 255, 255, 0.78)';
+
+  // 5. Card Architectural Frame
+  const frameMargin = isStory ? 64 : 54;
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = isLight ? 'rgba(120, 53, 15, 0.22)' : 'rgba(255, 255, 255, 0.16)';
+  ctx.strokeRect(frameMargin, frameMargin, width - frameMargin * 2, height - frameMargin * 2);
+
+  // 6. Header Badge & Sacred Symbol
+  const topY = isStory ? 220 : 140;
   ctx.textAlign = 'center';
-  ctx.font = '600 24px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = theme === 'parchment' ? '#b45309' : '#f59e0b';
+  ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = accentTextColor;
   ctx.letterSpacing = '3px';
-  const topY = isStory ? 240 : 160;
-  ctx.fillText('• DAILY SCRIPTURE ENCOURAGEMENT •', width / 2, topY);
+  ctx.fillText(tpl.badgeText, width / 2, topY);
 
-  // Decorative Cross / Symbol
-  ctx.font = '28px -apple-system, sans-serif';
-  ctx.fillText('✝', width / 2, topY + 46);
+  ctx.font = '26px -apple-system, sans-serif';
+  ctx.fillText('✝', width / 2, topY + 44);
 
-  // Scripture Quote
+  // 7. Auto-Scaling Font Loop (Rule 2)
   const quoteText = `"${verse.verseText}"`;
-  const maxLineWidth = width - margin * 2 - 120;
-  const quoteFontSize = isStory ? (quoteText.length > 120 ? 46 : 56) : (quoteText.length > 120 ? 42 : 50);
-  ctx.font = `italic 600 ${quoteFontSize}px "Playfair Display", Georgia, serif`;
-  ctx.fillStyle = theme === 'parchment' ? '#1c1917' : '#ffffff';
+  const maxAvailableH = safeH - 110; // reserve space for scripture reference
+  const { fontSize, lines, lineHeight, totalHeight } = fitTextInSafeZone(
+    ctx, quoteText, safeW - 40, maxAvailableH, 24, isStory ? 56 : 48
+  );
 
-  const lines = wrapCanvasText(ctx, quoteText, maxLineWidth);
-  const lineHeight = quoteFontSize * 1.5;
-  const totalTextHeight = lines.length * lineHeight;
-  let startY = (height / 2) - (totalTextHeight / 2) - 40;
-  if (!isStory) startY = (height / 2) - (totalTextHeight / 2) - 30;
+  // Vertical centering calculation within the Safe Zone
+  const contentTotalH = totalHeight + 80;
+  const startY = safeY + Math.max(10, Math.round((safeH - contentTotalH) / 2)) + fontSize;
+
+  // Set Readability Shadow on Text
+  ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.14)' : 'rgba(0, 0, 0, 0.75)';
+  ctx.shadowBlur = isLight ? 4 : 12;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+
+  // Render Scripture Quote Lines
+  ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
+  ctx.fillStyle = primaryTextColor;
 
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i], width / 2, startY + (i * lineHeight));
   }
 
-  // Scripture Reference
-  const refY = startY + (lines.length * lineHeight) + 60;
-  ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = theme === 'parchment' ? '#991b1b' : '#f59e0b';
+  // 8. Render Scripture Reference Badge
+  const refY = startY + (lines.length - 1) * lineHeight + 60;
+  ctx.font = '700 34px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = accentTextColor;
+  ctx.shadowBlur = isLight ? 3 : 8;
   ctx.fillText(`— ${verse.book} ${verse.chapter}:${verse.verse}`, width / 2, refY);
 
-  // Reflection snippet (if exists)
-  if (verse.reflection) {
-    ctx.font = '400 italic 26px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-    ctx.fillStyle = theme === 'parchment' ? 'rgba(41, 37, 36, 0.75)' : 'rgba(255, 255, 255, 0.75)';
-    const refLines = wrapCanvasText(ctx, `"${verse.reflection}"`, maxLineWidth - 60);
-    const refStart = refY + 54;
-    for (let j = 0; j < Math.min(3, refLines.length); j++) {
-      ctx.fillText(refLines[j], width / 2, refStart + (j * 38));
-    }
+  // Reset shadow for crisp UI elements
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+
+  // 9. Official Site Logo & Brand Watermark
+  const footerY = isStory ? height - 160 : height - 110;
+  const logo = await getCachedLogo();
+
+  if (logo) {
+    const logoSize = 56;
+    const logoX = (width - logoSize) / 2;
+    const logoY = footerY - 72;
+    ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
   }
 
-  // Footer Branding
-  const footerY = isStory ? height - 160 : height - 110;
-  ctx.font = '700 24px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = theme === 'parchment' ? '#78350f' : '#ffffff';
+  ctx.font = '700 22px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = isLight ? '#78350f' : '#ffffff';
+  ctx.letterSpacing = '1.5px';
   ctx.fillText('2-MINUTE SERMON', width / 2, footerY);
 
-  ctx.font = '500 18px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = theme === 'parchment' ? 'rgba(120, 53, 15, 0.65)' : 'rgba(255, 255, 255, 0.55)';
-  ctx.fillText('www.2minutesermon.org • Scripture in a Few Minutes', width / 2, footerY + 30);
+  ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = mutedTextColor;
+  ctx.letterSpacing = '0.5px';
+  ctx.fillText('2minutesermon.com • Scripture in a Few Minutes', width / 2, footerY + 28);
 }
 
 function wrapCanvasText(ctx, text, maxWidth) {
   const words = text.split(' ');
   const lines = [];
-  let currentLine = words[0];
+  let currentLine = words[0] || '';
 
   for (let i = 1; i < words.length; i++) {
     const word = words[i];
