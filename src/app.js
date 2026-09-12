@@ -186,7 +186,7 @@ function setupNavigation() {
     btn.addEventListener('click', () => {
       const targetView = btn.getAttribute('data-view');
       if (!targetView) return;
-      if (targetView === 'admin') { openAdminPortal(); return; }
+      if (targetView === 'admin') { window.location.href = '/admin.html'; return; }
       
       const aboutTab = btn.getAttribute('data-about-tab');
       switchView(targetView);
@@ -934,49 +934,7 @@ window.openPrayerFromSermon = () => {
 
 // ─── ADMIN AUTH GATE ──────────────────────────────────────────────────────────
 function openAdminPortal() {
-  if (adminAuthenticated) { switchView('admin'); return; }
-
-  // Render auth overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'admin-auth-overlay';
-  overlay.id = 'adminAuthOverlay';
-  overlay.innerHTML = `
-    <div class="admin-auth-card">
-      <img src="/assets/logo.png" alt="2-Minute Sermon" class="admin-auth-logo">
-      <h2 class="admin-auth-title">The Steward</h2>
-      <p class="admin-auth-subtitle">Faithful management of sermons, schedules &amp; ministry content.</p>
-      <form class="admin-auth-form" id="adminAuthForm">
-        <input type="text" class="admin-auth-input" id="adminAuthUser" placeholder="Username" autocomplete="username" required>
-        <input type="password" class="admin-auth-input" id="adminAuthPass" placeholder="Password" autocomplete="current-password" required>
-        <div class="admin-auth-error" id="adminAuthError"></div>
-        <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:4px;">
-          🔐 Enter The Steward
-        </button>
-      </form>
-      <p class="admin-auth-hint">Enter your password to continue.</p>
-    </div>`;
-
-  document.body.appendChild(overlay);
-
-  document.getElementById('adminAuthForm')?.addEventListener('submit', e => {
-    e.preventDefault();
-    const pass = (document.getElementById('adminAuthPass')?.value || '').trim();
-    const errEl = document.getElementById('adminAuthError');
-
-    if (VALID_PASSWORDS.includes(pass)) {
-      adminAuthenticated = true;
-      overlay.style.animation = 'fadeOut 0.25s ease forwards';
-      setTimeout(() => { overlay.remove(); switchView('admin'); }, 250); 
-      showToast('✅ Welcome to The Steward');
-    } else {
-      errEl.textContent = 'Incorrect password. Please try again.';
-      document.getElementById('adminAuthPass').value = '';
-      document.getElementById('adminAuthPass').focus();
-      const card = overlay.querySelector('.admin-auth-card');
-      card.style.animation = 'none';
-      requestAnimationFrame(() => { card.style.animation = 'shake 0.4s ease'; });
-    }
-  });
+  window.location.href = '/admin.html';
 }
 
 // Shake animation for wrong password
