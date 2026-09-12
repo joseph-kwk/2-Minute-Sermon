@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTopbarDate();
   setupAuthForm();
   setupSidebarNav();
+  setupMobileNav();
   setupQuickActions();
   setupVerseScheduler();
   setupSermonPublisher();
@@ -129,8 +130,9 @@ function setupAuthForm() {
   document.head.appendChild(st);
 }
 
-// Sign out (Modernized & Smooth)
-document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
+// ── Sign out (Modernized & Smooth) ─────────────────────────────────────────
+function handleSignOut() {
+  closeMobileSidebar();
   authenticated = false;
   const dash      = document.getElementById('adminDashboard');
   const overlay   = document.getElementById('adminAuthOverlay');
@@ -159,14 +161,47 @@ document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
     overlay.style.animation = 'fadeIn 0.25s ease forwards';
     toast('🔒 Signed out. Session closed.');
   }, 220);
-});
+}
+
+document.getElementById('adminSignOutBtn')?.addEventListener('click', handleSignOut);
+document.getElementById('adminTopSignOutBtn')?.addEventListener('click', handleSignOut);
+
+// ── MOBILE NAVIGATION CONTROLS ───────────────────────────────────────────
+function openMobileSidebar() {
+  const sidebar = document.getElementById('adminSidebar');
+  const backdrop = document.getElementById('adminNavBackdrop');
+  sidebar?.classList.add('open');
+  backdrop?.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById('adminSidebar');
+  const backdrop = document.getElementById('adminNavBackdrop');
+  sidebar?.classList.remove('open');
+  backdrop?.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+function setupMobileNav() {
+  document.getElementById('adminMobileMenuBtn')?.addEventListener('click', openMobileSidebar);
+  document.getElementById('adminSidebarCloseBtn')?.addEventListener('click', closeMobileSidebar);
+  document.getElementById('adminNavBackdrop')?.addEventListener('click', closeMobileSidebar);
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMobileSidebar();
+  });
+}
 
 // ── SIDEBAR NAV ─────────────────────────────────────────────────────────
 function setupSidebarNav() {
   document.querySelectorAll('.admin-nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.getAttribute('data-panel');
-      if (panel) switchPanel(panel);
+      if (panel) {
+        switchPanel(panel);
+        closeMobileSidebar();
+      }
     });
   });
 }
@@ -175,20 +210,26 @@ function setupQuickActions() {
   document.querySelectorAll('.admin-quick-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.getAttribute('data-panel');
-      if (panel) switchPanel(panel);
+      if (panel) {
+        switchPanel(panel);
+        closeMobileSidebar();
+      }
     });
   });
 }
 
 const PANEL_TITLES = {
-  dashboard:   'Dashboard',
-  'daily-verse': 'Daily Verse Scheduler',
-  sermons:     'Sermon Publisher',
-  preachers:   'Preachers Manager',
-  events:      'Events Manager',
-  prayers:     'Prayer Inbox',
-  settings:    'Ministry Settings',
-  backup:      'Export & Backup'
+  dashboard:     'Dashboard',
+  'daily-verse': 'Daily Verse Queue',
+  sermons:       'Sermon Publisher',
+  preachers:     'Preachers Manager',
+  events:        'Events Manager',
+  leadership:    'Leadership & Team',
+  conversations: 'The Conversation',
+  partners:      'Ministry Partners',
+  prayers:       'Prayer Inbox',
+  settings:      'Ministry Settings',
+  backup:        'Export & Backup'
 };
 
 function switchPanel(panelId) {
