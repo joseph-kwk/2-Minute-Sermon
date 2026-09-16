@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMobileDrawer();
   setupHeroCtas();
   setupHeroAmbientEffects();
+  setupFooterWater();
   setupPromoVideo();
   setupPersistentMiniPlayer();
   setupScriptureCardGenerator();
@@ -360,6 +361,163 @@ function setupHeroCtas() {
     }
   });
 }
+
+// --- FOOTER FLOWING WATER CANVAS - Natural Deep Ocean Simulation ---
+function setupFooterWater() {
+  const footer = document.querySelector('.app-footer');
+  if (!footer) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'footer-water-canvas';
+  footer.insertBefore(canvas, footer.firstChild);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let W = 0, H = 0;
+  let t = 0, rafId = null, isVisible = true;
+
+  function resize() {
+    W = canvas.width  = footer.offsetWidth;
+    H = canvas.height = footer.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  // 5 natural rolling ocean wave bodies, from distant deep horizon to foreground swell
+  const WAVES = [
+    { yRatio: 0.20, amp: 0.038, freq: 0.85, spd: 0.18, ph: 0.0, ph2: 1.4, c0: 'rgba(5, 18, 34, 0.90)', c1: 'rgba(2, 8, 16, 0.96)' },
+    { yRatio: 0.38, amp: 0.052, freq: 0.70, spd: 0.14, ph: 2.1, ph2: 0.8, c0: 'rgba(8, 28, 52, 0.88)', c1: 'rgba(3, 12, 24, 0.94)' },
+    { yRatio: 0.55, amp: 0.066, freq: 0.55, spd: 0.10, ph: 4.0, ph2: 2.7, c0: 'rgba(12, 38, 70, 0.86)', c1: 'rgba(5, 18, 35, 0.92)' },
+    { yRatio: 0.72, amp: 0.080, freq: 0.42, spd: 0.07, ph: 1.7, ph2: 3.9, c0: 'rgba(15, 48, 88, 0.88)', c1: 'rgba(6, 24, 46, 0.95)' },
+    { yRatio: 0.87, amp: 0.092, freq: 0.34, spd: 0.05, ph: 3.2, ph2: 1.8, c0: 'rgba(20, 60, 108, 0.90)', c1: 'rgba(8, 30, 58, 0.98)' }
+  ];
+
+  // Specular caustic shimmers that ride along the wave surfaces (like moonlight reflections on ripples)
+  const SHIMMERS = Array.from({ length: 48 }, (_, i) => ({
+    xRatio: Math.random(),
+    waveIdx: i % WAVES.length,
+    yOffset: (Math.random() - 0.25) * 14,
+    len: 28 + Math.random() * 50,
+    height: 1.6 + Math.random() * 2.2,
+    speed: 0.00035 + Math.random() * 0.00065,
+    pulseSpeed: 1.2 + Math.random() * 1.8,
+    phase: Math.random() * Math.PI * 2,
+    baseAlpha: 0.07 + Math.random() * 0.13
+  }));
+
+  function surfaceY(x, w) {
+    const nx = x / (W || 1);
+    const wave1 = Math.sin(nx * Math.PI * 2 * w.freq + t * w.spd + w.ph);
+    const wave2 = Math.sin(nx * Math.PI * 4 * w.freq + t * w.spd * 0.7 + w.ph2) * 0.36;
+    const wave3 = Math.cos(nx * Math.PI * 1.6 * w.freq - t * w.spd * 0.38) * 0.20;
+    const raw = (wave1 + wave2 + wave3) / 1.56;
+    return H * w.yRatio + raw * H * w.amp;
+  }
+
+  function drawWaveBody(w) {
+    const SEG = Math.max(4, Math.ceil(W / 200));
+    ctx.beginPath();
+    ctx.moveTo(-2, H + 2);
+    ctx.lineTo(-2, surfaceY(0, w));
+    for (let x = 0; x <= W + SEG; x += SEG) {
+      const nextX = Math.min(W + SEG, x + SEG);
+      const cpX = (x + nextX) / 2;
+      ctx.quadraticCurveTo(cpX, surfaceY(cpX, w), nextX, surfaceY(nextX, w));
+    }
+    ctx.lineTo(W + 2, H + 2);
+    ctx.closePath();
+
+    const crestY = H * (w.yRatio - w.amp);
+    const grad = ctx.createLinearGradient(0, crestY, 0, H);
+    grad.addColorStop(0, w.c0);
+    grad.addColorStop(0.3, w.c0);
+    grad.addColorStop(1, w.c1);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // NO stroke lines anywhere — completely pure natural fluid fills
+  }
+
+  function drawShimmers() {
+    SHIMMERS.forEach(s => {
+      s.xRatio = (s.xRatio + s.speed) % 1.0;
+      const x = s.xRatio * W;
+      const wave = WAVES[s.waveIdx];
+      const y = surfaceY(x, wave) + s.yOffset;
+
+      const pulse = Math.sin(t * s.pulseSpeed + s.phase);
+      if (pulse <= 0) return;
+
+      const alpha = s.baseAlpha * pulse * pulse;
+      if (alpha < 0.01) return;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(x, y, s.len * 0.5, s.height, 0, 0, Math.PI * 2);
+      const glint = ctx.createRadialGradient(x, y, 0, x, y, s.len * 0.5);
+      glint.addColorStop(0,   `rgba(175, 218, 255, ${alpha.toFixed(3)})`);
+      glint.addColorStop(0.45, `rgba(100, 165, 235, ${(alpha * 0.45).toFixed(3)})`);
+      glint.addColorStop(1,   'rgba(40, 90, 160, 0)');
+      ctx.fillStyle = glint;
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function drawFrame() {
+    if (!isVisible) return;
+    t += 0.0055;
+    ctx.clearRect(0, 0, W, H);
+
+    // Deep oceanic abyss background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,   '#01060e');
+    bg.addColorStop(0.5, '#030c18');
+    bg.addColorStop(1,   '#051526');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Diffuse ambient moonlight glow
+    const moonX = W * 0.5;
+    const moon = ctx.createRadialGradient(moonX, H * 0.05, 0, moonX, H * 0.45, W * 0.48);
+    const mA = (0.075 + Math.sin(t * 0.22) * 0.015).toFixed(3);
+    moon.addColorStop(0,    `rgba(160, 205, 255, ${mA})`);
+    moon.addColorStop(0.55, 'rgba(60, 110, 180, 0.02)');
+    moon.addColorStop(1,    'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = moon;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw waves: back to front
+    WAVES.forEach(w => drawWaveBody(w));
+
+    // Draw natural surface shimmers / moonlight caustics riding the waves
+    drawShimmers();
+
+    // Soft moonlit water sheen band down the center
+    const sheen = ctx.createLinearGradient(moonX - W * 0.25, 0, moonX + W * 0.25, 0);
+    const sA = (0.05 + Math.sin(t * 0.35) * 0.018).toFixed(3);
+    sheen.addColorStop(0,   'rgba(140, 190, 255, 0)');
+    sheen.addColorStop(0.5, `rgba(140, 190, 255, ${sA})`);
+    sheen.addColorStop(1,   'rgba(140, 190, 255, 0)');
+    ctx.fillStyle = sheen;
+    const topWaveY = surfaceY(W * 0.5, WAVES[0]);
+    ctx.fillRect(moonX - W * 0.25, 0, W * 0.5, topWaveY);
+
+    rafId = requestAnimationFrame(drawFrame);
+  }
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      isVisible = e.isIntersecting;
+      if (isVisible && !rafId) rafId = requestAnimationFrame(drawFrame);
+      else if (!isVisible && rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    });
+  }, { threshold: 0.01 });
+  obs.observe(footer);
+  rafId = requestAnimationFrame(drawFrame);
+}
+
+
 
 // ─── HERO AMBIENT EFFECTS (Static image + golden lantern particles) ──────────
 function setupHeroAmbientEffects() {
