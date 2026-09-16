@@ -537,10 +537,12 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   margin-bottom: 8px;
 }
 .promo-section-desc {
-  color: #555e6d !important;
-  font-size: 1.05rem;
-  max-width: 620px;
+  color: #4b5563 !important;
+  font-size: 1.12rem;
+  font-weight: 500;
+  max-width: 680px;
   margin: 0 auto;
+  line-height: 1.5;
 }
 
 .promo-cinema-frame {
@@ -2354,21 +2356,12 @@ textarea.text-input { resize: vertical; }
    NEWSLETTER SECTION (Warm Stone Devotional Delivery)
    ========================================================================== */
 .newsletter-section {
-  background: linear-gradient(180deg, #f5f1e8 0%, #ece5d9 45%, #22140d 88%, #0c0807 100%);
-  padding: 84px 0 100px;
+  background: linear-gradient(180deg, #f5f1e8 0%, #ece5d9 100%);
+  padding: 80px 0 84px;
   text-align: center;
   position: relative;
   overflow: hidden;
-}
-.newsletter-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 15%, rgba(245, 158, 11, 0.08) 0%, transparent 55%),
-    radial-gradient(circle at 85% 75%, rgba(198, 40, 40, 0.05) 0%, transparent 45%),
-    radial-gradient(circle at 15% 75%, rgba(16, 185, 129, 0.04) 0%, transparent 45%);
-  pointer-events: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
 .newsletter-container {
   max-width: 660px;
