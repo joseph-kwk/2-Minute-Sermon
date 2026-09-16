@@ -535,6 +535,8 @@ function setupHeroParticles(heroSection, sectionObserver) {
 // ─── SMOOTH HERO SCROLL PARALLAX ─────────────────────────────────────────────
 function setupHeroParallax(heroSection, video) {
   const container = heroSection.querySelector('.hero-container');
+  if (video) video.style.willChange = 'transform';
+  if (container) container.style.willChange = 'transform, opacity';
   let ticking = false;
 
   window.addEventListener('scroll', () => {
@@ -546,13 +548,13 @@ function setupHeroParallax(heroSection, video) {
         if (scrollY <= heroHeight + 50) {
           // Subtle downward parallax on video background (0.28x speed)
           if (video) {
-            const videoOffset = scrollY * 0.28;
+            const videoOffset = (scrollY * 0.28).toFixed(1);
             video.style.transform = `translate3d(-50%, calc(-50% + ${videoOffset}px), 0)`;
           }
 
           // Gentle fade and upward shift for hero text container
           if (container) {
-            const textOffset = scrollY * 0.14;
+            const textOffset = (scrollY * 0.14).toFixed(1);
             const opacity = Math.max(0, 1 - (scrollY / (heroHeight * 0.78)));
             container.style.transform = `translate3d(0, ${textOffset}px, 0)`;
             container.style.opacity = opacity.toFixed(2);
@@ -1735,6 +1737,7 @@ function populateDropdownFilterOptions() {
   const preachSel  = document.getElementById('filterPreacher');
   const adminPre   = document.getElementById('adminPreacher');
   const adminSea   = document.getElementById('adminSeason');
+  const scriptSel  = document.getElementById('filterScripture');
 
   if (topicSel)
     topicSel.innerHTML = `<option value="all">All Topics</option>` +
@@ -1743,6 +1746,16 @@ function populateDropdownFilterOptions() {
   if (preachSel)
     preachSel.innerHTML = `<option value="all">All Preachers</option>` +
       preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+
+  if (scriptSel) {
+    const prevVal = scriptSel.value || 'all';
+    const books = Array.from(new Set(sermons().map(s => s.scriptureBook).filter(Boolean))).sort();
+    scriptSel.innerHTML = `<option value="all">All Scripture Books</option>` +
+      books.map(b => `<option value="${b}">${b}</option>`).join('');
+    if (books.includes(prevVal)) {
+      scriptSel.value = prevVal;
+    }
+  }
 
   if (adminPre)
     adminPre.innerHTML = preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
@@ -1760,10 +1773,26 @@ function filterAndRenderSermons() {
   const sort       = document.getElementById('filterSort')?.value || 'newest';
 
   let results = sermons().filter(s => {
-    // Season filter
+    // Season filter (supports slugs, aliases, Xmas/Christmas, Easter/Passover, etc.)
     if (activeSeasonChip !== 'all') {
-      const primary   = s.primarySeason.toLowerCase().includes(activeSeasonChip);
-      const secondary = s.secondarySeasons?.some(x => x.toLowerCase().includes(activeSeasonChip));
+      const activeSeasonObj = seasons.find(sea => sea.slug === activeSeasonChip);
+      const aliases = (activeSeasonObj?.aliases && activeSeasonObj.aliases.length) 
+        ? activeSeasonObj.aliases 
+        : [activeSeasonChip, activeSeasonObj?.name || ''];
+
+      const matchSeason = (str) => {
+        if (!str) return false;
+        const sNorm = str.toLowerCase().trim();
+        const sClean = sNorm.replace(/[-\s_]/g, '');
+        return aliases.some(al => {
+          const alNorm = (al || '').toLowerCase().trim();
+          const alClean = alNorm.replace(/[-\s_]/g, '');
+          return sNorm.includes(alNorm) || alNorm.includes(sNorm) || (sClean && sClean === alClean);
+        });
+      };
+
+      const primary   = matchSeason(s.primarySeason);
+      const secondary = s.secondarySeasons?.some(x => matchSeason(x));
       if (!primary && !secondary) return false;
     }
 

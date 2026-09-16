@@ -1,6 +1,8 @@
 const STORAGE_KEY = '2ms_sermons';
+const VERSION_KEY = '2ms_sermons_ver';
+const CURRENT_SEED_VERSION = '2ms_v2.2_real_yt';
 
-// ── Seed data (curated real videos from @2MinuteSermonP channel) ─────────────
+// ── Seed data (curated real videos from @2MinuteSermonP YouTube channel) ─────
 const seedSermons = [
   {
     id: "sermon-1",
@@ -255,7 +257,7 @@ const seedSermons = [
     scripture: "Galatians 3:1",
     scriptureBook: "Galatians",
     primarySeason: "Lent",
-    secondarySeasons: ["Easter"],
+    secondarySeasons: ["Easter", "Holy Week"],
     topics: ["Grace", "Salvation", "Faith"],
     sermonType: "Teaching",
     duration: "2:35",
@@ -271,6 +273,171 @@ const seedSermons = [
       { time: "0:00", text: "Before whose eyes Jesus Christ was clearly portrayed among you as crucified." },
       { time: "0:50", text: "When Christ is vivid in your thoughts, worry and legalism lose their grip." },
       { time: "1:40", text: "Keep the cross before your eyes, for that is the bedrock of our freedom and peace." }
+    ]
+  },
+  // ── Christmas Series (Real 2023 Xmas Sermons from channel) ───────────────────
+  {
+    id: "sermon-11",
+    title: "A Birth that Changed History",
+    slug: "a-birth-that-changed-history",
+    preacherId: "p10",
+    preacherName: "Pastor Changhyun Kim",
+    scripture: "Luke 2:10-11",
+    scriptureBook: "Luke",
+    primarySeason: "Christmas",
+    secondarySeasons: ["Advent"],
+    topics: ["Salvation", "Hope", "Grace"],
+    sermonType: "Devotional",
+    duration: "2:42",
+    durationSec: 162,
+    youtubeUrl: "https://www.youtube.com/watch?v=i_laJlyN3wA",
+    youtubeEmbedId: "i_laJlyN3wA",
+    thumbnailUrl: "https://img.youtube.com/vi/i_laJlyN3wA/hqdefault.jpg",
+    summary: "I bring you good news of great joy for all people: Today in the city of David a Savior is born to you; He is Christ the Lord.",
+    publishDate: "2023-12-20",
+    views: 2150,
+    featured: true,
+    transcript: [
+      { time: "0:00", text: "The birth of Jesus was not an ordinary arrival—it was eternity entering human time." },
+      { time: "0:50", text: "In Bethlehem's quiet manger, God gave His greatest gift to redeem all mankind." },
+      { time: "1:40", text: "Welcome the Savior into your heart today and celebrate the joy that never fades." }
+    ]
+  },
+  {
+    id: "sermon-12",
+    title: "Celebrate Christmas Differently",
+    slug: "celebrate-christmas-differently",
+    preacherId: "p11",
+    preacherName: "Rev. Pastor Hyunjin Cho",
+    scripture: "Matthew 1:21",
+    scriptureBook: "Matthew",
+    primarySeason: "Christmas",
+    secondarySeasons: ["Advent"],
+    topics: ["Faith", "Salvation", "Encouragement"],
+    sermonType: "Devotional",
+    duration: "2:40",
+    durationSec: 160,
+    youtubeUrl: "https://www.youtube.com/watch?v=ohb-G-EZ2L0",
+    youtubeEmbedId: "ohb-G-EZ2L0",
+    thumbnailUrl: "https://img.youtube.com/vi/ohb-G-EZ2L0/hqdefault.jpg",
+    summary: "She will give birth to a son, and you are to give Him the name Jesus, because He will save His people from their sins.",
+    publishDate: "2023-12-22",
+    views: 1940,
+    featured: false,
+    transcript: [
+      { time: "0:00", text: "Beyond the lights and festivities lies the true purpose of Christmas: redemption." },
+      { time: "0:45", text: "When we celebrate Christmas with Christ at the center, our joy becomes anchored in eternity." },
+      { time: "1:35", text: "Let His peace rule in your home and share His generous love with someone in need." }
+    ]
+  },
+  {
+    id: "sermon-13",
+    title: "The Beauty of Waiting",
+    slug: "the-beauty-of-waiting",
+    preacherId: "p12",
+    preacherName: "Pastor Seulki Choi",
+    scripture: "Isaiah 9:6",
+    scriptureBook: "Isaiah",
+    primarySeason: "Christmas",
+    secondarySeasons: ["Advent"],
+    topics: ["Hope", "Prayer", "Faith"],
+    sermonType: "Teaching",
+    duration: "2:19",
+    durationSec: 139,
+    youtubeUrl: "https://www.youtube.com/watch?v=5yo8ZPYqeBI",
+    youtubeEmbedId: "5yo8ZPYqeBI",
+    thumbnailUrl: "https://img.youtube.com/vi/5yo8ZPYqeBI/hqdefault.jpg",
+    summary: "For unto us a Child is born, unto us a Son is given. Reflecting on the holy anticipation of Advent and God's perfect timing.",
+    publishDate: "2023-12-24",
+    views: 1870,
+    featured: false,
+    transcript: [
+      { time: "0:00", text: "Waiting is often difficult, but in God's kingdom, waiting is active preparation." },
+      { time: "0:40", text: "Generations waited for the Messiah's arrival, and God answered right on time." },
+      { time: "1:25", text: "Whatever promise you are waiting on, know that God's faithful timing is always perfect." }
+    ]
+  },
+  // ── Easter & Passover Special ────────────────────────────────────────────────
+  {
+    id: "sermon-14",
+    title: "The Sovereignty of God & Passover",
+    slug: "sovereignty-of-god-passover-and-christ",
+    preacherId: "p13",
+    preacherName: "Evangelist Falone Mbuyi M.",
+    scripture: "1 Corinthians 5:7",
+    scriptureBook: "1 Corinthians",
+    primarySeason: "Easter",
+    secondarySeasons: ["Holy Week", "Lent"],
+    topics: ["Grace", "Salvation", "Faith"],
+    sermonType: "Teaching",
+    duration: "2:55",
+    durationSec: 175,
+    youtubeUrl: "https://www.youtube.com/watch?v=bzlat7DOa-A",
+    youtubeEmbedId: "bzlat7DOa-A",
+    thumbnailUrl: "https://img.youtube.com/vi/bzlat7DOa-A/hqdefault.jpg",
+    summary: "For Christ, our Passover Lamb, has been sacrificed. Understanding God's supreme sovereignty from Exodus to the empty tomb.",
+    publishDate: "2023-04-08",
+    views: 2280,
+    featured: true,
+    transcript: [
+      { time: "0:00", text: "From the first Passover in Egypt to Calvary, God's sovereign hand was orchestrating redemption." },
+      { time: "0:50", text: "Christ is our Passover Lamb; by His blood, we are spared and given everlasting life." },
+      { time: "1:40", text: "Stand firm in the victory of the risen Lord—He reigns sovereign over every circumstance." }
+    ]
+  },
+  // ── New Year & Fresh Beginnings ──────────────────────────────────────────────
+  {
+    id: "sermon-15",
+    title: "Happy New Year & God's Faithfulness",
+    slug: "happy-new-year-gods-faithfulness",
+    preacherId: "p1",
+    preacherName: "Pastor Anany Kasongo",
+    scripture: "Lamentations 3:22-23",
+    scriptureBook: "Lamentations",
+    primarySeason: "New Year",
+    secondarySeasons: ["Thanksgiving"],
+    topics: ["Hope", "Encouragement", "Faith"],
+    sermonType: "Devotional",
+    duration: "0:59",
+    durationSec: 59,
+    youtubeUrl: "https://www.youtube.com/watch?v=xxRrvxuCew4",
+    youtubeEmbedId: "xxRrvxuCew4",
+    thumbnailUrl: "https://img.youtube.com/vi/xxRrvxuCew4/hqdefault.jpg",
+    summary: "The steadfast love of the Lord never ceases; His mercies never come to an end. They are new every morning.",
+    publishDate: "2024-01-01",
+    views: 3120,
+    featured: false,
+    transcript: [
+      { time: "0:00", text: "Happy New Year from all of us at 2-Minute Sermon Ministry." },
+      { time: "0:20", text: "As you step into this new season, carry no fear: God's mercies are fresh every morning." },
+      { time: "0:45", text: "May His grace surround your family and guide your path throughout this entire year." }
+    ]
+  },
+  {
+    id: "sermon-16",
+    title: "There is Nothing Too Hard for God",
+    slug: "there-is-nothing-too-hard-for-god",
+    preacherId: "p14",
+    preacherName: "Preacher Jeremiah A. Dessources Jr.",
+    scripture: "Jeremiah 32:17",
+    scriptureBook: "Jeremiah",
+    primarySeason: "Ordinary Time",
+    secondarySeasons: ["Pentecost"],
+    topics: ["Faith", "Hope", "Prayer"],
+    sermonType: "Devotional",
+    duration: "2:19",
+    durationSec: 139,
+    youtubeUrl: "https://www.youtube.com/watch?v=jrGHXUx2Tp4",
+    youtubeEmbedId: "jrGHXUx2Tp4",
+    thumbnailUrl: "https://img.youtube.com/vi/jrGHXUx2Tp4/hqdefault.jpg",
+    summary: "Ah, Sovereign Lord, You have made the heavens and the earth by Your great power and outstretched arm. Nothing is too hard for You.",
+    publishDate: "2023-11-12",
+    views: 1890,
+    featured: false,
+    transcript: [
+      { time: "0:00", text: "When facing an impossible mountain, remember the God who spoke galaxies into existence." },
+      { time: "0:45", text: "There is no disease He cannot heal, no broken heart He cannot bind up." },
+      { time: "1:30", text: "Put your confidence in the Almighty today—with God, all things are possible." }
     ]
   }
 ];
@@ -295,19 +462,21 @@ if (isFirebaseConfigured()) {
 
 const LEGACY_PLACEHOLDER_IDS = ['5qap5aO4i9A', '2Vv-BfVoq4g', '3JZ_D3ELwOQ', 'L_LUpnjgPso', 'e-ORhEE9VVg', 'fJ9rUzIMcZQ'];
 
-/** Read sermons from localStorage; seeds from static data on first run or auto-upgrades placeholders. */
+/** Read sermons from localStorage; seeds from static data on first run or auto-upgrades when new seed sermons are released. */
 export function getSermons() {
   try {
+    const currentVer = localStorage.getItem(VERSION_KEY);
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw && currentVer === CURRENT_SEED_VERSION) {
       const parsed = JSON.parse(raw);
       const hasPlaceholders = Array.isArray(parsed) && parsed.some(s => LEGACY_PLACEHOLDER_IDS.includes(s.youtubeEmbedId));
-      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length > 0) {
+      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length >= seedSermons.length) {
         return parsed;
       }
     }
   } catch (_) { /* storage unavailable */ }
   saveSermons(seedSermons);
+  try { localStorage.setItem(VERSION_KEY, CURRENT_SEED_VERSION); } catch (_) {}
   return [...seedSermons];
 }
 

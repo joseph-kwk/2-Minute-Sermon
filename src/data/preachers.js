@@ -90,6 +90,56 @@ const seedPreachers = [
     specialties: ["Evangelism", "Hope", "Encouragement"],
     photoUrl: "https://ui-avatars.com/api/?name=Paul+Besong&background=D84315&color=fff&size=200",
     bio: "Contributing minister delivering the Freestyle Sermon series on God's new seasons."
+  },
+  {
+    id: "p10",
+    name: "Pastor Changhyun Kim",
+    slug: "changhyun-kim",
+    denomination: "Presbyterian",
+    country: "South Korea / USA",
+    specialties: ["Christmas", "Salvation", "Grace"],
+    photoUrl: "https://ui-avatars.com/api/?name=Changhyun+Kim&background=C62828&color=fff&size=200",
+    bio: "Guest preacher for the 2-Minute Sermon Christmas series sharing the eternal wonder of Christ's nativity."
+  },
+  {
+    id: "p11",
+    name: "Rev. Pastor Hyunjin Cho",
+    slug: "hyunjin-cho",
+    denomination: "Methodist",
+    country: "South Korea / USA",
+    specialties: ["Christmas", "Faith", "Hope"],
+    photoUrl: "https://ui-avatars.com/api/?name=Hyunjin+Cho&background=1565C0&color=fff&size=200",
+    bio: "Contributing pastor ministering on celebrating Christmas with genuine biblical focus and sacrificial love."
+  },
+  {
+    id: "p12",
+    name: "Pastor Seulki Choi",
+    slug: "seulki-choi",
+    denomination: "Evangelical",
+    country: "South Korea / USA",
+    specialties: ["Christmas", "Waiting on God", "Encouragement"],
+    photoUrl: "https://ui-avatars.com/api/?name=Seulki+Choi&background=2E7D32&color=fff&size=200",
+    bio: "Contributing pastor reflecting on the holy patience of Advent and the beauty of God's timing."
+  },
+  {
+    id: "p13",
+    name: "Evangelist Falone Mbuyi M.",
+    slug: "falone-mbuyi",
+    denomination: "Evangelical",
+    country: "Democratic Republic of Congo",
+    specialties: ["Passover", "Sovereignty of God", "Easter"],
+    photoUrl: "https://ui-avatars.com/api/?name=Falone+Mbuyi&background=6A1B9A&color=fff&size=200",
+    bio: "Contributing minister preaching Christ our Passover Lamb and the almighty sovereignty of God."
+  },
+  {
+    id: "p14",
+    name: "Preacher Jeremiah A. Dessources Jr.",
+    slug: "jeremiah-dessources",
+    denomination: "Baptist",
+    country: "Haiti / USA",
+    specialties: ["Faith", "Miracles", "Encouragement"],
+    photoUrl: "https://ui-avatars.com/api/?name=Jeremiah+Dessources&background=00838F&color=fff&size=200",
+    bio: "Dynamic preacher of the Gospel testifying that nothing is impossible with Almighty God."
   }
 ];
 
@@ -116,7 +166,7 @@ export function getPreachers() {
     if (raw) {
       const parsed = JSON.parse(raw);
       const hasLegacy = Array.isArray(parsed) && parsed.some(p => p.name === 'Pastor John Doe' || p.name === 'Rev. Sarah Jenkins');
-      if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (!hasLegacy && Array.isArray(parsed) && parsed.length >= seedPreachers.length) return parsed;
     }
   } catch (_) { /* storage unavailable */ }
   savePreachers(seedPreachers);
@@ -154,4 +204,3 @@ export function deletePreacher(id) {
 }
 
 export const preachers = seedPreachers;
-
