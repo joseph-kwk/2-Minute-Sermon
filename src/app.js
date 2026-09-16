@@ -196,9 +196,18 @@ function setupHeaderScroll() {
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 function setupNavigation() {
   document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
       const targetView = btn.getAttribute('data-view');
       if (!targetView) return;
+
+      // Prevent default jump for anchor links pointing to '#' or '#home'
+      if (btn.tagName === 'A') {
+        const href = btn.getAttribute('href');
+        if (href === '#' || href === '#home') {
+          e.preventDefault();
+        }
+      }
+
       if (targetView === 'admin') { openAdminPortal(); return; }
       
       const aboutTab = btn.getAttribute('data-about-tab');
@@ -213,7 +222,10 @@ function setupNavigation() {
 
   function handleRouteHash() {
     const rawHash = window.location.hash.replace('#', '');
-    if (!rawHash) return;
+    if (!rawHash || rawHash === 'home') {
+      switchView('home');
+      return;
+    }
 
     if (rawHash === 'about-structure' || rawHash === 'about/structure') {
       switchView('about');
@@ -250,12 +262,29 @@ const VIEW_TITLES = {
 };
 
 export function switchView(viewId) {
+  const prevView = activeView;
   activeView = viewId;
   document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(`view-${viewId}`);
   if (target) {
     target.classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // If switching across different views, jump instantly to top so old scroll position isn't retained.
+    // If staying on the same view (e.g. clicking Home while already on Home), smooth scroll.
+    if (prevView && prevView !== viewId) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Always guarantee hero elements are 100% visible and correctly positioned when home is shown
+    if (viewId === 'home') {
+      const heroContainer = target.querySelector('.hero-container');
+      if (heroContainer) {
+        heroContainer.style.opacity = '1';
+        heroContainer.style.transform = 'translate3d(0, 0, 0)';
+      }
+    }
 
     if (VIEW_TITLES[viewId]) {
       document.title = VIEW_TITLES[viewId];
@@ -627,10 +656,29 @@ function setupHeroParallax(heroSection, video) {
   window.addEventListener('scroll', () => {
     if (!ticking) {
       window.requestAnimationFrame(() => {
+        // Only run parallax calculations when home view is actively visible
+        if (activeView !== 'home') {
+          ticking = false;
+          return;
+        }
+
         const scrollY = window.scrollY;
         const heroHeight = heroSection.offsetHeight;
+        if (!heroHeight) {
+          ticking = false;
+          return;
+        }
 
-        if (scrollY <= heroHeight + 50) {
+        if (scrollY <= 10) {
+          // At or near top of home: guarantee 100% full opacity and origin transform
+          if (container) {
+            container.style.transform = 'translate3d(0, 0, 0)';
+            container.style.opacity = '1';
+          }
+          if (video) {
+            video.style.transform = 'translate3d(-50%, -50%, 0)';
+          }
+        } else if (scrollY <= heroHeight + 50) {
           // Subtle downward parallax on video background (0.28x speed)
           if (video) {
             const videoOffset = (scrollY * 0.28).toFixed(1);
@@ -643,6 +691,10 @@ function setupHeroParallax(heroSection, video) {
             const opacity = Math.max(0, 1 - (scrollY / (heroHeight * 0.78)));
             container.style.transform = `translate3d(0, ${textOffset}px, 0)`;
             container.style.opacity = opacity.toFixed(2);
+          }
+        } else {
+          if (container) {
+            container.style.opacity = '0';
           }
         }
         ticking = false;
