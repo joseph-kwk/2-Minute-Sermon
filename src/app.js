@@ -384,26 +384,26 @@ function setupFooterWater() {
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
-  // 5 natural rolling ocean wave bodies, from distant deep horizon to foreground swell
+  // 5 natural rolling ocean wave bodies, from distant deep horizon to foreground swell (deep midnight navy palette)
   const WAVES = [
-    { yRatio: 0.20, amp: 0.038, freq: 0.85, spd: 0.18, ph: 0.0, ph2: 1.4, c0: 'rgba(5, 18, 34, 0.90)', c1: 'rgba(2, 8, 16, 0.96)' },
-    { yRatio: 0.38, amp: 0.052, freq: 0.70, spd: 0.14, ph: 2.1, ph2: 0.8, c0: 'rgba(8, 28, 52, 0.88)', c1: 'rgba(3, 12, 24, 0.94)' },
-    { yRatio: 0.55, amp: 0.066, freq: 0.55, spd: 0.10, ph: 4.0, ph2: 2.7, c0: 'rgba(12, 38, 70, 0.86)', c1: 'rgba(5, 18, 35, 0.92)' },
-    { yRatio: 0.72, amp: 0.080, freq: 0.42, spd: 0.07, ph: 1.7, ph2: 3.9, c0: 'rgba(15, 48, 88, 0.88)', c1: 'rgba(6, 24, 46, 0.95)' },
-    { yRatio: 0.87, amp: 0.092, freq: 0.34, spd: 0.05, ph: 3.2, ph2: 1.8, c0: 'rgba(20, 60, 108, 0.90)', c1: 'rgba(8, 30, 58, 0.98)' }
+    { yRatio: 0.20, amp: 0.038, freq: 0.85, spd: 0.18, ph: 0.0, ph2: 1.4, c0: 'rgba(3, 12, 24, 0.92)', c1: 'rgba(1, 6, 12, 0.98)' },
+    { yRatio: 0.38, amp: 0.052, freq: 0.70, spd: 0.14, ph: 2.1, ph2: 0.8, c0: 'rgba(5, 18, 35, 0.90)', c1: 'rgba(2, 9, 18, 0.96)' },
+    { yRatio: 0.55, amp: 0.066, freq: 0.55, spd: 0.10, ph: 4.0, ph2: 2.7, c0: 'rgba(7, 24, 46, 0.88)', c1: 'rgba(3, 13, 26, 0.94)' },
+    { yRatio: 0.72, amp: 0.080, freq: 0.42, spd: 0.07, ph: 1.7, ph2: 3.9, c0: 'rgba(9, 30, 58, 0.88)', c1: 'rgba(4, 16, 32, 0.96)' },
+    { yRatio: 0.87, amp: 0.092, freq: 0.34, spd: 0.05, ph: 3.2, ph2: 1.8, c0: 'rgba(12, 38, 72, 0.90)', c1: 'rgba(5, 20, 40, 0.98)' }
   ];
 
-  // Specular caustic shimmers that ride along the wave surfaces (like moonlight reflections on ripples)
+  // Specular caustic shimmers that ride along the wave surfaces (subtle midnight moonlight glimmers)
   const SHIMMERS = Array.from({ length: 48 }, (_, i) => ({
     xRatio: Math.random(),
     waveIdx: i % WAVES.length,
     yOffset: (Math.random() - 0.25) * 14,
-    len: 28 + Math.random() * 50,
-    height: 1.6 + Math.random() * 2.2,
+    len: 26 + Math.random() * 46,
+    height: 1.5 + Math.random() * 2.0,
     speed: 0.00035 + Math.random() * 0.00065,
     pulseSpeed: 1.2 + Math.random() * 1.8,
     phase: Math.random() * Math.PI * 2,
-    baseAlpha: 0.07 + Math.random() * 0.13
+    baseAlpha: 0.05 + Math.random() * 0.09
   }));
 
   function surfaceY(x, w) {
@@ -435,7 +435,6 @@ function setupFooterWater() {
     grad.addColorStop(1, w.c1);
     ctx.fillStyle = grad;
     ctx.fill();
-    // NO stroke lines anywhere — completely pure natural fluid fills
   }
 
   function drawShimmers() {
@@ -455,9 +454,9 @@ function setupFooterWater() {
       ctx.beginPath();
       ctx.ellipse(x, y, s.len * 0.5, s.height, 0, 0, Math.PI * 2);
       const glint = ctx.createRadialGradient(x, y, 0, x, y, s.len * 0.5);
-      glint.addColorStop(0,   `rgba(175, 218, 255, ${alpha.toFixed(3)})`);
-      glint.addColorStop(0.45, `rgba(100, 165, 235, ${(alpha * 0.45).toFixed(3)})`);
-      glint.addColorStop(1,   'rgba(40, 90, 160, 0)');
+      glint.addColorStop(0,   `rgba(130, 175, 225, ${(alpha * 0.75).toFixed(3)})`);
+      glint.addColorStop(0.45, `rgba(70, 120, 180, ${(alpha * 0.4).toFixed(3)})`);
+      glint.addColorStop(1,   'rgba(20, 50, 95, 0)');
       ctx.fillStyle = glint;
       ctx.fill();
       ctx.restore();
@@ -471,18 +470,18 @@ function setupFooterWater() {
 
     // Deep oceanic abyss background
     const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0,   '#01060e');
-    bg.addColorStop(0.5, '#030c18');
-    bg.addColorStop(1,   '#051526');
+    bg.addColorStop(0,   '#01040a');
+    bg.addColorStop(0.5, '#020814');
+    bg.addColorStop(1,   '#030d1c');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Diffuse ambient moonlight glow
+    // Diffuse ambient moonlight glow - soft & subtle
     const moonX = W * 0.5;
     const moon = ctx.createRadialGradient(moonX, H * 0.05, 0, moonX, H * 0.45, W * 0.48);
-    const mA = (0.075 + Math.sin(t * 0.22) * 0.015).toFixed(3);
-    moon.addColorStop(0,    `rgba(160, 205, 255, ${mA})`);
-    moon.addColorStop(0.55, 'rgba(60, 110, 180, 0.02)');
+    const mA = (0.055 + Math.sin(t * 0.22) * 0.012).toFixed(3);
+    moon.addColorStop(0,    `rgba(140, 185, 235, ${mA})`);
+    moon.addColorStop(0.55, 'rgba(40, 80, 140, 0.015)');
     moon.addColorStop(1,    'rgba(0, 0, 0, 0)');
     ctx.fillStyle = moon;
     ctx.fillRect(0, 0, W, H);
@@ -493,12 +492,12 @@ function setupFooterWater() {
     // Draw natural surface shimmers / moonlight caustics riding the waves
     drawShimmers();
 
-    // Soft moonlit water sheen band down the center
+    // Soft moonlit water sheen band down the center (subtle)
     const sheen = ctx.createLinearGradient(moonX - W * 0.25, 0, moonX + W * 0.25, 0);
-    const sA = (0.05 + Math.sin(t * 0.35) * 0.018).toFixed(3);
-    sheen.addColorStop(0,   'rgba(140, 190, 255, 0)');
-    sheen.addColorStop(0.5, `rgba(140, 190, 255, ${sA})`);
-    sheen.addColorStop(1,   'rgba(140, 190, 255, 0)');
+    const sA = (0.035 + Math.sin(t * 0.35) * 0.012).toFixed(3);
+    sheen.addColorStop(0,   'rgba(100, 150, 210, 0)');
+    sheen.addColorStop(0.5, `rgba(100, 150, 210, ${sA})`);
+    sheen.addColorStop(1,   'rgba(100, 150, 210, 0)');
     ctx.fillStyle = sheen;
     const topWaveY = surfaceY(W * 0.5, WAVES[0]);
     ctx.fillRect(moonX - W * 0.25, 0, W * 0.5, topWaveY);
@@ -548,19 +547,19 @@ function setupHeroParticles(heroSection, sectionObserver) {
     height = canvas.height = heroSection.offsetHeight;
   }, { passive: true });
 
-  const PARTICLE_COUNT = 36;
+  const PARTICLE_COUNT = 16;
   const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
     x: Math.random() * width,
     y: Math.random() * height,
-    radius: Math.random() * 2.4 + 1.0,
-    baseAlpha: Math.random() * 0.45 + 0.25,
-    alphaSpeed: Math.random() * 0.02 + 0.01,
+    radius: Math.random() * 2.6 + 1.2,
+    baseAlpha: Math.random() * 0.35 + 0.20,
+    alphaSpeed: Math.random() * 0.015 + 0.008,
     alphaOffset: Math.random() * Math.PI * 2,
-    vx: (Math.random() - 0.45) * 0.35,
-    vy: -(Math.random() * 0.45 + 0.2), // gentle upward drift
-    wobbleSpeed: Math.random() * 0.02 + 0.005,
-    wobbleAmp: Math.random() * 1.2 + 0.4,
-    color: Math.random() > 0.4 ? '251, 191, 36' : '245, 158, 11' // Amber & Gold
+    vx: (Math.random() - 0.45) * 0.25,
+    vy: -(Math.random() * 0.35 + 0.15), // gentle calm upward drift
+    wobbleSpeed: Math.random() * 0.015 + 0.005,
+    wobbleAmp: Math.random() * 1.0 + 0.3,
+    color: Math.random() > 0.45 ? '251, 191, 36' : '245, 158, 11' // Amber & Gold
   }));
 
   let animFrameId = null;
