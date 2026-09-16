@@ -940,14 +940,11 @@ function updateMiniPlayerUI() {
 let activeCardVerse = null;
 let activeCardTheme = 'midnight';
 let activeCardRatio = 'story'; // 'story' (9:16) or 'square' (1:1)
-let activeCardFont  = 'lora';  // 'lora' | 'merriweather' | 'garamond' | 'inter'
+let activeCardFont  = 'inter'; // locked to Inter modern sans-serif
 
-// Scripture font definitions — upright (no cursive), clear and dignified
+// Fixed font for scripture cards — clean, bold, highly legible Inter
 const SCRIPTURE_FONTS = {
-  lora:        { family: '"Lora", Georgia, serif',                                  style: 'normal', weight: '600' },
-  merriweather:{ family: '"Merriweather", Georgia, serif',                          style: 'normal', weight: '400' },
-  garamond:    { family: '"Cormorant Garamond", "EB Garamond", Garamond, serif',   style: 'normal', weight: '600' },
-  inter:       { family: '"-apple-system", BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' }
+  inter: { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' }
 };
 
 export function setupScriptureCardGenerator() {
@@ -974,15 +971,7 @@ export function setupScriptureCardGenerator() {
     });
   });
 
-  // Font switchers
-  modal.querySelectorAll('.font-pill').forEach(btn => {
-    btn.addEventListener('click', () => {
-      modal.querySelectorAll('.font-pill').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeCardFont = btn.getAttribute('data-font') || 'lora';
-      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
-    });
-  });
+
 
   // Helpers for safe downloads
   function triggerDownloadBlob(blob, filename) {
