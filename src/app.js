@@ -384,16 +384,16 @@ function setupFooterWater() {
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
-  // 5 natural rolling ocean wave bodies, from distant deep horizon to foreground swell (deep midnight navy palette)
+  // 5 natural rolling river swells: deep roasted espresso, rich mahogany, sacred sermon crimson, and molten amber
   const WAVES = [
-    { yRatio: 0.20, amp: 0.038, freq: 0.85, spd: 0.18, ph: 0.0, ph2: 1.4, c0: 'rgba(3, 12, 24, 0.92)', c1: 'rgba(1, 6, 12, 0.98)' },
-    { yRatio: 0.38, amp: 0.052, freq: 0.70, spd: 0.14, ph: 2.1, ph2: 0.8, c0: 'rgba(5, 18, 35, 0.90)', c1: 'rgba(2, 9, 18, 0.96)' },
-    { yRatio: 0.55, amp: 0.066, freq: 0.55, spd: 0.10, ph: 4.0, ph2: 2.7, c0: 'rgba(7, 24, 46, 0.88)', c1: 'rgba(3, 13, 26, 0.94)' },
-    { yRatio: 0.72, amp: 0.080, freq: 0.42, spd: 0.07, ph: 1.7, ph2: 3.9, c0: 'rgba(9, 30, 58, 0.88)', c1: 'rgba(4, 16, 32, 0.96)' },
-    { yRatio: 0.87, amp: 0.092, freq: 0.34, spd: 0.05, ph: 3.2, ph2: 1.8, c0: 'rgba(12, 38, 72, 0.90)', c1: 'rgba(5, 20, 40, 0.98)' }
+    { yRatio: 0.20, amp: 0.038, freq: 0.85, spd: 0.18, ph: 0.0, ph2: 1.4, c0: 'rgba(28, 14, 10, 0.94)', c1: 'rgba(12, 6, 4, 0.98)' },
+    { yRatio: 0.38, amp: 0.052, freq: 0.70, spd: 0.14, ph: 2.1, ph2: 0.8, c0: 'rgba(48, 20, 13, 0.92)', c1: 'rgba(18, 8, 5, 0.96)' },
+    { yRatio: 0.55, amp: 0.066, freq: 0.55, spd: 0.10, ph: 4.0, ph2: 2.7, c0: 'rgba(76, 26, 16, 0.90)', c1: 'rgba(28, 11, 7, 0.95)' },
+    { yRatio: 0.72, amp: 0.080, freq: 0.42, spd: 0.07, ph: 1.7, ph2: 3.9, c0: 'rgba(105, 36, 18, 0.88)', c1: 'rgba(38, 14, 8, 0.96)' },
+    { yRatio: 0.87, amp: 0.092, freq: 0.34, spd: 0.05, ph: 3.2, ph2: 1.8, c0: 'rgba(138, 46, 20, 0.90)', c1: 'rgba(52, 18, 10, 0.98)' }
   ];
 
-  // Specular caustic shimmers that ride along the wave surfaces (subtle midnight moonlight glimmers)
+  // Specular caustic shimmers: radiant golden embers and candlelight glimmers drifting on the waves
   const SHIMMERS = Array.from({ length: 48 }, (_, i) => ({
     xRatio: Math.random(),
     waveIdx: i % WAVES.length,
@@ -403,7 +403,7 @@ function setupFooterWater() {
     speed: 0.00035 + Math.random() * 0.00065,
     pulseSpeed: 1.2 + Math.random() * 1.8,
     phase: Math.random() * Math.PI * 2,
-    baseAlpha: 0.05 + Math.random() * 0.09
+    baseAlpha: 0.06 + Math.random() * 0.10
   }));
 
   function surfaceY(x, w) {
@@ -454,9 +454,9 @@ function setupFooterWater() {
       ctx.beginPath();
       ctx.ellipse(x, y, s.len * 0.5, s.height, 0, 0, Math.PI * 2);
       const glint = ctx.createRadialGradient(x, y, 0, x, y, s.len * 0.5);
-      glint.addColorStop(0,   `rgba(130, 175, 225, ${(alpha * 0.75).toFixed(3)})`);
-      glint.addColorStop(0.45, `rgba(70, 120, 180, ${(alpha * 0.4).toFixed(3)})`);
-      glint.addColorStop(1,   'rgba(20, 50, 95, 0)');
+      glint.addColorStop(0,    `rgba(253, 224, 71, ${(alpha * 0.90).toFixed(3)})`);
+      glint.addColorStop(0.45, `rgba(245, 158, 11, ${(alpha * 0.45).toFixed(3)})`);
+      glint.addColorStop(1,    'rgba(180, 83, 9, 0)');
       ctx.fillStyle = glint;
       ctx.fill();
       ctx.restore();
@@ -468,20 +468,20 @@ function setupFooterWater() {
     t += 0.0055;
     ctx.clearRect(0, 0, W, H);
 
-    // Deep oceanic abyss background
+    // Deep nocturnal espresso & sacred obsidian river base
     const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0,   '#01040a');
-    bg.addColorStop(0.5, '#020814');
-    bg.addColorStop(1,   '#030d1c');
+    bg.addColorStop(0,   '#080504');
+    bg.addColorStop(0.5, '#0f0a07');
+    bg.addColorStop(1,   '#180e09');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Diffuse ambient moonlight glow - soft & subtle
+    // Diffuse ambient golden sunset glow
     const moonX = W * 0.5;
     const moon = ctx.createRadialGradient(moonX, H * 0.05, 0, moonX, H * 0.45, W * 0.48);
-    const mA = (0.055 + Math.sin(t * 0.22) * 0.012).toFixed(3);
-    moon.addColorStop(0,    `rgba(140, 185, 235, ${mA})`);
-    moon.addColorStop(0.55, 'rgba(40, 80, 140, 0.015)');
+    const mA = (0.065 + Math.sin(t * 0.22) * 0.014).toFixed(3);
+    moon.addColorStop(0,    `rgba(245, 158, 11, ${mA})`);
+    moon.addColorStop(0.55, 'rgba(198, 40, 40, 0.020)');
     moon.addColorStop(1,    'rgba(0, 0, 0, 0)');
     ctx.fillStyle = moon;
     ctx.fillRect(0, 0, W, H);
@@ -489,15 +489,15 @@ function setupFooterWater() {
     // Draw waves: back to front
     WAVES.forEach(w => drawWaveBody(w));
 
-    // Draw natural surface shimmers / moonlight caustics riding the waves
+    // Draw radiant golden caustics & embers riding the waves
     drawShimmers();
 
-    // Soft moonlit water sheen band down the center (subtle)
+    // Soft warm golden sunset sheen band down the center
     const sheen = ctx.createLinearGradient(moonX - W * 0.25, 0, moonX + W * 0.25, 0);
-    const sA = (0.035 + Math.sin(t * 0.35) * 0.012).toFixed(3);
-    sheen.addColorStop(0,   'rgba(100, 150, 210, 0)');
-    sheen.addColorStop(0.5, `rgba(100, 150, 210, ${sA})`);
-    sheen.addColorStop(1,   'rgba(100, 150, 210, 0)');
+    const sA = (0.040 + Math.sin(t * 0.35) * 0.014).toFixed(3);
+    sheen.addColorStop(0,   'rgba(245, 158, 11, 0)');
+    sheen.addColorStop(0.5, `rgba(245, 158, 11, ${sA})`);
+    sheen.addColorStop(1,   'rgba(245, 158, 11, 0)');
     ctx.fillStyle = sheen;
     const topWaveY = surfaceY(W * 0.5, WAVES[0]);
     ctx.fillRect(moonX - W * 0.25, 0, W * 0.5, topWaveY);
