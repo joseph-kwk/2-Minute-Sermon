@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupExploreDropdown();
   setupMobileDrawer();
   setupHeroCtas();
-  setupHeroVideo();
+  setupHeroAmbientEffects();
   setupPromoVideo();
   setupPersistentMiniPlayer();
   setupScriptureCardGenerator();
@@ -361,88 +361,16 @@ function setupHeroCtas() {
   });
 }
 
-// ─── LOCALHOST HERO VIDEO BACKGROUND TEST ────────────────────────────────────
-function setupHeroVideo() {
-  const isLocalhost = Boolean(
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '[::1]' ||
-    window.location.hostname.endsWith('.localhost') ||
-    window.location.hostname.match(/^192\.168\.\d+\.\d+$/) ||
-    window.location.hostname.match(/^10\.\d+\.\d+\.\d+$/)
-  );
-
-  if (!isLocalhost) return;
-
+// ─── HERO AMBIENT EFFECTS (Static image + golden lantern particles) ──────────
+function setupHeroAmbientEffects() {
   const heroSection = document.querySelector('.hero-section');
   if (!heroSection) return;
 
-  // Create video element (loaded only on localhost)
-  const video = document.createElement('video');
-  video.className = 'hero-video-bg';
-  video.autoplay = true;
-  video.muted = true;
-  video.loop = true;
-  video.playsInline = true;
-  video.preload = 'auto';
-  video.setAttribute('playsinline', '');
-  video.setAttribute('muted', '');
-  video.setAttribute('aria-hidden', 'true');
-  video.src = '/assets/hero-bg-video.mp4';
-
-  video.addEventListener('canplay', () => {
-    video.classList.add('is-playing');
-  });
-
-  // Prepend before overlay so gradient overlay remains on top
-  heroSection.prepend(video);
-  video.play().catch(err => {
-    console.warn('Hero video autoplay prevented (user interaction might be needed):', err);
-  });
-
-  // Performance Guard: Pause video when scrolled out of view to ensure 0% lag on rest of page
-  let videoInView = true;
-  let videoEnabled = true;
-  const videoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      videoInView = entry.isIntersecting;
-      if (videoInView && videoEnabled) {
-        if (video.paused) video.play().catch(() => {});
-      } else {
-        if (!video.paused) video.pause();
-      }
-    });
-  }, { threshold: 0.05 });
-  videoObserver.observe(heroSection);
-
   // ─── AMBIENT GOLDEN LIGHT PARTICLES ────────────────────────
-  setupHeroParticles(heroSection, videoObserver);
+  setupHeroParticles(heroSection, null);
 
-  // ─── SMOOTH SCROLL PARALLAX ────────────────────────────────
-  setupHeroParallax(heroSection, video);
-
-  // Interactive toggle badge in bottom-right corner of hero
-  const badge = document.createElement('button');
-  badge.className = 'localhost-video-badge';
-  badge.title = 'Click to toggle hero video background / static image';
-  badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Active</span>`;
-
-  badge.addEventListener('click', () => {
-    videoEnabled = !videoEnabled;
-    if (videoEnabled) {
-      video.style.display = 'block';
-      if (videoInView) video.play().catch(() => {});
-      badge.classList.remove('is-paused');
-      badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Active</span>`;
-    } else {
-      video.pause();
-      video.style.display = 'none';
-      badge.classList.add('is-paused');
-      badge.innerHTML = `<span class="badge-dot"></span><span>Localhost Video: Paused</span>`;
-    }
-  });
-
-  heroSection.appendChild(badge);
+  // ─── SMOOTH SCROLL PARALLAX (text container only, no video) ─
+  setupHeroParallax(heroSection, null);
 }
 
 // ─── GOLDEN SUN-MOTE CANVAS PARTICLES ─────────────────────────────────────────
@@ -1012,6 +940,15 @@ function updateMiniPlayerUI() {
 let activeCardVerse = null;
 let activeCardTheme = 'midnight';
 let activeCardRatio = 'story'; // 'story' (9:16) or 'square' (1:1)
+let activeCardFont  = 'lora';  // 'lora' | 'merriweather' | 'garamond' | 'inter'
+
+// Scripture font definitions — upright (no cursive), clear and dignified
+const SCRIPTURE_FONTS = {
+  lora:        { family: '"Lora", Georgia, serif',                                  style: 'normal', weight: '600' },
+  merriweather:{ family: '"Merriweather", Georgia, serif',                          style: 'normal', weight: '400' },
+  garamond:    { family: '"Cormorant Garamond", "EB Garamond", Garamond, serif',   style: 'normal', weight: '600' },
+  inter:       { family: '"-apple-system", BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' }
+};
 
 export function setupScriptureCardGenerator() {
   const modal = document.getElementById('scriptureCardModal');
@@ -1023,7 +960,7 @@ export function setupScriptureCardGenerator() {
       modal.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeCardRatio = btn.getAttribute('data-ratio') || 'story';
-      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
     });
   });
 
@@ -1033,7 +970,17 @@ export function setupScriptureCardGenerator() {
       modal.querySelectorAll('.theme-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeCardTheme = btn.getAttribute('data-theme') || 'midnight';
-      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
+    });
+  });
+
+  // Font switchers
+  modal.querySelectorAll('.font-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.font-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCardFont = btn.getAttribute('data-font') || 'lora';
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
     });
   });
 
@@ -1077,7 +1024,7 @@ export function setupScriptureCardGenerator() {
     }
 
     try {
-      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio);
+      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
       const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
       const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
       const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
@@ -1144,7 +1091,7 @@ export function setupScriptureCardGenerator() {
     }
 
     try {
-      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio);
+      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
       const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
       const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
       const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
@@ -1185,7 +1132,7 @@ export function setupScriptureCardGenerator() {
     }
 
     try {
-      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio);
+      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
       let copiedImage = false;
 
       if (blob && navigator.clipboard && window.ClipboardItem) {
@@ -1276,7 +1223,7 @@ export function openScriptureCardModal(verse) {
 
   lockPageScroll();
   modal.hidden = false;
-  renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio);
+  renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
 }
 window.openScriptureCardModal = openScriptureCardModal;
 window.openScriptureCardForVerse = (verse) => openScriptureCardModal(verse);
@@ -1524,14 +1471,15 @@ function wrapCanvasText(ctx, text, maxWidth) {
   return lines;
 }
 
-function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 20, maxFontSize = 56) {
+function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 20, maxFontSize = 56, fontId = 'lora') {
+  const fd = SCRIPTURE_FONTS[fontId] || SCRIPTURE_FONTS.lora;
   let fontSize = maxFontSize;
   let lines = [];
   let lineHeight = Math.round(fontSize * 1.45);
   let totalHeight = 0;
 
   while (fontSize >= minFontSize) {
-    ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
+    ctx.font = `${fd.style} ${fd.weight} ${fontSize}px ${fd.family}`;
     lineHeight = Math.round(fontSize * 1.45);
     lines = wrapCanvasText(ctx, text, maxW);
     totalHeight = lines.length * lineHeight;
@@ -1564,7 +1512,7 @@ function analyzeSafeZoneLuminance(ctx, x, y, w, h) {
   }
 }
 
-async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story', forcePureCanvas = false) {
+async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story', fontId = 'lora', forcePureCanvas = false) {
   const canvas = document.getElementById('scriptureExportCanvas');
   if (!canvas || !verse) return;
 
@@ -1673,8 +1621,9 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   const quoteText = `"${rawQuote}"`;
   const maxAvailableH = safeH - 80;
   const { fontSize, lines, lineHeight, totalHeight } = fitTextInSafeZone(
-    ctx, quoteText, safeW - 40, maxAvailableH, 20, isStory ? 54 : 46
+    ctx, quoteText, safeW - 40, maxAvailableH, 20, isStory ? 54 : 46, fontId
   );
+  const fd = SCRIPTURE_FONTS[fontId] || SCRIPTURE_FONTS.lora;
 
   const contentTotalH = totalHeight + 64;
   const startY = safeY + Math.max(20, Math.round((safeH - contentTotalH) / 2));
@@ -1688,7 +1637,7 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   // Render Scripture Quote Lines
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
+  ctx.font = `${fd.style} ${fd.weight} ${fontSize}px ${fd.family}`;
   ctx.fillStyle = primaryTextColor;
 
   for (let i = 0; i < lines.length; i++) {
@@ -1702,7 +1651,7 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   const citation = chapter ? `${book} ${chapter}${verseNum ? ':' + verseNum : ''}` : book;
   const refY = startY + (lines.length * lineHeight) + 24;
 
-  ctx.font = '700 28px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.font = '700 24px "Cinzel", "Trajan Pro", Georgia, serif';
   ctx.fillStyle = accentTextColor;
   ctx.letterSpacing = '3px';
   ctx.shadowBlur = isLight ? 2 : 8;
@@ -1742,7 +1691,7 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   ctx.fillText('2minutesermon.org', padX, logoY + 26);
 }
 
-async function getCanvasBlobSafely(canvas, verse, themeId, ratio) {
+async function getCanvasBlobSafely(canvas, verse, themeId, ratio, fontId = 'lora') {
   try {
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (blob) return blob;
@@ -1752,7 +1701,7 @@ async function getCanvasBlobSafely(canvas, verse, themeId, ratio) {
 
   // Tainted or failed: re-render canvas cleanly without external images!
   try {
-    await renderScriptureCardToCanvas(verse, themeId, ratio, true /* forcePureCanvas */);
+    await renderScriptureCardToCanvas(verse, themeId, ratio, fontId, true /* forcePureCanvas */);
     const cleanBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (cleanBlob) return cleanBlob;
   } catch (err2) {

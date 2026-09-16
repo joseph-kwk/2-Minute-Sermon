@@ -408,24 +408,6 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   color: var(--color-white); padding: 110px 0 90px; text-align: center; overflow: hidden;
   perspective: 1000px;
 }
-.hero-video-bg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: translate3d(-50%, -50%, 0);
-  will-change: transform, opacity;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
-  backface-visibility: hidden;
-}
-.hero-video-bg.is-playing {
-  opacity: 1;
-}
 .hero-particles-canvas {
   position: absolute;
   inset: 0;
@@ -448,43 +430,6 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   background: radial-gradient(ellipse at 50% 0%, rgba(198, 40, 40, 0.12) 0%, transparent 70%);
   animation: pulseGlow 5s ease-in-out infinite alternate;
   pointer-events: none;
-}
-.localhost-video-badge {
-  position: absolute;
-  bottom: 14px;
-  right: 18px;
-  z-index: 10;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(15, 15, 18, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 6px 14px;
-  border-radius: var(--radius-full, 999px);
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-.localhost-video-badge:hover {
-  background: rgba(28, 28, 35, 0.95);
-  border-color: rgba(255, 255, 255, 0.45);
-  transform: translateY(-1px);
-}
-.localhost-video-badge .badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: #22c55e;
-  box-shadow: 0 0 8px #22c55e;
-}
-.localhost-video-badge.is-paused .badge-dot {
-  background-color: #f59e0b;
-  box-shadow: 0 0 8px #f59e0b;
 }
 .hero-container { position: relative; z-index: 2; max-width: 860px; }
 
@@ -3227,6 +3172,51 @@ body.modal-open {
 .swatch-parchment { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #78350f; }
 .swatch-emerald { background: linear-gradient(135deg, #064e3b 0%, #047857 100%); border: 1px solid #34d399; }
 
+/* Scripture Typography Selector */
+.font-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.font-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+.font-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.font-pill.active {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: #f59e0b;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+.font-preview-tag {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fbbf24;
+  font-size: 0.88rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 /* Enhanced, Elegant Share & Export Buttons */
 .card-export-actions {
   display: flex;
@@ -3339,6 +3329,9 @@ body.modal-open {
     grid-template-columns: 1fr;
   }
   .theme-palette-grid {
+    grid-template-columns: 1fr;
+  }
+  .font-selector-grid {
     grid-template-columns: 1fr;
   }
 }
