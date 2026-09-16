@@ -1501,9 +1501,72 @@ function drawProceduralBackground(ctx, themeId, width, height) {
   }
 }
 
+function wrapCanvasText(ctx, text, maxWidth) {
+  if (!text) return [];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = words[0] || '';
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const testLine = currentLine + ' ' + word;
+    const testWidth = ctx.measureText(testLine).width;
+    if (testWidth < maxWidth) {
+      currentLine = testLine;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 20, maxFontSize = 56) {
+  let fontSize = maxFontSize;
+  let lines = [];
+  let lineHeight = Math.round(fontSize * 1.45);
+  let totalHeight = 0;
+
+  while (fontSize >= minFontSize) {
+    ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
+    lineHeight = Math.round(fontSize * 1.45);
+    lines = wrapCanvasText(ctx, text, maxW);
+    totalHeight = lines.length * lineHeight;
+
+    if (totalHeight <= maxH) {
+      break;
+    }
+    fontSize -= 2;
+  }
+
+  return { fontSize, lines, lineHeight, totalHeight };
+}
+
+function analyzeSafeZoneLuminance(ctx, x, y, w, h) {
+  try {
+    const imgData = ctx.getImageData(x, y, w, h);
+    const d = imgData.data;
+    let totalLum = 0;
+    let samples = 0;
+    for (let i = 0; i < d.length; i += 16 * 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+      totalLum += 0.299 * r + 0.587 * g + 0.114 * b;
+      samples++;
+    }
+    return samples > 0 ? (totalLum / samples) : 60;
+  } catch (_) {
+    return 60;
+  }
+}
+
 async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story', forcePureCanvas = false) {
   const canvas = document.getElementById('scriptureExportCanvas');
-  if (!canvas) return;
+  if (!canvas || !verse) return;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -1597,31 +1660,34 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   const accentTextColor  = isLight ? '#78350f' : tpl.accentColor;
 
   // 5. Header Badge Text
-  const badgeY = isStory ? safeY - 36 : Math.max(76, safeY - 24);
+  const badgeY = isStory ? Math.max(80, safeY - 45) : Math.max(60, safeY - 35);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
   ctx.font = '700 15px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
   ctx.fillStyle = accentTextColor;
   ctx.letterSpacing = '3px';
-  ctx.textAlign = 'center';
   ctx.fillText(tpl.badgeText || '• DAILY SCRIPTURE ENCOURAGEMENT •', width / 2, badgeY);
 
   // 6. Auto-Scaling Font Loop for Scripture Quote (The Hero Content)
-  const quoteText = `"${verse.verseText}"`;
+  const rawQuote = verse.verseText || verse.text || verse.quote || '';
+  const quoteText = `"${rawQuote}"`;
   const maxAvailableH = safeH - 80;
   const { fontSize, lines, lineHeight, totalHeight } = fitTextInSafeZone(
-    ctx, quoteText, safeW - 40, maxAvailableH, 24, isStory ? 58 : 50
+    ctx, quoteText, safeW - 40, maxAvailableH, 20, isStory ? 54 : 46
   );
 
-  const contentTotalH = totalHeight + 70;
-  const startY = safeY + Math.max(20, Math.round((safeH - contentTotalH) / 2)) + fontSize;
+  const contentTotalH = totalHeight + 64;
+  const startY = safeY + Math.max(20, Math.round((safeH - contentTotalH) / 2));
 
   // Set Readability Shadow on Text
-  ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.10)' : 'rgba(0, 0, 0, 0.70)';
+  ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.75)';
   ctx.shadowBlur = isLight ? 4 : 14;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 2;
 
   // Render Scripture Quote Lines
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
   ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
   ctx.fillStyle = primaryTextColor;
 
@@ -1629,42 +1695,51 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
     ctx.fillText(lines[i], width / 2, startY + (i * lineHeight));
   }
 
-  // 7. Render Scripture Reference
-  const refY = startY + (lines.length - 1) * lineHeight + 56;
-  ctx.font = '700 30px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  // 7. Render Scripture Reference Citation
+  const book = verse.book || 'Scripture';
+  const chapter = verse.chapter || '';
+  const verseNum = verse.verse || '';
+  const citation = chapter ? `${book} ${chapter}${verseNum ? ':' + verseNum : ''}` : book;
+  const refY = startY + (lines.length * lineHeight) + 24;
+
+  ctx.font = '700 28px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
   ctx.fillStyle = accentTextColor;
   ctx.letterSpacing = '3px';
   ctx.shadowBlur = isLight ? 2 : 8;
-  const bookRef = `${verse.book} ${verse.chapter}:${verse.verse}`.toUpperCase();
-  ctx.fillText(bookRef, width / 2, refY);
+  ctx.fillText(citation.toUpperCase(), width / 2, refY);
 
-  // Reset shadow for clean vector logo & imprint
+  // Reset shadow for clean footer logo & imprint
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
 
-  // 8. Minimalist Social Media Footer Imprint
-  const footerY = isStory ? height - 140 : height - 80;
+  // 8. Logo & Footer Imprint (Logo placed at Bottom Right, not too big)
+  const padX = isStory ? 60 : 44;
+  const padY = isStory ? 70 : 44;
+  const logoSize = isStory ? 48 : 40; // Tasteful, crisp size in bottom right!
+  const logoY = height - padY - logoSize;
+  const logoX = width - padX - logoSize;
+
   if (!forcePureCanvas) {
     try {
       const logo = await getCachedLogo();
       if (logo) {
-        const logoSize = 44;
-        const logoX = (width - logoSize) / 2;
-        const logoY = footerY - 54;
         ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
       }
     } catch (_) {}
   }
 
-  ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  // Brand Watermark at Bottom Left (Aligned with Bottom-Right Logo)
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
   ctx.fillStyle = isLight ? '#78350f' : 'rgba(255, 255, 255, 0.90)';
   ctx.letterSpacing = '2px';
-  ctx.fillText('2-MINUTE SERMON', width / 2, footerY);
+  ctx.fillText('2-MINUTE SERMON', padX, logoY + 4);
 
-  ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-  ctx.fillStyle = isLight ? 'rgba(120, 53, 15, 0.65)' : 'rgba(255, 255, 255, 0.55)';
+  ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = isLight ? 'rgba(120, 53, 15, 0.70)' : 'rgba(255, 255, 255, 0.60)';
   ctx.letterSpacing = '1px';
-  ctx.fillText('2minutesermon.org', width / 2, footerY + 22);
+  ctx.fillText('2minutesermon.org', padX, logoY + 26);
 }
 
 async function getCanvasBlobSafely(canvas, verse, themeId, ratio) {
@@ -1684,25 +1759,6 @@ async function getCanvasBlobSafely(canvas, verse, themeId, ratio) {
     console.error('Clean canvas export failed:', err2);
   }
   return null;
-}
-
-function wrapCanvasText(ctx, text, maxWidth) {
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = words[0] || '';
-
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const width = ctx.measureText(currentLine + ' ' + word).width;
-    if (width < maxWidth) {
-      currentLine += ' ' + word;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-  lines.push(currentLine);
-  return lines;
 }
 
 function setupPromoVideo() {
