@@ -1531,14 +1531,90 @@ textarea.text-input { resize: vertical; }
 /* ==========================================================================
    HUB GRIDS
    ========================================================================== */
-.seasons-hub-grid, .topics-hub-grid, .preachers-hub-grid, .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-.hub-card {
-  background: var(--color-white); border: 1px solid var(--color-lightgray); border-radius: var(--radius-lg);
-  padding: 26px; transition: all var(--transition-normal);
+.seasons-hub-grid, .topics-hub-grid, .preachers-hub-grid, .events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
-.hub-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(198,40,40,0.2); }
-.preacher-card-img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; margin-bottom: 16px; border: 3px solid var(--color-lightgray); transition: border-color var(--transition-fast); }
-.hub-card:hover .preacher-card-img { border-color: var(--color-sermon-red); }
+.hub-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-lightgray);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.hub-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(198,40,40,0.2);
+}
+.preacher-card-img {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 16px;
+  border: 3px solid var(--color-lightgray);
+  transition: border-color var(--transition-fast);
+  display: block;
+}
+.hub-card:hover .preacher-card-img {
+  border-color: var(--color-sermon-red);
+}
+
+/* Preacher Hub Card Precision Alignment */
+.preacher-card-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  line-height: 1.35;
+  min-height: 2.7em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: center;
+}
+.preacher-card-meta {
+  font-size: 0.80rem;
+  color: var(--color-sermon-red);
+  font-weight: 600;
+  margin-bottom: 12px;
+  min-height: 2.4em;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: center;
+}
+.preacher-card-bio {
+  font-size: 0.86rem;
+  color: #555e6d;
+  line-height: 1.55;
+  margin-bottom: 20px;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.6em;
+  text-align: center;
+}
+.preacher-card-footer {
+  margin-top: auto;
+  width: 100%;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-lightgray);
+}
+.preacher-card-footer .btn {
+  width: 100%;
+  padding: 8px 14px;
+  font-weight: 600;
+}
 
 /* Minimal Event Cards */
 .event-card {

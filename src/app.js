@@ -2938,8 +2938,8 @@ function renderSeasonsHub() {
   c.innerHTML = seasons.filter(s => s.slug !== 'all').map(s => `
     <div class="hub-card" onclick="window.selectSeasonChip('${s.slug}');window.switchView('sermons');">
       <h3 style="font-size:1.3rem;margin-bottom:8px;">${s.name}</h3>
-      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;">${s.description}</p>
-      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;">Browse Season →</span>
+      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;flex-grow:1;">${s.description}</p>
+      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">Browse Season →</span>
     </div>`).join('');
   observeNewCards(c);
 }
@@ -2950,8 +2950,8 @@ function renderTopicsHub() {
   c.innerHTML = topics.map(t => `
     <div class="hub-card" onclick="window.filterByTopicName('${t.name}')">
       <h3 style="font-size:1.3rem;margin-bottom:8px;">${t.name}</h3>
-      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;">${t.description}</p>
-      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;">View ${t.count} Sermons →</span>
+      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;flex-grow:1;">${t.description}</p>
+      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">View ${t.count} Sermons →</span>
     </div>`).join('');
   observeNewCards(c);
 }
@@ -2965,15 +2965,17 @@ function renderPreachersHub() {
   const c = document.getElementById('preachersHubGrid');
   if (!c) return;
   c.innerHTML = preachers().map(p => `
-    <div class="hub-card text-center">
+    <div class="hub-card preacher-hub-card text-center">
       <img src="${p.photoUrl}" alt="${p.name}" class="preacher-card-img"
            onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=84'">
-      <h3 style="font-size:1.2rem;margin-bottom:4px;">${p.name}</h3>
-      <div style="font-size:0.8rem;color:var(--color-sermon-red);font-weight:600;margin-bottom:10px;">${p.denomination} &bull; ${p.country}</div>
-      <p style="font-size:0.85rem;color:#777;margin-bottom:18px;line-height:1.5;">${p.bio}</p>
-      <button class="btn btn-outline btn-sm btn-full" onclick="window.filterByPreacherName('${p.name}')">
-        View Sermons
-      </button>
+      <h3 class="preacher-card-name">${p.name}</h3>
+      <div class="preacher-card-meta">${p.denomination} &bull; ${p.country}</div>
+      <p class="preacher-card-bio">${p.bio}</p>
+      <div class="preacher-card-footer">
+        <button class="btn btn-outline btn-sm btn-full" onclick="window.filterByPreacherName('${p.name}')">
+          View Sermons
+        </button>
+      </div>
     </div>`).join('');
   observeNewCards(c);
 }
