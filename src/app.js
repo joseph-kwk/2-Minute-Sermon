@@ -1037,76 +1037,183 @@ export function setupScriptureCardGenerator() {
     });
   });
 
-  // Download High-Res PNG
-  document.getElementById('cardDownloadBtn')?.addEventListener('click', () => {
-    const canvas = document.getElementById('scriptureExportCanvas');
-    if (!canvas || !activeCardVerse) return;
-
-    canvas.toBlob(blob => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const safeBook = (activeCardVerse.book || 'Scripture').replace(/\s+/g, '-');
-      a.href = url;
-      a.download = `2-Minute-Sermon-${safeBook}-${activeCardVerse.chapter || '1'}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+  // Helpers for safe downloads
+  function triggerDownloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (a.parentNode) document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('📥 Scripture card downloaded in high resolution!');
-    }, 'image/png');
-  });
+    }, 4000);
+  }
 
-  // Native Share (Mobile Instagram / WhatsApp / System Sheet)
+  function triggerDownloadDataUrl(dataUrl, filename) {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (a.parentNode) document.body.removeChild(a);
+    }, 2000);
+  }
+
+  // Native Share (Mobile Instagram / WhatsApp / System Sheet — Full Package)
   document.getElementById('cardNativeShareBtn')?.addEventListener('click', async () => {
     const canvas = document.getElementById('scriptureExportCanvas');
     if (!canvas || !activeCardVerse) return;
 
-    canvas.toBlob(async blob => {
-      if (!blob) return;
-      const safeBook = (activeCardVerse.book || 'Scripture').replace(/\s+/g, '-');
-      const file = new File([blob], `2ms-verse-${safeBook}.png`, { type: 'image/png' });
+    const btn = document.getElementById('cardNativeShareBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Preparing Full Package...`;
+    }
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio);
+      const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
+      const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+      const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
+      const url = `${window.location.origin}/#daily-verse`;
+
+      const shareTitle = `Daily Verse: ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}`;
+      const shareText = `📖 Today's Verse — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n"${activeCardVerse.verseText}"\n\n🕊️ Reflection: ${activeCardVerse.reflection || ''}\n\n✨ 2-Minute Sermon: ${url}`;
+
+      let sharedNatively = false;
+
+      if (blob && navigator.canShare) {
         try {
-          await navigator.share({
-            title: `${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}`,
-            text: `"${activeCardVerse.verseText}" — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\nShared via 2minutesermon.org`,
-            files: [file]
-          });
-          showToast('✨ Shared successfully!');
+          const file = new File([blob], filename, { type: 'image/png' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: shareTitle,
+              text: shareText,
+              files: [file]
+            });
+            sharedNatively = true;
+            showToast('✨ Verse & image shared successfully!');
+          }
         } catch (err) {
-          // User dismissed share dialog
+          if (err.name === 'AbortError') {
+            return; // User cancelled native sheet
+          }
+          console.warn('Native file share failed, falling back:', err);
         }
-      } else {
-        // Fallback to download
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `2ms-verse-${safeBook}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('📥 Image downloaded! Share it to your Instagram or WhatsApp story.');
       }
-    }, 'image/png');
+
+      if (!sharedNatively) {
+        // Full Package Fallback: download image AND copy complete scripture package
+        if (blob) {
+          triggerDownloadBlob(blob, filename);
+        }
+        try {
+          await navigator.clipboard.writeText(shareText);
+          showToast('📥 Image downloaded & full verse copied to clipboard! (Ready to paste anywhere)');
+        } catch (_) {
+          showToast('📥 Scripture card downloaded in high resolution!');
+        }
+      }
+    } catch (err) {
+      console.error('Share full package error:', err);
+      showToast('⚠️ Could not complete share. Please try Download.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+  });
+
+  // Download High-Res PNG
+  document.getElementById('cardDownloadBtn')?.addEventListener('click', async () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas || !activeCardVerse) return;
+
+    const btn = document.getElementById('cardDownloadBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Exporting PNG...`;
+    }
+
+    try {
+      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio);
+      const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
+      const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+      const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
+
+      if (blob) {
+        triggerDownloadBlob(blob, filename);
+        showToast('📥 Scripture card downloaded in high resolution!');
+      } else {
+        try {
+          const dataUrl = canvas.toDataURL('image/png');
+          triggerDownloadDataUrl(dataUrl, filename);
+          showToast('📥 Scripture card downloaded!');
+        } catch (dataUrlErr) {
+          showToast('⚠️ Could not download image. Please try again.');
+        }
+      }
+    } catch (err) {
+      console.error('Download card error:', err);
+      showToast('⚠️ Could not download card. Please try again.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
   });
 
   // Copy Image to Clipboard
-  document.getElementById('cardCopyBtn')?.addEventListener('click', () => {
+  document.getElementById('cardCopyBtn')?.addEventListener('click', async () => {
     const canvas = document.getElementById('scriptureExportCanvas');
-    if (!canvas) return;
+    if (!canvas || !activeCardVerse) return;
 
-    canvas.toBlob(async blob => {
-      if (!blob) return;
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ]);
-        showToast('📋 Image copied to clipboard!');
-      } catch (err) {
-        showToast('⚠️ Direct image copy not supported on this browser. Try Download!');
+    const btn = document.getElementById('cardCopyBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Copying...`;
+    }
+
+    try {
+      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio);
+      let copiedImage = false;
+
+      if (blob && navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          copiedImage = true;
+          showToast('📋 High-res image copied to clipboard!');
+        } catch (clipErr) {
+          console.warn('Direct clipboard image copy unsupported:', clipErr);
+        }
       }
-    }, 'image/png');
+
+      if (!copiedImage) {
+        const shareText = `"${activeCardVerse.verseText}" — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n${window.location.origin}/#daily-verse`;
+        await navigator.clipboard.writeText(shareText);
+        showToast('📋 Verse text copied to clipboard! (Image copy unsupported in this browser)');
+      }
+    } catch (err) {
+      console.error('Clipboard copy error:', err);
+      showToast('⚠️ Could not copy image. Try Download instead!');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
   });
 
   // Close Card Modal
@@ -1244,13 +1351,18 @@ function getCachedCardImage(url) {
     return Promise.resolve(cardImageCache[url]);
   }
   return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(null), 3000);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
+      clearTimeout(timer);
       cardImageCache[url] = img;
       resolve(img);
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve(null);
+    };
     img.src = url;
   });
 }
@@ -1260,63 +1372,147 @@ function getCachedLogo() {
     return Promise.resolve(logoImgCache);
   }
   return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(null), 2500);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
+      clearTimeout(timer);
       logoImgCache = img;
       resolve(img);
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve(null);
+    };
     img.src = '/assets/logo.png';
   });
 }
 
-function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 24, maxFontSize = 62) {
-  let fontSize = maxFontSize;
-  let lines = [];
-  let lineHeight = Math.round(fontSize * 1.45);
-  let totalHeight = 0;
+function drawProceduralBackground(ctx, themeId, width, height) {
+  if (themeId === 'parchment') {
+    // Sacred Parchment: Warm antique parchment paper texture
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, '#fefbf3');
+    bgGrad.addColorStop(0.3, '#fbf3e4');
+    bgGrad.addColorStop(0.7, '#f4e5cb');
+    bgGrad.addColorStop(1, '#ebd7bc');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
 
-  while (fontSize >= minFontSize) {
-    ctx.font = `italic 600 ${fontSize}px "Playfair Display", Georgia, serif`;
-    lineHeight = Math.round(fontSize * 1.45);
-    lines = wrapCanvasText(ctx, text, maxW);
-    totalHeight = lines.length * lineHeight;
+    // Subtle warm center illumination
+    const centerGlow = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width * 0.65);
+    centerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    centerGlow.addColorStop(1, 'rgba(235, 215, 188, 0.0)');
+    ctx.fillStyle = centerGlow;
+    ctx.fillRect(0, 0, width, height);
 
-    if (totalHeight <= maxH) {
-      break;
-    }
-    fontSize -= 2;
+    // Antique double gold/amber border
+    ctx.strokeStyle = 'rgba(120, 53, 15, 0.28)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(36, 36, width - 72, height - 72);
+
+    ctx.strokeStyle = 'rgba(180, 83, 9, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(44, 44, width - 88, height - 88);
+
+    // Corner decorative accents
+    const cornerOffsets = [
+      [36, 36], [width - 36, 36],
+      [36, height - 36], [width - 36, height - 36]
+    ];
+    ctx.fillStyle = 'rgba(120, 53, 15, 0.35)';
+    cornerOffsets.forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (themeId === 'dawn') {
+    // Dawn Grace: Vibrant sunrise from deep plum to golden dawn
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#150824');
+    bgGrad.addColorStop(0.28, '#3b0d36');
+    bgGrad.addColorStop(0.55, '#831843');
+    bgGrad.addColorStop(0.80, '#c2410c');
+    bgGrad.addColorStop(1, '#f59e0b');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Rising sun radiant glow
+    const dawnSun = ctx.createRadialGradient(width * 0.5, height * 0.85, 30, width * 0.5, height * 0.85, width * 0.75);
+    dawnSun.addColorStop(0, 'rgba(254, 240, 138, 0.35)');
+    dawnSun.addColorStop(0.5, 'rgba(249, 115, 22, 0.20)');
+    dawnSun.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = dawnSun;
+    ctx.fillRect(0, 0, width, height);
+  } else if (themeId === 'emerald') {
+    // Living Hope: Deep sanctuary forest / living waters emerald
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#021814');
+    bgGrad.addColorStop(0.35, '#042f2e');
+    bgGrad.addColorStop(0.70, '#064e3b');
+    bgGrad.addColorStop(1, '#022c22');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Emerald radiant bloom
+    const emeraldGlow = ctx.createRadialGradient(width * 0.5, height * 0.45, 40, width * 0.5, height * 0.45, width * 0.7);
+    emeraldGlow.addColorStop(0, 'rgba(52, 211, 153, 0.16)');
+    emeraldGlow.addColorStop(0.7, 'rgba(16, 185, 129, 0.05)');
+    emeraldGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = emeraldGlow;
+    ctx.fillRect(0, 0, width, height);
+  } else {
+    // Midnight Sanctuary (Default): Rich obsidian night sanctuary
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#07090e');
+    bgGrad.addColorStop(0.4, '#0d111a');
+    bgGrad.addColorStop(0.8, '#131826');
+    bgGrad.addColorStop(1, '#080a10');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Celestial golden warmth
+    const celestialGlow = ctx.createRadialGradient(width * 0.5, height * 0.35, 40, width * 0.5, height * 0.35, width * 0.65);
+    celestialGlow.addColorStop(0, 'rgba(245, 158, 11, 0.12)');
+    celestialGlow.addColorStop(0.6, 'rgba(217, 119, 6, 0.04)');
+    celestialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = celestialGlow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle starlight accents
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    const stars = [
+      [width * 0.18, height * 0.12, 1.5],
+      [width * 0.82, height * 0.16, 1.8],
+      [width * 0.25, height * 0.22, 1.2],
+      [width * 0.74, height * 0.28, 1.4],
+      [width * 0.12, height * 0.32, 1.2],
+      [width * 0.88, height * 0.38, 1.6],
+      [width * 0.32, height * 0.78, 1.3],
+      [width * 0.68, height * 0.82, 1.5],
+      [width * 0.15, height * 0.85, 1.2],
+      [width * 0.85, height * 0.88, 1.4]
+    ];
+    stars.forEach(([sx, sy, sr]) => {
+      ctx.beginPath();
+      ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+      ctx.fill();
+    });
   }
-
-  return { fontSize, lines, lineHeight, totalHeight };
 }
 
-function analyzeSafeZoneLuminance(ctx, x, y, w, h) {
-  try {
-    const imgData = ctx.getImageData(x, y, w, h);
-    const d = imgData.data;
-    let totalLum = 0;
-    let samples = 0;
-    for (let i = 0; i < d.length; i += 16 * 4) {
-      const r = d[i];
-      const g = d[i + 1];
-      const b = d[i + 2];
-      totalLum += 0.299 * r + 0.587 * g + 0.114 * b;
-      samples++;
-    }
-    return samples > 0 ? (totalLum / samples) : 60;
-  } catch (_) {
-    return 60;
-  }
-}
-
-async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story') {
+async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story', forcePureCanvas = false) {
   const canvas = document.getElementById('scriptureExportCanvas');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (_) {}
+  }
 
   const isStory = ratio === 'story';
   const width  = 1080;
@@ -1327,47 +1523,46 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
 
   const tpl = SCRIPTURE_CARD_TEMPLATES[themeId] || SCRIPTURE_CARD_TEMPLATES.midnight;
 
-  // 1. Draw Background Image or Fallback Gradient
-  const bgImg = await getCachedCardImage(tpl.imageUrl);
-  if (bgImg) {
-    // Cover-fit image to canvas
-    const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
-    const targetRatio = width / height;
-    let renderW, renderH, offsetX, offsetY;
+  // 1. Paint rich procedural master base first (guaranteed clean origin)
+  drawProceduralBackground(ctx, themeId, width, height);
 
-    if (imgRatio > targetRatio) {
-      renderH = height;
-      renderW = height * imgRatio;
-      offsetX = (width - renderW) / 2;
-      offsetY = 0;
-    } else {
-      renderW = width;
-      renderH = width / imgRatio;
-      offsetX = 0;
-      offsetY = (height - renderH) / 2;
-    }
-    ctx.drawImage(bgImg, offsetX, offsetY, renderW, renderH);
+  // If photo is enabled and not forcePureCanvas, overlay it
+  if (!forcePureCanvas && tpl.imageUrl) {
+    try {
+      const bgImg = await getCachedCardImage(tpl.imageUrl);
+      if (bgImg) {
+        const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
+        const targetRatio = width / height;
+        let renderW, renderH, offsetX, offsetY;
 
-    // Deep rich overlay to ensure photograph serves as atmosphere
-    const imgTint = ctx.createLinearGradient(0, 0, 0, height);
-    if (themeId === 'parchment') {
-      imgTint.addColorStop(0, 'rgba(250, 244, 232, 0.75)');
-      imgTint.addColorStop(1, 'rgba(238, 222, 203, 0.88)');
-    } else {
-      imgTint.addColorStop(0, 'rgba(5, 7, 12, 0.72)');
-      imgTint.addColorStop(0.5, 'rgba(10, 14, 22, 0.55)');
-      imgTint.addColorStop(1, 'rgba(5, 7, 12, 0.82)');
+        if (imgRatio > targetRatio) {
+          renderH = height;
+          renderW = height * imgRatio;
+          offsetX = (width - renderW) / 2;
+          offsetY = 0;
+        } else {
+          renderW = width;
+          renderH = width / imgRatio;
+          offsetX = 0;
+          offsetY = (height - renderH) / 2;
+        }
+        ctx.drawImage(bgImg, offsetX, offsetY, renderW, renderH);
+
+        const imgTint = ctx.createLinearGradient(0, 0, 0, height);
+        if (themeId === 'parchment') {
+          imgTint.addColorStop(0, 'rgba(250, 244, 232, 0.78)');
+          imgTint.addColorStop(1, 'rgba(238, 222, 203, 0.88)');
+        } else {
+          imgTint.addColorStop(0, 'rgba(5, 7, 12, 0.72)');
+          imgTint.addColorStop(0.5, 'rgba(10, 14, 22, 0.55)');
+          imgTint.addColorStop(1, 'rgba(5, 7, 12, 0.82)');
+        }
+        ctx.fillStyle = imgTint;
+        ctx.fillRect(0, 0, width, height);
+      }
+    } catch (imgErr) {
+      console.warn('Background image draw skipped, procedural base preserved:', imgErr);
     }
-    ctx.fillStyle = imgTint;
-    ctx.fillRect(0, 0, width, height);
-  } else {
-    // Rich fallback gradient
-    const grad = ctx.createLinearGradient(0, 0, 0, height);
-    tpl.fallbackGrad.forEach((col, idx) => {
-      grad.addColorStop(idx / (tpl.fallbackGrad.length - 1), col);
-    });
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, width, height);
   }
 
   // 2. Define "Safe Zone" Bounding Box
@@ -1400,16 +1595,22 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
 
   const primaryTextColor = isLight ? '#1c1917' : '#ffffff';
   const accentTextColor  = isLight ? '#78350f' : tpl.accentColor;
-  const mutedTextColor   = isLight ? 'rgba(41, 37, 36, 0.75)' : 'rgba(255, 255, 255, 0.78)';
 
-  // 5. Auto-Scaling Font Loop for Scripture Quote (The Hero Content)
+  // 5. Header Badge Text
+  const badgeY = isStory ? safeY - 36 : Math.max(76, safeY - 24);
+  ctx.font = '700 15px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = accentTextColor;
+  ctx.letterSpacing = '3px';
+  ctx.textAlign = 'center';
+  ctx.fillText(tpl.badgeText || '• DAILY SCRIPTURE ENCOURAGEMENT •', width / 2, badgeY);
+
+  // 6. Auto-Scaling Font Loop for Scripture Quote (The Hero Content)
   const quoteText = `"${verse.verseText}"`;
   const maxAvailableH = safeH - 80;
   const { fontSize, lines, lineHeight, totalHeight } = fitTextInSafeZone(
-    ctx, quoteText, safeW - 40, maxAvailableH, 26, isStory ? 58 : 50
+    ctx, quoteText, safeW - 40, maxAvailableH, 24, isStory ? 58 : 50
   );
 
-  // Vertical centering calculation within the Safe Zone
   const contentTotalH = totalHeight + 70;
   const startY = safeY + Math.max(20, Math.round((safeH - contentTotalH) / 2)) + fontSize;
 
@@ -1428,7 +1629,7 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
     ctx.fillText(lines[i], width / 2, startY + (i * lineHeight));
   }
 
-  // 6. Render Scripture Reference (Clean, Elegant, Tracked Small-Caps)
+  // 7. Render Scripture Reference
   const refY = startY + (lines.length - 1) * lineHeight + 56;
   ctx.font = '700 30px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
   ctx.fillStyle = accentTextColor;
@@ -1441,15 +1642,18 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
 
-  // 7. Minimalist Social Media Footer Imprint (Clean, High-End Watermark)
+  // 8. Minimalist Social Media Footer Imprint
   const footerY = isStory ? height - 140 : height - 80;
-  const logo = await getCachedLogo();
-
-  if (logo) {
-    const logoSize = 44;
-    const logoX = (width - logoSize) / 2;
-    const logoY = footerY - 54;
-    ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+  if (!forcePureCanvas) {
+    try {
+      const logo = await getCachedLogo();
+      if (logo) {
+        const logoSize = 44;
+        const logoX = (width - logoSize) / 2;
+        const logoY = footerY - 54;
+        ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+      }
+    } catch (_) {}
   }
 
   ctx.font = '700 18px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
@@ -1460,7 +1664,26 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
   ctx.fillStyle = isLight ? 'rgba(120, 53, 15, 0.65)' : 'rgba(255, 255, 255, 0.55)';
   ctx.letterSpacing = '1px';
-  ctx.fillText('2minutesermon.com', width / 2, footerY + 22);
+  ctx.fillText('2minutesermon.org', width / 2, footerY + 22);
+}
+
+async function getCanvasBlobSafely(canvas, verse, themeId, ratio) {
+  try {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (blob) return blob;
+  } catch (err) {
+    console.warn('Canvas toBlob failed (possible CORS/taint). Re-rendering with pure procedural canvas...', err);
+  }
+
+  // Tainted or failed: re-render canvas cleanly without external images!
+  try {
+    await renderScriptureCardToCanvas(verse, themeId, ratio, true /* forcePureCanvas */);
+    const cleanBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (cleanBlob) return cleanBlob;
+  } catch (err2) {
+    console.error('Clean canvas export failed:', err2);
+  }
+  return null;
 }
 
 function wrapCanvasText(ctx, text, maxWidth) {
@@ -2053,13 +2276,7 @@ export function setupDailyVerse() {
   const shareBtn = document.getElementById('dvShareBtn');
   if (shareBtn && !shareBtn.dataset.bound) {
     shareBtn.dataset.bound = 'true';
-    shareBtn.addEventListener('click', () => shareDailyVerse());
-  }
-
-  const shareImgBtn = document.getElementById('dvShareImageBtn');
-  if (shareImgBtn && !shareImgBtn.dataset.bound) {
-    shareImgBtn.dataset.bound = 'true';
-    shareImgBtn.addEventListener('click', () => {
+    shareBtn.addEventListener('click', () => {
       const verse = getVerseForDate(getTodayDateStr());
       if (verse) openScriptureCardModal(verse);
     });
@@ -2918,21 +3135,7 @@ window.renderConversationsHub = renderConversationsHub;
 
 export function shareDailyVerse() {
   const verse = getVerseForDate(getTodayDateStr());
-  if (!verse) return;
-  const shareTitle = `Daily Verse: ${verse.book} ${verse.chapter}:${verse.verse}`;
-  const shareText = `📖 Today's Verse — ${verse.book} ${verse.chapter}:${verse.verse}\n\n"${verse.verseText}"\n\n🕊️ Reflection: ${verse.reflection}\n\n✨ Read and listen on 2-Minute Sermon:`;
-  const url = `${window.location.origin}/#daily-verse`;
-
-  if (navigator.share) {
-    navigator.share({
-      title: shareTitle,
-      text: `${shareText}\n${url}`,
-      url: url
-    }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${shareText}\n${url}`);
-    showToast('🔗 Daily Verse link & scripture copied to clipboard!');
-  }
+  if (verse) openScriptureCardModal(verse);
 }
 window.shareDailyVerse = shareDailyVerse;
 

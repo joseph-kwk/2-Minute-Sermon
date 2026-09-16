@@ -314,13 +314,9 @@
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Copy Verse
               </button>
-              <button class="btn btn-sm btn-outline" id="dvShareBtn">
+              <button class="btn btn-sm btn-primary" id="dvShareBtn" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%); box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35);">
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                 Share Verse
-              </button>
-              <button class="btn btn-sm btn-primary" id="dvShareImageBtn" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
-                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                Share as Image
               </button>
             </div>
           </div>
@@ -1411,8 +1407,11 @@
       <button class="modal-close-btn" id="closeCardModalBtn" aria-label="Close modal">✕</button>
       <div class="card-generator-wrap">
         <div class="card-generator-header">
-          <span class="badge badge-season">✨ Share Scripture</span>
-          <h2 class="card-generator-title">Share Scripture Card</h2>
+          <span class="badge badge-season">✨ Full Scripture Package</span>
+          <h2 class="card-generator-title">Share Verse Card</h2>
+          <p class="card-generator-subtitle" style="font-size:0.92rem;color:rgba(255,255,255,0.7);margin-top:4px;">
+            Export stunning high-res artwork with scripture quote, reference, and reflection ready to share.
+          </p>
         </div>
 
         <div class="card-generator-body">
@@ -1462,15 +1461,15 @@
             </div>
 
             <div class="card-export-actions">
-              <button class="card-action-btn btn-action-download" id="cardDownloadBtn">
+              <button class="card-action-btn btn-action-share" id="cardNativeShareBtn" title="Share full package: image + scripture + reference + link">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Share Verse (Full Package)
+              </button>
+              <button class="card-action-btn btn-action-download" id="cardDownloadBtn" title="Download high-resolution PNG image directly">
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 Download Image (PNG)
               </button>
-              <button class="card-action-btn btn-action-share" id="cardNativeShareBtn">
-                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                Share to Stories / WhatsApp
-              </button>
-              <button class="card-action-btn btn-action-copy" id="cardCopyBtn">
+              <button class="card-action-btn btn-action-copy" id="cardCopyBtn" title="Copy artwork to clipboard">
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Copy Image to Clipboard
               </button>
