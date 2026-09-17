@@ -163,10 +163,44 @@ document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
 
 // ── SIDEBAR NAV ─────────────────────────────────────────────────────────
 function setupSidebarNav() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop');
+  const menuBtn = document.getElementById('adminMobileMenuBtn');
+
+  function closeMobileSidebar() {
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
+  }
+
+  function openMobileSidebar() {
+    if (sidebar) sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (sidebar && sidebar.classList.contains('open')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener('click', closeMobileSidebar);
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMobileSidebar();
+  });
+
   document.querySelectorAll('.admin-nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.getAttribute('data-panel');
       if (panel) switchPanel(panel);
+      closeMobileSidebar();
     });
   });
 }
