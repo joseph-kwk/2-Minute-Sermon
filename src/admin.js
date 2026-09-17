@@ -20,6 +20,7 @@ let pendingPrayers = [
 ];
 
 const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
+const SESSION_KEY     = '2ms_steward_authenticated';
 let authenticated   = false;
 let activePanel     = 'dashboard';
 
@@ -39,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSettingsPanel();
   setupBackupPanel();
   populateSelects();
+
+  // Restore authenticated session if active in current browser tab
+  checkExistingSession();
 
   // ── Real-time Cloud Data Sync Listeners for Admin ─────────────────────────
   const refreshAdminView = () => {
@@ -70,6 +74,25 @@ function updateTopbarDate() {
   if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 }
 
+// ── Check Existing Session on Load ───────────────────────────────────────
+function checkExistingSession() {
+  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+    authenticated = true;
+    const overlay = document.getElementById('adminAuthOverlay');
+    const dash    = document.getElementById('adminDashboard');
+    if (overlay && dash) {
+      overlay.hidden = true;
+      dash.hidden    = false;
+      renderDashboardStats();
+      renderSermonsList();
+      renderVerseQueue();
+      renderPreachersList();
+      renderEventsList();
+      renderPrayerInbox();
+    }
+  }
+}
+
 // ── AUTH ─────────────────────────────────────────────────────────────────
 function setupAuthForm() {
   const form      = document.getElementById('adminAuthForm');
@@ -93,6 +116,8 @@ function setupAuthForm() {
 
     if (VALID_PASSWORDS.includes(pass)) {
       authenticated = true;
+      sessionStorage.setItem(SESSION_KEY, 'true');
+
       if (noticeEl) {
         noticeEl.hidden = true;
         noticeEl.classList.remove('visible');
@@ -103,6 +128,7 @@ function setupAuthForm() {
         dash.hidden    = false;
         dash.style.animation = 'fadeIn 0.3s ease';
         renderDashboardStats();
+        renderSermonsList();
         renderVerseQueue();
         renderPreachersList();
         renderEventsList();
@@ -129,9 +155,17 @@ function setupAuthForm() {
   document.head.appendChild(st);
 }
 
-// Sign out (Modernized & Smooth)
-document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
+// ── Unified Sign Out (Clean session removal & mobile drawer dismissal) ────
+function handleSignOut() {
   authenticated = false;
+  sessionStorage.removeItem(SESSION_KEY);
+
+  // Unconditionally close mobile drawer and backdrop if open
+  const sidebar  = document.querySelector('.admin-sidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop');
+  if (sidebar)  sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+
   const dash      = document.getElementById('adminDashboard');
   const overlay   = document.getElementById('adminAuthOverlay');
   const passInput = document.getElementById('adminAuthPass');
@@ -159,7 +193,10 @@ document.getElementById('adminSignOutBtn')?.addEventListener('click', () => {
     overlay.style.animation = 'fadeIn 0.25s ease forwards';
     toast('🔒 Signed out. Session closed.');
   }, 220);
-});
+}
+
+document.getElementById('adminSignOutBtn')?.addEventListener('click', handleSignOut);
+document.getElementById('adminTopbarSignOutBtn')?.addEventListener('click', handleSignOut);
 
 // ── SIDEBAR NAV ─────────────────────────────────────────────────────────
 function setupSidebarNav() {

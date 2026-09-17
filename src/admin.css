@@ -322,12 +322,21 @@ html, body { height: 100%; font-family: var(--font-body); }
 .admin-topbar-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 .admin-topbar-date {
   font-size: 0.82rem;
   color: var(--admin-muted);
   font-weight: 500;
+}
+.admin-topbar-signout-btn {
+  color: var(--admin-muted);
+  transition: all var(--transition);
+}
+.admin-topbar-signout-btn:hover {
+  background: rgba(211, 47, 47, 0.12);
+  border-color: rgba(211, 47, 47, 0.35);
+  color: #ff8a80;
 }
 
 /* ── Panels ── */
@@ -790,7 +799,11 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   .admin-topbar-title {
     font-size: 1.15rem;
   }
-  .admin-live-site-text {
+  .admin-topbar-right {
+    gap: 6px;
+  }
+  .admin-live-site-text,
+  .admin-signout-text {
     display: none;
   }
   .admin-stats-grid {
