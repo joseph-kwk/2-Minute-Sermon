@@ -17,7 +17,7 @@
   --admin-muted: #94a3b8;
   --admin-hover: rgba(255, 255, 255, 0.05);
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 14px;
@@ -75,11 +75,11 @@ html, body { height: 100%; font-family: var(--font-body); }
 }
 .admin-auth-title {
   font-family: var(--font-heading);
-  font-size: 2.15rem;
+  font-size: 2rem;
   color: #fff;
   margin-bottom: 8px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .admin-auth-subtitle {
   font-size: 0.95rem;
@@ -314,10 +314,10 @@ html, body { height: 100%; font-family: var(--font-body); }
 }
 .admin-topbar-title {
   font-family: var(--font-heading);
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   color: #fff;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .admin-topbar-right {
   display: flex;
@@ -382,11 +382,12 @@ html, body { height: 100%; font-family: var(--font-body); }
 }
 .admin-stat-value {
   font-family: var(--font-heading);
-  font-size: 2.1rem;
-  font-weight: 700;
+  font-size: 2.15rem;
+  font-weight: 800;
   color: #fff;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 .admin-stat-label {
   font-size: 0.72rem;
@@ -442,11 +443,11 @@ html, body { height: 100%; font-family: var(--font-body); }
 }
 .admin-card-title {
   font-family: var(--font-heading);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   color: #fff;
   margin-bottom: 6px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 .admin-card-sub {
   font-size: 0.86rem;
