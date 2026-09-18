@@ -1151,7 +1151,17 @@ function updateMiniPlayerUI() {
 
 // ─── V2: SCRIPTURE CARD GENERATOR ("Share as Image") ──────────────────────────
 let activeCardVerse = null;
-let activeCardTheme = 'midnight';
+let userSelectedCardTheme = false;
+
+function getDefaultSeasonalTheme() {
+  const m = new Date().getMonth(); // 0 = Jan, 11 = Dec
+  if (m >= 2 && m <= 4) return 'mountain_dawn'; // Spring / Easter (Mar-May)
+  if (m >= 5 && m <= 7) return 'living_waters'; // Summer / Living Waters (Jun-Aug)
+  if (m >= 8 && m <= 10) return 'golden_woods'; // Autumn / Harvest (Sep-Nov)
+  return 'winter_twilight';                      // Winter / Advent (Dec-Feb)
+}
+
+let activeCardTheme = getDefaultSeasonalTheme();
 let activeCardRatio = 'story'; // 'story' (9:16) or 'square' (1:1)
 let activeCardFont  = 'inter'; // locked to Inter modern sans-serif
 
@@ -1177,9 +1187,10 @@ export function setupScriptureCardGenerator() {
   // Theme switchers
   modal.querySelectorAll('.theme-pill').forEach(btn => {
     btn.addEventListener('click', () => {
+      userSelectedCardTheme = true;
       modal.querySelectorAll('.theme-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      activeCardTheme = btn.getAttribute('data-theme') || 'midnight';
+      activeCardTheme = btn.getAttribute('data-theme') || 'mountain_dawn';
       if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
     });
   });
@@ -1423,6 +1434,16 @@ export function openScriptureCardModal(verse) {
   const modal = document.getElementById('scriptureCardModal');
   if (!modal) return;
 
+  // Auto-recommend current liturgical/natural season if user hasn't explicitly chosen one
+  if (!userSelectedCardTheme) {
+    activeCardTheme = getDefaultSeasonalTheme();
+  }
+
+  // Synchronize UI active state on theme pills
+  modal.querySelectorAll('.theme-pill').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-theme') === activeCardTheme);
+  });
+
   lockPageScroll();
   modal.hidden = false;
   renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
@@ -1440,34 +1461,78 @@ export function closeScriptureCardModal() {
 window.closeScriptureCardModal = closeScriptureCardModal;
 
 // ─── TEMPLATE-DRIVEN LAYOUT ENGINE FOR SCRIPTURE CARDS ────────────────────────
+// 6 curated, lightweight natural presets (under 120KB each via CDN) paired with
+// atmospheric lighting, high-contrast typography, and procedural fallbacks.
 const SCRIPTURE_CARD_TEMPLATES = {
-  midnight: {
-    id: 'midnight',
-    name: 'Midnight Sanctuary',
-    imageUrl: '/assets/hero-bg.jpg',
-    fallbackGrad: ['#090a0f', '#12151e', '#07080b'],
-    safeZone: {
-      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
-      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
-    },
-    accentColor: '#f59e0b',
-    badgeText: '• DAILY SCRIPTURE ENCOURAGEMENT •'
-  },
-  dawn: {
-    id: 'dawn',
-    name: 'Dawn Grace',
-    imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-    fallbackGrad: ['#1e0c24', '#581c3c', '#9f1239', '#d97706'],
+  mountain_dawn: {
+    id: 'mountain_dawn',
+    name: 'Mountain Dawn',
+    season: 'Spring & Easter',
+    imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#0c1322', '#1e293b', '#064e3b', '#f59e0b'],
     safeZone: {
       story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
       square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
     },
     accentColor: '#fbbf24',
-    badgeText: '• MORNING DEVOTION •'
+    badgeText: '• SPRING DAWN & NEW HOPE •'
+  },
+  living_waters: {
+    id: 'living_waters',
+    name: 'Living Waters',
+    season: 'Summer & Peace',
+    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#021827', '#082f49', '#0369a1', '#38bdf8'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#38bdf8',
+    badgeText: '• LIVING WATERS & PEACE •'
+  },
+  golden_woods: {
+    id: 'golden_woods',
+    name: 'Golden Woods',
+    season: 'Autumn & Harvest',
+    imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#1c0f05', '#5c2b09', '#9a3412', '#f59e0b'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#f59e0b',
+    badgeText: '• HARVEST & THANKSGIVING •'
+  },
+  winter_twilight: {
+    id: 'winter_twilight',
+    name: 'Winter Twilight',
+    season: 'Winter & Advent',
+    imageUrl: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#030712', '#0f172a', '#1e1b4b', '#93c5fd'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#93c5fd',
+    badgeText: '• WINTER PEACE & ADVENT •'
+  },
+  starry_solitude: {
+    id: 'starry_solitude',
+    name: 'Starry Solitude',
+    season: 'Evening & Prayer',
+    imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#05070c', '#0a0e18', '#111827', '#080a10'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#fde68a',
+    badgeText: '• EVENING PRAYER & CONTEMPLATION •'
   },
   parchment: {
     id: 'parchment',
     name: 'Sacred Parchment',
+    season: 'Theological & Classic',
     imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#faf4e8', '#f5ebe0', '#eedecb'],
     safeZone: {
@@ -1476,20 +1541,13 @@ const SCRIPTURE_CARD_TEMPLATES = {
     },
     accentColor: '#78350f',
     badgeText: '• SCRIPTURE OF THE DAY •'
-  },
-  emerald: {
-    id: 'emerald',
-    name: 'Living Hope',
-    imageUrl: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80',
-    fallbackGrad: ['#042f2e', '#064e3b', '#022c22'],
-    safeZone: {
-      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
-      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
-    },
-    accentColor: '#34d399',
-    badgeText: '• LIVING WORD •'
   }
 };
+
+// Aliases for backwards compatibility with any legacy bookmarks/configs
+SCRIPTURE_CARD_TEMPLATES.midnight = SCRIPTURE_CARD_TEMPLATES.starry_solitude;
+SCRIPTURE_CARD_TEMPLATES.dawn     = SCRIPTURE_CARD_TEMPLATES.mountain_dawn;
+SCRIPTURE_CARD_TEMPLATES.emerald  = SCRIPTURE_CARD_TEMPLATES.living_waters;
 
 const cardImageCache = {};
 let logoImgCache = null;
@@ -1575,72 +1633,114 @@ function drawProceduralBackground(ctx, themeId, width, height) {
       ctx.arc(cx, cy, 4, 0, Math.PI * 2);
       ctx.fill();
     });
-  } else if (themeId === 'dawn') {
-    // Dawn Grace: Vibrant sunrise from deep plum to golden dawn
+  } else if (themeId === 'mountain_dawn' || themeId === 'dawn') {
+    // Mountain Dawn: Alpine sunrise from deep indigo to emerald valley & golden dawn
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#150824');
-    bgGrad.addColorStop(0.28, '#3b0d36');
-    bgGrad.addColorStop(0.55, '#831843');
-    bgGrad.addColorStop(0.80, '#c2410c');
+    bgGrad.addColorStop(0, '#0c1322');
+    bgGrad.addColorStop(0.32, '#1e293b');
+    bgGrad.addColorStop(0.62, '#064e3b');
+    bgGrad.addColorStop(0.85, '#b45309');
     bgGrad.addColorStop(1, '#f59e0b');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Rising sun radiant glow
-    const dawnSun = ctx.createRadialGradient(width * 0.5, height * 0.85, 30, width * 0.5, height * 0.85, width * 0.75);
-    dawnSun.addColorStop(0, 'rgba(254, 240, 138, 0.35)');
-    dawnSun.addColorStop(0.5, 'rgba(249, 115, 22, 0.20)');
+    // Radiant dawn sunrise bloom
+    const dawnSun = ctx.createRadialGradient(width * 0.5, height * 0.88, 30, width * 0.5, height * 0.88, width * 0.75);
+    dawnSun.addColorStop(0, 'rgba(254, 240, 138, 0.38)');
+    dawnSun.addColorStop(0.55, 'rgba(245, 158, 11, 0.18)');
     dawnSun.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = dawnSun;
     ctx.fillRect(0, 0, width, height);
-  } else if (themeId === 'emerald') {
-    // Living Hope: Deep sanctuary forest / living waters emerald
+  } else if (themeId === 'living_waters' || themeId === 'emerald') {
+    // Living Waters: Deep tranquil oceanic sapphire to coastal twilight
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#021814');
-    bgGrad.addColorStop(0.35, '#042f2e');
-    bgGrad.addColorStop(0.70, '#064e3b');
-    bgGrad.addColorStop(1, '#022c22');
+    bgGrad.addColorStop(0, '#021827');
+    bgGrad.addColorStop(0.35, '#082f49');
+    bgGrad.addColorStop(0.70, '#0369a1');
+    bgGrad.addColorStop(1, '#0c4a6e');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Emerald radiant bloom
-    const emeraldGlow = ctx.createRadialGradient(width * 0.5, height * 0.45, 40, width * 0.5, height * 0.45, width * 0.7);
-    emeraldGlow.addColorStop(0, 'rgba(52, 211, 153, 0.16)');
-    emeraldGlow.addColorStop(0.7, 'rgba(16, 185, 129, 0.05)');
-    emeraldGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = emeraldGlow;
+    // Oceanic horizon light bloom
+    const waterGlow = ctx.createRadialGradient(width * 0.5, height * 0.52, 40, width * 0.5, height * 0.52, width * 0.7);
+    waterGlow.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+    waterGlow.addColorStop(0.65, 'rgba(14, 165, 233, 0.08)');
+    waterGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = waterGlow;
     ctx.fillRect(0, 0, width, height);
-  } else {
-    // Midnight Sanctuary (Default): Rich obsidian night sanctuary
+  } else if (themeId === 'golden_woods') {
+    // Golden Woods: Warm autumn cedar and golden sunbeams
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#07090e');
+    bgGrad.addColorStop(0, '#1c0f05');
+    bgGrad.addColorStop(0.35, '#381a07');
+    bgGrad.addColorStop(0.70, '#78350f');
+    bgGrad.addColorStop(1, '#b45309');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Golden sunbeam canopy bloom
+    const sunbeamGlow = ctx.createRadialGradient(width * 0.5, height * 0.38, 40, width * 0.5, height * 0.38, width * 0.7);
+    sunbeamGlow.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
+    sunbeamGlow.addColorStop(0.65, 'rgba(217, 119, 6, 0.10)');
+    sunbeamGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = sunbeamGlow;
+    ctx.fillRect(0, 0, width, height);
+  } else if (themeId === 'winter_twilight') {
+    // Winter Twilight: Frosted alpine indigo with quiet starlight
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#030712');
+    bgGrad.addColorStop(0.35, '#0f172a');
+    bgGrad.addColorStop(0.70, '#1e1b4b');
+    bgGrad.addColorStop(1, '#172554');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Ice blue twilight bloom
+    const iceGlow = ctx.createRadialGradient(width * 0.5, height * 0.42, 40, width * 0.5, height * 0.42, width * 0.7);
+    iceGlow.addColorStop(0, 'rgba(147, 197, 253, 0.22)');
+    iceGlow.addColorStop(0.65, 'rgba(96, 165, 250, 0.08)');
+    iceGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = iceGlow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle frost stars
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
+    const frostPoints = [
+      [width * 0.2, height * 0.15, 1.4], [width * 0.8, height * 0.18, 1.6],
+      [width * 0.15, height * 0.45, 1.2], [width * 0.85, height * 0.48, 1.4],
+      [width * 0.3, height * 0.82, 1.5], [width * 0.7, height * 0.85, 1.3]
+    ];
+    frostPoints.forEach(([fx, fy, fr]) => {
+      ctx.beginPath();
+      ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else {
+    // Starry Solitude / Midnight Sanctuary: Rich obsidian celestial night
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#05070c');
     bgGrad.addColorStop(0.4, '#0d111a');
     bgGrad.addColorStop(0.8, '#131826');
-    bgGrad.addColorStop(1, '#080a10');
+    bgGrad.addColorStop(1, '#07090e');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Celestial golden warmth
     const celestialGlow = ctx.createRadialGradient(width * 0.5, height * 0.35, 40, width * 0.5, height * 0.35, width * 0.65);
-    celestialGlow.addColorStop(0, 'rgba(245, 158, 11, 0.12)');
+    celestialGlow.addColorStop(0, 'rgba(245, 158, 11, 0.14)');
     celestialGlow.addColorStop(0.6, 'rgba(217, 119, 6, 0.04)');
     celestialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = celestialGlow;
     ctx.fillRect(0, 0, width, height);
 
     // Subtle starlight accents
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
     const stars = [
-      [width * 0.18, height * 0.12, 1.5],
-      [width * 0.82, height * 0.16, 1.8],
-      [width * 0.25, height * 0.22, 1.2],
-      [width * 0.74, height * 0.28, 1.4],
-      [width * 0.12, height * 0.32, 1.2],
-      [width * 0.88, height * 0.38, 1.6],
-      [width * 0.32, height * 0.78, 1.3],
-      [width * 0.68, height * 0.82, 1.5],
-      [width * 0.15, height * 0.85, 1.2],
-      [width * 0.85, height * 0.88, 1.4]
+      [width * 0.18, height * 0.12, 1.5], [width * 0.82, height * 0.16, 1.8],
+      [width * 0.25, height * 0.22, 1.2], [width * 0.74, height * 0.28, 1.4],
+      [width * 0.12, height * 0.32, 1.2], [width * 0.88, height * 0.38, 1.6],
+      [width * 0.32, height * 0.78, 1.3], [width * 0.68, height * 0.82, 1.5],
+      [width * 0.15, height * 0.85, 1.2], [width * 0.85, height * 0.88, 1.4]
     ];
     stars.forEach(([sx, sy, sr]) => {
       ctx.beginPath();
@@ -1765,9 +1865,26 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
         if (themeId === 'parchment') {
           imgTint.addColorStop(0, 'rgba(250, 244, 232, 0.78)');
           imgTint.addColorStop(1, 'rgba(238, 222, 203, 0.88)');
+        } else if (themeId === 'golden_woods') {
+          imgTint.addColorStop(0, 'rgba(28, 15, 5, 0.65)');
+          imgTint.addColorStop(0.5, 'rgba(40, 20, 8, 0.45)');
+          imgTint.addColorStop(1, 'rgba(28, 15, 5, 0.78)');
+        } else if (themeId === 'living_waters' || themeId === 'emerald') {
+          imgTint.addColorStop(0, 'rgba(2, 24, 39, 0.64)');
+          imgTint.addColorStop(0.5, 'rgba(4, 35, 58, 0.42)');
+          imgTint.addColorStop(1, 'rgba(2, 24, 39, 0.78)');
+        } else if (themeId === 'winter_twilight') {
+          imgTint.addColorStop(0, 'rgba(3, 7, 18, 0.68)');
+          imgTint.addColorStop(0.5, 'rgba(8, 15, 35, 0.46)');
+          imgTint.addColorStop(1, 'rgba(3, 7, 18, 0.80)');
+        } else if (themeId === 'mountain_dawn' || themeId === 'dawn') {
+          imgTint.addColorStop(0, 'rgba(12, 19, 34, 0.62)');
+          imgTint.addColorStop(0.5, 'rgba(18, 32, 48, 0.42)');
+          imgTint.addColorStop(1, 'rgba(12, 19, 34, 0.76)');
         } else {
+          // starry_solitude / midnight
           imgTint.addColorStop(0, 'rgba(5, 7, 12, 0.72)');
-          imgTint.addColorStop(0.5, 'rgba(10, 14, 22, 0.55)');
+          imgTint.addColorStop(0.5, 'rgba(10, 14, 22, 0.52)');
           imgTint.addColorStop(1, 'rgba(5, 7, 12, 0.82)');
         }
         ctx.fillStyle = imgTint;
