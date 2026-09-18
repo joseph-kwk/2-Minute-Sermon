@@ -1235,7 +1235,19 @@ export function setupScriptureCardGenerator() {
   function downloadCanvasArtwork(canvas, filename) {
     if (!canvas) return;
 
-    // 1. Try binary Blob first
+    // Chrome honors the `download` attribute filename reliably with data: URLs.
+    // Blob URLs can have filename stripped due to browser security policy — use as fallback.
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      if (dataUrl && dataUrl.length > 100) {
+        triggerDirectDownload(dataUrl, filename, false);
+        return;
+      }
+    } catch (err) {
+      console.warn('toDataURL failed (canvas tainted?), trying blob:', err);
+    }
+
+    // Fallback: blob URL (may lose filename in Chrome but at least delivers the file)
     if (canvas.toBlob) {
       try {
         canvas.toBlob((blob) => {
@@ -1243,17 +1255,16 @@ export function setupScriptureCardGenerator() {
             const blobUrl = URL.createObjectURL(blob);
             triggerDirectDownload(blobUrl, filename, true);
           } else {
-            downloadDataUrlFallback(canvas, filename);
+            showToast('⚠️ Could not export image. Please try again.');
           }
         }, 'image/png');
         return;
       } catch (err) {
-        console.warn('toBlob error, falling back to dataUrl:', err);
+        console.warn('toBlob also failed:', err);
       }
     }
 
-    // 2. Fallback to Data URL
-    downloadDataUrlFallback(canvas, filename);
+    showToast('⚠️ Download not supported in this browser.');
   }
 
   function downloadDataUrlFallback(canvas, filename) {

@@ -456,7 +456,7 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   position: relative;
   background-image: url('/assets/hero-bg-bible.jpg?v=2');
   background-size: cover; background-position: center 35%;
-  color: var(--color-white); padding: 98px 0 46px; text-align: center; overflow: hidden;
+  color: var(--color-white); padding: 98px 0 120px; text-align: center; overflow: hidden;
   perspective: 1000px;
 }
 .hero-particles-canvas {
@@ -525,10 +525,10 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .stat-divider { width: 1px; height: 36px; background: rgba(255, 255, 255, 0.18); }
 
 /* ==========================================================================
-   PROMO VIDEO CINEMA SHOWCASE (Warm Luminous 2-Color Transition & Ambient Aura)
+   PROMO VIDEO CINEMA SHOWCASE (Warm Luminous)
    ========================================================================== */
 .section-promo-video {
-  padding: 44px 0 78px;
+  padding: 44px 0 88px;
   background: linear-gradient(180deg, #f9f7f2 0%, #ece6dc 100%);
   position: relative;
   overflow: hidden;
