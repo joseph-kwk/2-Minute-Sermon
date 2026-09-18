@@ -1167,7 +1167,8 @@ let activeCardFont  = 'inter'; // locked to Inter modern sans-serif
 
 // Fixed font for scripture cards — clean, bold, highly legible Inter
 const SCRIPTURE_FONTS = {
-  inter: { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' }
+  inter: { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' },
+  lora:  { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' }
 };
 
 export function setupScriptureCardGenerator() {
@@ -1197,31 +1198,79 @@ export function setupScriptureCardGenerator() {
 
 
 
-  // Helpers for safe downloads
-  function triggerDownloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
+  // ─── Rock-Solid Cross-Browser Download Engine ────────────────────────────────
+  function triggerDirectDownload(url, filename, isBlob = false) {
     const a = document.createElement('a');
+    a.style.position = 'fixed';
+    a.style.left = '-9999px';
+    a.style.opacity = '0';
     a.href = url;
     a.download = filename;
-    a.rel = 'noopener';
+    // CRITICAL: NEVER set rel="noopener" on download anchors — Chrome cancels downloads!
     document.body.appendChild(a);
-    a.click();
+
+    // Dispatch synthetic mouse click (standard FileSaver.js approach)
+    try {
+      const clickEvt = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      a.dispatchEvent(clickEvt);
+    } catch (_) {
+      a.click();
+    }
+
+    // Keep blob URL active for 2 full minutes so Chrome can finish streaming 3.5MB+ file without Network Error
     setTimeout(() => {
-      if (a.parentNode) document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 4000);
+      if (a.parentNode) a.parentNode.removeChild(a);
+      if (isBlob) {
+        setTimeout(() => {
+          try { URL.revokeObjectURL(url); } catch (_) {}
+        }, 120000);
+      }
+    }, 1000);
   }
 
-  function triggerDownloadDataUrl(dataUrl, filename) {
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = filename;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      if (a.parentNode) document.body.removeChild(a);
-    }, 2000);
+  function downloadCanvasArtwork(canvas, filename) {
+    if (!canvas) return;
+
+    // 1. Try binary Blob first
+    if (canvas.toBlob) {
+      try {
+        canvas.toBlob((blob) => {
+          if (blob && blob.size > 0) {
+            const blobUrl = URL.createObjectURL(blob);
+            triggerDirectDownload(blobUrl, filename, true);
+          } else {
+            downloadDataUrlFallback(canvas, filename);
+          }
+        }, 'image/png');
+        return;
+      } catch (err) {
+        console.warn('toBlob error, falling back to dataUrl:', err);
+      }
+    }
+
+    // 2. Fallback to Data URL
+    downloadDataUrlFallback(canvas, filename);
+  }
+
+  function downloadDataUrlFallback(canvas, filename) {
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      triggerDirectDownload(dataUrl, filename, false);
+    } catch (err) {
+      console.error('DataURL download failed:', err);
+      // Last-resort fallback for sandboxed iframes or restricted WebViews
+      try {
+        const win = window.open('');
+        if (win) {
+          win.document.write(`<img src="${canvas.toDataURL('image/png')}" style="max-width:100%;height:auto;display:block;margin:20px auto;" alt="Scripture Card" /><p style="font-family:sans-serif;text-align:center;color:#666;">Right-click or hold down to save image.</p>`);
+          win.document.title = filename;
+        }
+      } catch (_) {}
+    }
   }
 
   // Native Share (Mobile Instagram / WhatsApp / System Sheet — Full Package)
@@ -1237,7 +1286,6 @@ export function setupScriptureCardGenerator() {
     }
 
     try {
-      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
       const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
       const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
       const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
@@ -1248,34 +1296,54 @@ export function setupScriptureCardGenerator() {
 
       let sharedNatively = false;
 
-      if (blob && navigator.canShare) {
+      // 1. Try Native OS File Share (iOS Safari, Android Chrome, mobile apps)
+      if (navigator.canShare && canvas.toBlob) {
         try {
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: shareTitle,
-              text: shareText,
-              files: [file]
-            });
-            sharedNatively = true;
-            showToast('✨ Verse & image shared successfully!');
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob && blob.size > 0) {
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: shareTitle,
+                text: shareText,
+                files: [file]
+              });
+              sharedNatively = true;
+              showToast('✨ Verse card shared successfully!');
+            }
           }
         } catch (err) {
           if (err.name === 'AbortError') {
             return; // User cancelled native sheet
           }
-          console.warn('Native file share failed, falling back:', err);
+          console.warn('Native file share failed, trying text share:', err);
         }
       }
 
-      if (!sharedNatively) {
-        // Full Package Fallback: download image AND copy complete scripture package
-        if (blob) {
-          triggerDownloadBlob(blob, filename);
+      // 2. Try Native OS Text/Link Share if file share not accepted
+      if (!sharedNatively && navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: url
+          });
+          sharedNatively = true;
+          showToast('✨ Verse shared successfully!');
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            return;
+          }
+          console.warn('Native text share rejected:', err);
         }
+      }
+
+      // 3. Desktop / Browser Fallback: Automatic download of high-res image AND copy full package to clipboard!
+      if (!sharedNatively) {
+        downloadCanvasArtwork(canvas, filename);
         try {
           await navigator.clipboard.writeText(shareText);
-          showToast('📥 Image downloaded & full verse copied to clipboard! (Ready to paste anywhere)');
+          showToast('📥 Image downloaded & full scripture package copied to clipboard! (Ready to paste anywhere)');
         } catch (_) {
           showToast('📥 Scripture card downloaded in high resolution!');
         }
@@ -1304,23 +1372,12 @@ export function setupScriptureCardGenerator() {
     }
 
     try {
-      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
       const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
       const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
       const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
 
-      if (blob) {
-        triggerDownloadBlob(blob, filename);
-        showToast('📥 Scripture card downloaded in high resolution!');
-      } else {
-        try {
-          const dataUrl = canvas.toDataURL('image/png');
-          triggerDownloadDataUrl(dataUrl, filename);
-          showToast('📥 Scripture card downloaded!');
-        } catch (dataUrlErr) {
-          showToast('⚠️ Could not download image. Please try again.');
-        }
-      }
+      downloadCanvasArtwork(canvas, filename);
+      showToast('📥 Scripture card downloaded in high resolution!');
     } catch (err) {
       console.error('Download card error:', err);
       showToast('⚠️ Could not download card. Please try again.');
@@ -1345,16 +1402,18 @@ export function setupScriptureCardGenerator() {
     }
 
     try {
-      const blob = await getCanvasBlobSafely(canvas, activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
       let copiedImage = false;
 
-      if (blob && navigator.clipboard && window.ClipboardItem) {
+      if (canvas.toBlob && navigator.clipboard && window.ClipboardItem) {
         try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]);
-          copiedImage = true;
-          showToast('📋 High-res image copied to clipboard!');
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob && blob.size > 0) {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            copiedImage = true;
+            showToast('📋 High-res image copied to clipboard! Ready to paste (Ctrl+V / Cmd+V).');
+          }
         } catch (clipErr) {
           console.warn('Direct clipboard image copy unsupported:', clipErr);
         }
@@ -1773,8 +1832,8 @@ function wrapCanvasText(ctx, text, maxWidth) {
   return lines;
 }
 
-function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 20, maxFontSize = 56, fontId = 'lora') {
-  const fd = SCRIPTURE_FONTS[fontId] || SCRIPTURE_FONTS.lora;
+function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 20, maxFontSize = 56, fontId = 'inter') {
+  const fd = SCRIPTURE_FONTS[fontId] || SCRIPTURE_FONTS.inter || { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' };
   let fontSize = maxFontSize;
   let lines = [];
   let lineHeight = Math.round(fontSize * 1.45);
@@ -2010,7 +2069,7 @@ async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 
   ctx.fillText('2minutesermon.org', padX, logoY + 26);
 }
 
-async function getCanvasBlobSafely(canvas, verse, themeId, ratio, fontId = 'lora') {
+async function getCanvasBlobSafely(canvas, verse, themeId, ratio, fontId = 'inter') {
   try {
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     if (blob) return blob;
@@ -2022,6 +2081,8 @@ async function getCanvasBlobSafely(canvas, verse, themeId, ratio, fontId = 'lora
   try {
     await renderScriptureCardToCanvas(verse, themeId, ratio, fontId, true /* forcePureCanvas */);
     const cleanBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    // Restore visual rendering on screen after clean export
+    renderScriptureCardToCanvas(verse, themeId, ratio, fontId, false);
     if (cleanBlob) return cleanBlob;
   } catch (err2) {
     console.error('Clean canvas export failed:', err2);
