@@ -137,10 +137,14 @@ function animateLogoTitle() {
   let html = '';
 
   words.forEach((word, wi) => {
+    // Word 0 is '2-Minute' (crimson accent), Word 1 is 'Sermon' (obsidian charcoal)
+    const wordClass = wi === 0 ? 'logo-word-accent' : 'logo-word-main';
+    html += `<span class="${wordClass}">`;
     [...word].forEach((ch, ci) => {
       const delay = baseDelay + (wi * word.length + ci) * 48;
       html += `<span class="letter" style="animation-delay:${delay}ms">${ch}</span>`;
     });
+    html += `</span>`;
     if (wi < words.length - 1) html += '<span class="word-space"></span>';
   });
 

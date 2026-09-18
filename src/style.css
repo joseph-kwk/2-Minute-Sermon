@@ -239,9 +239,27 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 
 /* Animated letter-by-letter title */
 .logo-title {
-  font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700;
-  color: var(--color-sermon-red); line-height: 1.1; display: flex; gap: 0;
+  font-family: var(--font-heading);
+  font-size: 1.28rem;
+  font-weight: 700;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 0;
   overflow: hidden;
+  letter-spacing: -0.015em;
+}
+.logo-word-accent {
+  color: var(--color-sermon-red);
+  display: inline-flex;
+}
+.logo-word-main {
+  color: var(--color-charcoal);
+  display: inline-flex;
+  transition: color var(--transition-fast);
+}
+.brand-logo:hover .logo-word-main {
+  color: var(--color-sermon-red);
 }
 .logo-title .letter {
   display: inline-block;
@@ -251,7 +269,14 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 }
 /* Space between words */
 .logo-title .word-space { display: inline-block; width: 0.32em; }
-.logo-subtitle { font-size: 0.72rem; color: var(--color-mediumgray); letter-spacing: 0.5px; }
+.logo-subtitle {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-mediumgray);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
 
 .main-nav { display: flex; align-items: center; gap: 6px; }
 .nav-btn {

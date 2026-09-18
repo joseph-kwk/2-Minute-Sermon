@@ -556,6 +556,59 @@ function populateSelects() {
       .map(s => `<option value="${s.name}">${s.name}</option>`).join('');
 }
 
+// ── Image Auto-Compressor & Downscaler (HTML5 Canvas) ─────────────────────
+// Ensures uploaded photos (which can be 5MB-12MB from phones) are smoothly
+// downscaled to ~360-480px and compressed to ~25KB-40KB JPEG. This guarantees
+// they never exceed Firestore's 1MB document limit or localStorage's 5MB origin quota.
+function compressImageFile(file, maxDim = 400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return reject(new Error('Selected file is not a supported image format.'));
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read file from disk.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Failed to decode image data.'));
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return resolve(e.target.result);
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(optimizedDataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ── PREACHERS MANAGER ─────────────────────────────────────────────────────
 function setupPreachersManager() {
   const form = document.getElementById('adminAddPreacherForm');
@@ -594,20 +647,19 @@ function setupPreachersManager() {
     photoFileInput?.click();
   });
 
-  photoFileInput?.addEventListener('change', (e) => {
+  photoFileInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast('⚠️ Image is large (>2MB). Please select a smaller photo.');
+    try {
+      toast('⏳ Optimizing photo...');
+      const compressedDataUrl = await compressImageFile(file, 400, 0.82);
+      if (photoUrlInput) photoUrlInput.value = compressedDataUrl;
+      if (previewImg) previewImg.src = compressedDataUrl;
+      toast('🖼️ Preacher photo optimized & uploaded!');
+    } catch (err) {
+      console.warn('Preacher photo compression error:', err);
+      toast('⚠️ Could not process image. Please try another photo or paste a URL.');
     }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataUrl = evt.target.result;
-      if (photoUrlInput) photoUrlInput.value = dataUrl;
-      if (previewImg) previewImg.src = dataUrl;
-      toast('🖼️ Preacher photo uploaded!');
-    };
-    reader.readAsDataURL(file);
   });
 
   btnDefaultAvatar?.addEventListener('click', () => {
@@ -788,20 +840,19 @@ function setupLeadershipManager() {
     photoFileInput?.click();
   });
 
-  photoFileInput?.addEventListener('change', (e) => {
+  photoFileInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast('⚠️ Image is large (>2MB). Please select a smaller photo.');
+    try {
+      toast('⏳ Optimizing photo...');
+      const compressedDataUrl = await compressImageFile(file, 400, 0.82);
+      if (photoUrlInput) photoUrlInput.value = compressedDataUrl;
+      if (previewImg) previewImg.src = compressedDataUrl;
+      toast('🖼️ Leader photo optimized & uploaded!');
+    } catch (err) {
+      console.warn('Leader photo compression error:', err);
+      toast('⚠️ Could not process image. Please try another photo or paste a URL.');
     }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataUrl = evt.target.result;
-      if (photoUrlInput) photoUrlInput.value = dataUrl;
-      if (previewImg) previewImg.src = dataUrl;
-      toast('🖼️ Leader photo uploaded!');
-    };
-    reader.readAsDataURL(file);
   });
 
   btnDefaultAvatar?.addEventListener('click', () => {
@@ -1060,15 +1111,18 @@ function setupPartnersManager() {
 
   uploadBtn?.addEventListener('click', () => fileInput?.click());
 
-  fileInput?.addEventListener('change', e => {
+  fileInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        if (previewImg) previewImg.src = ev.target.result;
-        if (logoUrlInput) logoUrlInput.value = ev.target.result;
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      toast('⏳ Optimizing logo...');
+      const compressedDataUrl = await compressImageFile(file, 480, 0.85);
+      if (previewImg) previewImg.src = compressedDataUrl;
+      if (logoUrlInput) logoUrlInput.value = compressedDataUrl;
+      toast('🖼️ Partner logo optimized & uploaded!');
+    } catch (err) {
+      console.warn('Partner logo compression error:', err);
+      toast('⚠️ Could not process image. Please try another file or paste a URL.');
     }
   });
 
