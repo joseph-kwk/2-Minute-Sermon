@@ -670,8 +670,28 @@ function setupPreachersManager() {
     toast('⚡ Default initials avatar set.');
   });
 
+  const cancelBtn = document.getElementById('btnCancelPreacherEdit');
+  const titleEl = document.getElementById('preacherFormTitle');
+  const submitBtn = document.getElementById('btnPreacherSubmit');
+  const editIdInput = document.getElementById('editPreacherId');
+
+  function resetPreacherForm() {
+    form.reset();
+    if (editIdInput) editIdInput.value = '';
+    if (titleEl) titleEl.textContent = 'Add Preacher Profile';
+    if (submitBtn) submitBtn.textContent = '➕ Add Preacher to Directory';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    updateAvatarPreview();
+  }
+
+  cancelBtn?.addEventListener('click', () => {
+    resetPreacherForm();
+    toast('Edit cancelled.');
+  });
+
   form?.addEventListener('submit', e => {
     e.preventDefault();
+    const editId       = editIdInput?.value.trim();
     const name         = nameInput?.value.trim() || '';
     const denomination = denomInput?.value.trim() || '';
     const country      = countryInput?.value.trim() || '';
@@ -682,6 +702,29 @@ function setupPreachersManager() {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
     }
 
+    if (editId) {
+      // Update existing preacher in place
+      const idx = preachers.findIndex(p => p.id === editId);
+      if (idx >= 0) {
+        preachers[idx] = {
+          ...preachers[idx],
+          name,
+          denomination,
+          country,
+          photoUrl,
+          bio
+        };
+        savePreachers(preachers);
+        populateSelects();
+        renderPreachersList();
+        renderDashboardStats();
+        resetPreacherForm();
+        toast(`✅ Preacher "${name}" updated successfully!`);
+        return;
+      }
+    }
+
+    // Creating new preacher
     const newPreacher = { 
       id: `p-${Date.now()}`, 
       name, 
@@ -696,8 +739,7 @@ function setupPreachersManager() {
     populateSelects();
     renderPreachersList();
     renderDashboardStats();
-    form.reset();
-    updateAvatarPreview();
+    resetPreacherForm();
     toast(`🎙️ ${name} added to the preacher directory!`);
   });
 }
@@ -716,8 +758,48 @@ function renderPreachersList() {
         <strong>${p.name}</strong>
         <span>${p.denomination} · ${p.country}</span>
       </div>
-      <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher(${idx})">✕</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button class="admin-btn admin-btn-sm admin-btn-outline edit-preacher-btn" data-id="${p.id}" title="Edit minister details & photo">✏️ Edit</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher(${idx})" title="Remove minister">✕</button>
+      </div>
     </div>`).join('');
+
+  // Attach Edit Click Handlers
+  c.querySelectorAll('.edit-preacher-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const p = preachers.find(item => item.id === id);
+      if (!p) return;
+
+      const editIdInput = document.getElementById('editPreacherId');
+      const nameInput = document.getElementById('newPreacherName');
+      const denomInput = document.getElementById('newPreacherDenomination');
+      const countryInput = document.getElementById('newPreacherCountry');
+      const photoUrlInput = document.getElementById('newPreacherPhoto');
+      const bioInput = document.getElementById('newPreacherBio');
+      const previewImg = document.getElementById('adminPreacherPhotoPreview');
+      const titleEl = document.getElementById('preacherFormTitle');
+      const submitBtn = document.getElementById('btnPreacherSubmit');
+      const cancelBtn = document.getElementById('btnCancelPreacherEdit');
+
+      if (editIdInput) editIdInput.value = p.id;
+      if (nameInput) nameInput.value = p.name || '';
+      if (denomInput) denomInput.value = p.denomination || '';
+      if (countryInput) countryInput.value = p.country || '';
+      if (bioInput) bioInput.value = p.bio || '';
+      if (photoUrlInput) photoUrlInput.value = p.photoUrl || '';
+      if (previewImg && p.photoUrl) previewImg.src = p.photoUrl;
+
+      if (titleEl) titleEl.textContent = `✏️ Edit Minister: ${p.name}`;
+      if (submitBtn) submitBtn.textContent = '💾 Save Preacher Changes';
+      if (cancelBtn) cancelBtn.style.display = 'block';
+
+      // Smoothly scroll to the form
+      document.getElementById('adminAddPreacherForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      nameInput?.focus();
+      toast(`✏️ Editing ${p.name}. Update photo, bio, or location above.`);
+    });
+  });
 }
 
 window.removePreacher = idx => {
