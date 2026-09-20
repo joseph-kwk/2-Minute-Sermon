@@ -1161,11 +1161,7 @@ let activeCardVerse = null;
 let userSelectedCardTheme = false;
 
 function getDefaultSeasonalTheme() {
-  const m = new Date().getMonth(); // 0 = Jan, 11 = Dec
-  if (m >= 2 && m <= 4) return 'mountain_dawn'; // Spring / Easter (Mar-May)
-  if (m >= 5 && m <= 7) return 'living_waters'; // Summer / Living Waters (Jun-Aug)
-  if (m >= 8 && m <= 10) return 'golden_woods'; // Autumn / Harvest (Sep-Nov)
-  return 'winter_twilight';                      // Winter / Advent (Dec-Feb)
+  return 'mountain_dawn';
 }
 
 let activeCardTheme = getDefaultSeasonalTheme();
@@ -1544,7 +1540,6 @@ const SCRIPTURE_CARD_TEMPLATES = {
   mountain_dawn: {
     id: 'mountain_dawn',
     name: 'Mountain Dawn',
-    season: 'Spring & Easter',
     imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#0c1322', '#1e293b', '#064e3b', '#f59e0b'],
     safeZone: {
@@ -1552,12 +1547,11 @@ const SCRIPTURE_CARD_TEMPLATES = {
       square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
     },
     accentColor: '#fbbf24',
-    badgeText: '• SPRING DAWN & NEW HOPE •'
+    badgeText: '• SCRIPTURE OF THE DAY •'
   },
   living_waters: {
     id: 'living_waters',
     name: 'Living Waters',
-    season: 'Summer & Peace',
     imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#021827', '#082f49', '#0369a1', '#38bdf8'],
     safeZone: {
@@ -1565,12 +1559,11 @@ const SCRIPTURE_CARD_TEMPLATES = {
       square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
     },
     accentColor: '#38bdf8',
-    badgeText: '• LIVING WATERS & PEACE •'
+    badgeText: '• SCRIPTURE OF THE DAY •'
   },
   golden_woods: {
     id: 'golden_woods',
     name: 'Golden Woods',
-    season: 'Autumn & Harvest',
     imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#1c0f05', '#5c2b09', '#9a3412', '#f59e0b'],
     safeZone: {
@@ -1578,12 +1571,11 @@ const SCRIPTURE_CARD_TEMPLATES = {
       square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
     },
     accentColor: '#f59e0b',
-    badgeText: '• HARVEST & THANKSGIVING •'
+    badgeText: '• SCRIPTURE OF THE DAY •'
   },
   winter_twilight: {
     id: 'winter_twilight',
-    name: 'Winter Twilight',
-    season: 'Winter & Advent',
+    name: 'Twilight',
     imageUrl: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#030712', '#0f172a', '#1e1b4b', '#93c5fd'],
     safeZone: {
@@ -1591,12 +1583,11 @@ const SCRIPTURE_CARD_TEMPLATES = {
       square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
     },
     accentColor: '#93c5fd',
-    badgeText: '• WINTER PEACE & ADVENT •'
+    badgeText: '• SCRIPTURE OF THE DAY •'
   },
   starry_solitude: {
     id: 'starry_solitude',
-    name: 'Starry Solitude',
-    season: 'Evening & Prayer',
+    name: 'Starry Night',
     imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#05070c', '#0a0e18', '#111827', '#080a10'],
     safeZone: {
@@ -1604,12 +1595,11 @@ const SCRIPTURE_CARD_TEMPLATES = {
       square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
     },
     accentColor: '#fde68a',
-    badgeText: '• EVENING PRAYER & CONTEMPLATION •'
+    badgeText: '• SCRIPTURE OF THE DAY •'
   },
   parchment: {
     id: 'parchment',
-    name: 'Sacred Parchment',
-    season: 'Theological & Classic',
+    name: 'Parchment',
     imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
     fallbackGrad: ['#faf4e8', '#f5ebe0', '#eedecb'],
     safeZone: {
