@@ -1166,3 +1166,26 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   .crop-stage { width: 260px; height: 260px; }
   .crop-modal-card { padding: 20px 16px 18px; }
 }
+
+/* ── Verse Status Banner ────────────────────────────────────────── */
+.admin-verse-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+}
+.admin-verse-status-banner.is-scheduled {
+  background: rgba(46, 125, 50, 0.12);
+  border-color: rgba(76, 175, 80, 0.3);
+  color: #a5d6a7;
+}
+.admin-verse-status-banner.is-fallback {
+  background: rgba(2, 136, 209, 0.12);
+  border-color: rgba(3, 169, 244, 0.3);
+  color: #81d4fa;
+}

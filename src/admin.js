@@ -5,7 +5,7 @@ import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durati
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
-import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
 import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
@@ -350,6 +350,7 @@ function setupVerseScheduler() {
 
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
     if (!confirm('Clear all scheduled verses?')) return;
+    scheduledDailyVerses.forEach(v => deleteDailyVerse(v.id));
     scheduledDailyVerses.length = 0;
     saveDailyVerses(scheduledDailyVerses);
     renderVerseQueue();
@@ -362,10 +363,25 @@ function renderVerseQueue() {
   const c = document.getElementById('adminVerseQueueList');
   const countEl = document.getElementById('verseQueueCount');
   if (countEl) countEl.textContent = scheduledDailyVerses.length;
+
+  // Update live status banner
+  const statusEl = document.getElementById('adminTodayVerseStatus');
+  if (statusEl) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayVerse = getVerseForDate(todayStr);
+    if (!todayVerse.isFallback) {
+      statusEl.className = 'admin-verse-status-banner is-scheduled';
+      statusEl.innerHTML = `<span>🟢</span> <div><strong>Today (${todayStr}):</strong> Custom scheduled verse active on live site — <em>${todayVerse.book} ${todayVerse.chapter}:${todayVerse.verse}</em></div>`;
+    } else {
+      statusEl.className = 'admin-verse-status-banner is-fallback';
+      statusEl.innerHTML = `<span>ℹ️</span> <div><strong>Today (${todayStr}):</strong> Auto-rotating from the <strong>Evergreen Devotional Collection</strong> (<em>${todayVerse.book} ${todayVerse.chapter}:${todayVerse.verse}</em>). The live site always displays fresh scripture automatically — you can schedule a custom verse anytime!</div>`;
+    }
+  }
+
   if (!c) return;
 
   if (!scheduledDailyVerses.length) {
-    c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px 0;">No verses scheduled yet.</p>`;
+    c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px 0;">No custom verses scheduled yet.<br><small style="color:rgba(255,255,255,0.2);">Live site is automatically serving the daily evergreen devotional rotation.</small></p>`;
     return;
   }
 
@@ -384,7 +400,10 @@ function renderVerseQueue() {
 }
 
 window.removeVerse = idx => {
-  scheduledDailyVerses.splice(idx, 1);
+  const removed = scheduledDailyVerses.splice(idx, 1)[0];
+  if (removed && removed.id) {
+    deleteDailyVerse(removed.id);
+  }
   saveDailyVerses(scheduledDailyVerses);
   renderVerseQueue();
   renderDashboardStats();

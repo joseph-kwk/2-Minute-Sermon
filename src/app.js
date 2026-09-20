@@ -3,7 +3,7 @@ import { getEvents, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { topics } from './data/topics.js';
-import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses, getVerseForDate } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam } from './data/leadership.js';
 import { getPartners, savePartners } from './data/partners.js';
 import { getConversations, saveConversations, extractVideoId, ytThumb } from './data/conversations.js';
@@ -40,9 +40,16 @@ function getTodayDateStr() {
   return new Date().toISOString().split('T')[0];
 }
 
-function getVerseForDate(dateStr) {
-  const list = scheduledDailyVerses();
-  return list.find(v => v.publishDate === dateStr) || list[0];
+function formatVerseDate(dateStr) {
+  try {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-').map(Number);
+    if (parts.length === 3 && !isNaN(parts[0])) {
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+  } catch (_) {}
+  return dateStr;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2606,19 +2613,21 @@ export function renderDailyVerse() {
   const verse = getVerseForDate(getTodayDateStr());
   if (!verse) return;
 
+  const displayDate = formatVerseDate(verse.publishDate) || verse.publishDate;
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  setEl('dvDateDisplay', verse.publishDate);
+  setEl('dvDateDisplay', displayDate);
   setEl('dvQuoteDisplay', `"${verse.verseText}"`);
   setEl('dvRefDisplay', `— ${verse.book} ${verse.chapter}:${verse.verse}`);
   setEl('dvReflectionDisplay', verse.reflection);
 
   const full = document.getElementById('dailyVerseFullContainer');
   if (full) {
+    const queue = scheduledDailyVerses();
     full.innerHTML = `
       <div class="daily-verse-card" style="margin-bottom:36px;">
         <div class="verse-header">
-          <span class="verse-label">Today's Scheduled Verse</span>
-          <span class="verse-date">${verse.publishDate}</span>
+          <span class="verse-label">${verse.isFallback ? "Today's Daily Verse" : "Today's Scheduled Verse"}</span>
+          <span class="verse-date">${displayDate}</span>
         </div>
         <blockquote class="verse-quote">"${verse.verseText}"</blockquote>
         <div class="verse-meta">— ${verse.book} ${verse.chapter}:${verse.verse}</div>
@@ -2626,13 +2635,16 @@ export function renderDailyVerse() {
       </div>
       <h2 style="margin-bottom:20px;">Upcoming Verse Queue</h2>
       <div style="display:flex;flex-direction:column;gap:16px;">
-        ${scheduledDailyVerses().map(v => `
+        ${queue.length ? queue.map(v => `
           <div class="hub-card reveal-on-scroll">
-            <span class="badge badge-season">${v.publishDate}</span>
+            <span class="badge badge-season">${formatVerseDate(v.publishDate) || v.publishDate}</span>
             <h3 style="margin:10px 0 4px;">"${v.verseText}"</h3>
             <div style="font-weight:700;color:var(--color-sermon-red);margin-bottom:6px;">— ${v.book} ${v.chapter}:${v.verse}</div>
             <p style="font-size:0.88rem;color:#777;">${v.reflection}</p>
-          </div>`).join('')}
+          </div>`).join('') : `
+          <div class="hub-card reveal-on-scroll" style="text-align:center;padding:36px 20px;">
+            <p style="color:#777;margin:0;font-size:0.95rem;">Daily scripture is rotating automatically from our inspirational devotional collection.<br><small style="color:#999;">Check back tomorrow for fresh daily encouragement.</small></p>
+          </div>`}
       </div>`;
     // trigger reveal for newly injected cards
     setTimeout(() => full.querySelectorAll('.reveal-on-scroll').forEach(el => el.classList.add('revealed')), 100);
