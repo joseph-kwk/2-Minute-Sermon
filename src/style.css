@@ -3447,36 +3447,68 @@ body.modal-open {
 }
 
 /* Themes */
+/* Themes & Mood (Visual Color Swatches with Icons Only, No Text) */
 .theme-palette-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.theme-pill {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  padding: 10px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.82rem;
-  font-weight: 500;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.theme-pill {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
+  position: relative;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 .theme-pill:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 .theme-pill.active {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: #f59e0b;
-  color: #fff;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  transform: translateY(-2px) scale(1.12);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5), 0 8px 20px rgba(0, 0, 0, 0.65);
 }
+.theme-pill .theme-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+.theme-pill[data-theme="mountain_dawn"] {
+  background: linear-gradient(135deg, #1e293b 0%, #047857 50%, #fbbf24 100%);
+}
+.theme-pill[data-theme="living_waters"] {
+  background: linear-gradient(135deg, #082f49 0%, #0284c7 60%, #38bdf8 100%);
+}
+.theme-pill[data-theme="golden_woods"] {
+  background: linear-gradient(135deg, #451a03 0%, #b45309 60%, #f59e0b 100%);
+}
+.theme-pill[data-theme="winter_twilight"] {
+  background: linear-gradient(135deg, #030712 0%, #1e1b4b 60%, #93c5fd 100%);
+}
+.theme-pill[data-theme="starry_solitude"] {
+  background: linear-gradient(135deg, #05070c 0%, #0f172a 60%, #fde68a 100%);
+}
+.theme-pill[data-theme="parchment"] {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+.theme-pill.active[data-theme="mountain_dawn"] { border-color: #fbbf24; }
+.theme-pill.active[data-theme="living_waters"] { border-color: #38bdf8; }
+.theme-pill.active[data-theme="golden_woods"] { border-color: #f59e0b; }
+.theme-pill.active[data-theme="winter_twilight"] { border-color: #93c5fd; }
+.theme-pill.active[data-theme="starry_solitude"] { border-color: #fde68a; }
+.theme-pill.active[data-theme="parchment"] { border-color: #78350f; }
+
 .theme-swatch {
   width: 16px;
   height: 16px;
@@ -3653,7 +3685,9 @@ body.modal-open {
     grid-template-columns: 1fr;
   }
   .theme-palette-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
   }
   .font-selector-grid {
     grid-template-columns: 1fr;
