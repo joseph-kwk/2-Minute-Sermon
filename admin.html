@@ -368,24 +368,24 @@
             <p class="admin-card-sub">Register a new contributing minister with photo, location, and bio.</p>
             <form id="adminAddPreacherForm">
               <input type="hidden" id="editPreacherId" value="">
-              <!-- Live Photo Preview & Upload Controls -->
-              <div class="admin-form-group" style="display:flex;gap:18px;align-items:center;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
-                <div class="admin-avatar-preview-box" style="position:relative;flex-shrink:0;">
-                  <img id="adminPreacherPhotoPreview" src="https://ui-avatars.com/api/?name=Minister&background=C62828&color=fff&size=160" alt="Preacher Avatar Preview" 
+              <!-- Photo Preview & URL Input -->
+              <div class="admin-form-group" style="display:flex;gap:18px;align-items:flex-start;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
+                <div style="flex-shrink:0;">
+                  <img id="adminPreacherPhotoPreview" src="https://ui-avatars.com/api/?name=Minister&background=C62828&color=fff&size=160" alt="Preacher Avatar Preview"
                     style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid var(--admin-red);box-shadow:0 4px 14px rgba(198,40,40,0.3);background:#222;display:block;">
                 </div>
                 <div style="flex:1;min-width:0;">
-                  <label class="admin-form-label" style="margin-bottom:6px;font-size:0.85rem;">Preacher Photo</label>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="file" id="newPreacherPhotoFile" accept="image/*" style="display:none;">
-                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnTriggerPhotoUpload">
-                      📁 Upload from Device
-                    </button>
-                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnDefaultAvatar">
-                      ⚡ Use Initials
-                    </button>
+                  <label class="admin-form-label" style="margin-bottom:4px;font-size:0.85rem;">Preacher Photo URL</label>
+                  <input type="url" id="newPreacherPhoto" placeholder="https://drive.google.com/... or any image link" class="admin-input" style="font-size:0.85rem;">
+                  <input type="file" id="newPreacherPhotoFile" accept="image/*" style="display:none;">
+                  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnDefaultAvatar">⚡ Use Initials Avatar</button>
                   </div>
-                  <input type="url" id="newPreacherPhoto" placeholder="Or paste image URL (https://...)" class="admin-input" style="margin-top:8px;font-size:0.8rem;padding:6px 10px;">
+                  <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:10px;line-height:1.5;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:6px;border-left:2px solid var(--admin-red);">
+                    💡 <strong>How to get a photo link:</strong> Upload the photo to
+                    <strong>Google Drive</strong> → right-click → <em>Get link</em> → set to "Anyone with the link" → paste here.<br>
+                    Or use <strong>Imgur.com</strong> → upload → copy the direct image link (ends in .jpg or .png).
+                  </p>
                 </div>
               </div>
 
@@ -488,24 +488,23 @@
             <h2 class="admin-card-title">Add Leadership Member</h2>
             <p class="admin-card-sub">Register ministry directors, advisory council members, and department leads.</p>
             <form id="adminAddLeadershipForm">
-              <!-- Live Photo Preview & Upload Controls -->
-              <div class="admin-form-group" style="display:flex;gap:18px;align-items:center;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
-                <div class="admin-avatar-preview-box" style="position:relative;flex-shrink:0;">
-                  <img id="adminLeaderPhotoPreview" src="https://ui-avatars.com/api/?name=Leader&background=C62828&color=fff&size=160" alt="Leader Avatar Preview" 
+              <!-- Photo Preview & URL Input -->
+              <div class="admin-form-group" style="display:flex;gap:18px;align-items:flex-start;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
+                <div style="flex-shrink:0;">
+                  <img id="adminLeaderPhotoPreview" src="https://ui-avatars.com/api/?name=Leader&background=C62828&color=fff&size=160" alt="Leader Avatar Preview"
                     style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid var(--admin-red);box-shadow:0 4px 14px rgba(198,40,40,0.3);background:#222;display:block;">
                 </div>
                 <div style="flex:1;min-width:0;">
-                  <label class="admin-form-label" style="margin-bottom:6px;font-size:0.85rem;">Leader Photo</label>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="file" id="newLeaderPhotoFile" accept="image/*" style="display:none;">
-                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnTriggerLeaderPhotoUpload">
-                      📁 Upload from Device
-                    </button>
-                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnDefaultLeaderAvatar">
-                      ⚡ Use Initials
-                    </button>
+                  <label class="admin-form-label" style="margin-bottom:4px;font-size:0.85rem;">Leader Photo URL</label>
+                  <input type="url" id="newLeaderPhoto" placeholder="https://drive.google.com/... or any image link" class="admin-input" style="font-size:0.85rem;">
+                  <input type="file" id="newLeaderPhotoFile" accept="image/*" style="display:none;">
+                  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnDefaultLeaderAvatar">⚡ Use Initials Avatar</button>
                   </div>
-                  <input type="url" id="newLeaderPhoto" placeholder="Or paste image URL (https://...)" class="admin-input" style="margin-top:8px;font-size:0.8rem;padding:6px 10px;">
+                  <p style="font-size:0.75rem;color:var(--admin-text-muted);margin-top:10px;line-height:1.5;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:6px;border-left:2px solid var(--admin-red);">
+                    💡 <strong>How to get a photo link:</strong> Upload to <strong>Google Drive</strong> → right-click → <em>Get link</em> → "Anyone with the link" → paste here.<br>
+                    Or use <strong>Imgur.com</strong> → upload → copy the direct image link (ends in .jpg or .png).
+                  </p>
                 </div>
               </div>
 
