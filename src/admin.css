@@ -209,6 +209,25 @@ html, body { height: 100%; font-family: var(--font-body); }
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+.admin-sidebar-close-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-muted);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all var(--transition);
+}
+.admin-sidebar-close-btn:hover {
+  background: var(--admin-hover);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
 
 .admin-sidebar-nav {
   display: flex;
@@ -312,6 +331,11 @@ html, body { height: 100%; font-family: var(--font-body); }
   -webkit-backdrop-filter: blur(12px);
   flex-shrink: 0;
 }
+.admin-topbar-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
 .admin-topbar-title {
   font-family: var(--font-heading);
   font-size: 1.45rem;
@@ -319,24 +343,38 @@ html, body { height: 100%; font-family: var(--font-body); }
   font-weight: 700;
   letter-spacing: -0.02em;
 }
-.admin-topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 .admin-topbar-date {
   font-size: 0.82rem;
   color: var(--admin-muted);
   font-weight: 500;
 }
+.admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.admin-topbar-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-topbar-signout,
 .admin-topbar-signout-btn {
-  color: var(--admin-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(211, 47, 47, 0.12);
+  border: 1px solid rgba(211, 47, 47, 0.28);
+  color: #ff8a80;
+  cursor: pointer;
   transition: all var(--transition);
 }
+.admin-topbar-signout:hover,
 .admin-topbar-signout-btn:hover {
-  background: rgba(211, 47, 47, 0.12);
-  border-color: rgba(211, 47, 47, 0.35);
-  color: #ff8a80;
+  background: rgba(211, 47, 47, 0.25);
+  border-color: rgba(211, 47, 47, 0.50);
+  color: #fff;
 }
 
 /* ── Panels ── */
@@ -753,9 +791,10 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
   .admin-quick-grid { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .admin-dashboard { grid-template-columns: 1fr; }
   .admin-mobile-menu-btn { display: flex; }
+  .admin-sidebar-close-btn { display: flex; }
   
   .admin-sidebar {
     position: fixed;
@@ -802,6 +841,7 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   .admin-topbar-right {
     gap: 6px;
   }
+  .admin-topbar-btn-text,
   .admin-live-site-text,
   .admin-signout-text {
     display: none;

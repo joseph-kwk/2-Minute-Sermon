@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTopbarDate();
   setupAuthForm();
   setupSidebarNav();
-  setupMobileNav();
   setupQuickActions();
   setupVerseScheduler();
   setupSermonPublisher();
@@ -201,20 +200,25 @@ document.getElementById('adminTopSignOutBtn')?.addEventListener('click', handleS
 document.getElementById('adminTopbarSignOutBtn')?.addEventListener('click', handleSignOut);
 
 // ── SIDEBAR NAV ─────────────────────────────────────────────────────────
+function closeMobileSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop') || document.getElementById('adminNavBackdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+}
+
+function openMobileSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop') || document.getElementById('adminNavBackdrop');
+  if (sidebar) sidebar.classList.add('open');
+  if (backdrop) backdrop.classList.add('open');
+}
+
 function setupSidebarNav() {
   const sidebar = document.querySelector('.admin-sidebar');
-  const backdrop = document.getElementById('adminSidebarBackdrop');
+  const backdrop = document.getElementById('adminSidebarBackdrop') || document.getElementById('adminNavBackdrop');
   const menuBtn = document.getElementById('adminMobileMenuBtn');
-
-  function closeMobileSidebar() {
-    if (sidebar) sidebar.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('open');
-  }
-
-  function openMobileSidebar() {
-    if (sidebar) sidebar.classList.add('open');
-    if (backdrop) backdrop.classList.add('open');
-  }
+  const closeBtn = document.getElementById('adminSidebarCloseBtn');
 
   if (menuBtn) {
     menuBtn.addEventListener('click', (e) => {
@@ -225,6 +229,10 @@ function setupSidebarNav() {
         openMobileSidebar();
       }
     });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeMobileSidebar);
   }
 
   if (backdrop) {
