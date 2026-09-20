@@ -622,8 +622,23 @@ function setupPreachersManager() {
   const btnTriggerUpload = document.getElementById('btnTriggerPhotoUpload');
   const btnDefaultAvatar = document.getElementById('btnDefaultAvatar');
 
+  function convertToDirectImageUrl(url) {
+    // Auto-convert Google Drive share links to a direct embeddable image URL.
+    // lh3.googleusercontent.com/d/ID serves the image directly in <img> tags.
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) {
+      return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+    }
+    const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+    if (driveOpen) {
+      return `https://lh3.googleusercontent.com/d/${driveOpen[1]}`;
+    }
+    return url;
+  }
+
   function updateAvatarPreview() {
-    const customUrl = photoUrlInput?.value.trim();
+    const rawUrl = photoUrlInput?.value.trim();
+    const customUrl = rawUrl ? convertToDirectImageUrl(rawUrl) : '';
     const name = nameInput?.value.trim() || 'Minister';
     const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
 
@@ -631,6 +646,8 @@ function setupPreachersManager() {
       if (customUrl) {
         previewImg.src = customUrl;
         previewImg.onerror = () => { previewImg.src = fallback; };
+        // Also update the input with the converted URL so it saves correctly
+        if (photoUrlInput && customUrl !== rawUrl) photoUrlInput.value = customUrl;
       } else {
         previewImg.src = fallback;
       }
@@ -641,7 +658,10 @@ function setupPreachersManager() {
     if (!photoUrlInput?.value) updateAvatarPreview();
   });
 
+  // Listen on input, paste, and change so preview fires reliably in all browsers
   photoUrlInput?.addEventListener('input', updateAvatarPreview);
+  photoUrlInput?.addEventListener('paste', () => setTimeout(updateAvatarPreview, 50));
+  photoUrlInput?.addEventListener('change', updateAvatarPreview);
 
   btnTriggerUpload?.addEventListener('click', () => {
     photoFileInput?.click();
@@ -650,15 +670,23 @@ function setupPreachersManager() {
   photoFileInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const btn = document.getElementById('btnTriggerPhotoUpload');
+    const origLabel = btn?.innerHTML;
     try {
-      toast('⏳ Optimizing photo...');
-      const compressedDataUrl = await compressImageFile(file, 400, 0.82);
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Processing...'; }
+      toast('⏳ Compressing photo...');
+      // 280px max, 0.75 quality → ~20–45KB base64 — safe for Firestore & localStorage
+      const compressedDataUrl = await compressImageFile(file, 280, 0.75);
       if (photoUrlInput) photoUrlInput.value = compressedDataUrl;
       if (previewImg) previewImg.src = compressedDataUrl;
-      toast('🖼️ Preacher photo optimized & uploaded!');
+      const kb = Math.round(compressedDataUrl.length * 0.75 / 1024);
+      toast(`✅ Photo ready! (${kb} KB) — Click Save to apply.`);
     } catch (err) {
       console.warn('Preacher photo compression error:', err);
-      toast('⚠️ Could not process image. Please try another photo or paste a URL.');
+      toast('⚠️ Could not process image. Try a smaller photo or paste a URL below.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+      if (photoFileInput) photoFileInput.value = '';
     }
   });
 
@@ -916,24 +944,28 @@ function setupLeadershipManager() {
     if (!photoUrlInput?.value) updateLeaderAvatarPreview();
   });
 
-  photoUrlInput?.addEventListener('input', updateLeaderAvatarPreview);
-
-  btnTriggerUpload?.addEventListener('click', () => {
-    photoFileInput?.click();
-  });
+  photoUrlInput?.addEventListener('paste', () => setTimeout(updateLeaderAvatarPreview, 50));
+  photoUrlInput?.addEventListener('change', updateLeaderAvatarPreview);
 
   photoFileInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const btn = document.getElementById('btnTriggerLeaderPhotoUpload');
+    const origLabel = btn?.innerHTML;
     try {
-      toast('⏳ Optimizing photo...');
-      const compressedDataUrl = await compressImageFile(file, 400, 0.82);
+      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Processing...'; }
+      toast('⏳ Compressing photo...');
+      const compressedDataUrl = await compressImageFile(file, 280, 0.75);
       if (photoUrlInput) photoUrlInput.value = compressedDataUrl;
       if (previewImg) previewImg.src = compressedDataUrl;
-      toast('🖼️ Leader photo optimized & uploaded!');
+      const kb = Math.round(compressedDataUrl.length * 0.75 / 1024);
+      toast(`✅ Photo ready! (${kb} KB) — Click Save to apply.`);
     } catch (err) {
       console.warn('Leader photo compression error:', err);
-      toast('⚠️ Could not process image. Please try another photo or paste a URL.');
+      toast('⚠️ Could not process image. Try a smaller photo or paste a URL below.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+      if (photoFileInput) photoFileInput.value = '';
     }
   });
 
