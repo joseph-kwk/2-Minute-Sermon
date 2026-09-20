@@ -1067,3 +1067,102 @@ select.admin-input option { background: #1e1e24; color: #fff; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   PHOTO CROP MODAL
+   ========================================================================== */
+.crop-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: cropFadeIn 0.18s ease;
+}
+@keyframes cropFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.crop-modal-card {
+  background: #1c1b22;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
+}
+.crop-modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.crop-modal-header h3 {
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.2px;
+}
+.crop-modal-header p {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.8rem;
+  margin: 0;
+}
+.crop-stage-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.crop-stage {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #0d0d0f;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  box-shadow:
+    0 0 0 3px var(--admin-red),
+    0 0 0 6px rgba(198, 40, 40, 0.18),
+    0 12px 40px rgba(0, 0, 0, 0.55);
+}
+.crop-stage:active { cursor: grabbing; }
+#cropCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  display: block;
+  pointer-events: none;
+}
+.crop-zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.crop-zoom-row span { font-size: 1rem; opacity: 0.7; flex-shrink: 0; }
+.crop-zoom-row input[type="range"] {
+  flex: 1; height: 4px;
+  accent-color: var(--admin-red);
+  cursor: pointer;
+}
+.crop-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 20px;
+}
+.crop-actions { display: flex; gap: 10px; }
+.crop-actions .admin-btn { flex: 1; justify-content: center; }
+@media (max-width: 400px) {
+  .crop-stage { width: 260px; height: 260px; }
+  .crop-modal-card { padding: 20px 16px 18px; }
+}

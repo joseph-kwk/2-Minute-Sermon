@@ -557,6 +557,144 @@ function populateSelects() {
 }
 
 // ── Image Auto-Compressor & Downscaler (HTML5 Canvas) ─────────────────────
+// ── PHOTO CROP MODAL ENGINE ────────────────────────────────────────────────
+// Opens a circular drag-to-crop modal. onConfirm(dataUrl) is called with the
+// final 280×280 JPEG data URL when the user clicks "Use This Photo".
+function openPhotoCropModal(imageFile, onConfirm) {
+  const modal  = document.getElementById('photoCropModal');
+  const canvas = document.getElementById('cropCanvas');
+  const stage  = document.getElementById('cropStage');
+  const slider = document.getElementById('cropZoomSlider');
+  if (!modal || !canvas || !stage || !slider) {
+    // Fallback: skip crop and compress directly
+    compressImageFile(imageFile, 280, 0.82).then(onConfirm).catch(() => {});
+    return;
+  }
+
+  const STAGE = stage.offsetWidth || 300; // respect responsive size
+  canvas.width  = STAGE;
+  canvas.height = STAGE;
+  const ctx = canvas.getContext('2d');
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      // Minimum scale: image must fully cover the circle
+      const minScale = Math.max(STAGE / img.width, STAGE / img.height);
+      let scale = minScale;
+      // Center image initially
+      let offsetX = (STAGE - img.width  * scale) / 2;
+      let offsetY = (STAGE - img.height * scale) / 2;
+
+      slider.min   = minScale;
+      slider.max   = Math.min(minScale * 4, 6);
+      slider.step  = 0.001;
+      slider.value = scale;
+
+      // Clamp: image must always cover all 4 edges of the circle
+      function clamp(ox, oy, sc) {
+        const iw = img.width  * sc;
+        const ih = img.height * sc;
+        return {
+          x: Math.max(STAGE - iw, Math.min(0, ox)),
+          y: Math.max(STAGE - ih, Math.min(0, oy))
+        };
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, STAGE, STAGE);
+        ctx.fillStyle = '#0d0d0f';
+        ctx.fillRect(0, 0, STAGE, STAGE);
+        ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+      }
+      draw();
+      modal.style.display = 'flex';
+
+      // ── Drag to pan ──────────────────────────────────────────────────────
+      let isDragging = false, dragX = 0, dragY = 0, startX = 0, startY = 0;
+
+      function getXY(e) {
+        return e.touches
+          ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+          : { x: e.clientX,            y: e.clientY            };
+      }
+
+      function onDown(e) {
+        e.preventDefault();
+        isDragging = true;
+        const p = getXY(e);
+        dragX = p.x; dragY = p.y;
+        startX = offsetX; startY = offsetY;
+      }
+      function onMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const p = getXY(e);
+        const clamped = clamp(startX + (p.x - dragX), startY + (p.y - dragY), scale);
+        offsetX = clamped.x; offsetY = clamped.y;
+        draw();
+      }
+      function onUp() { isDragging = false; }
+
+      stage.addEventListener('mousedown',  onDown, { passive: false });
+      stage.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('mousemove', onMove, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup',   onUp);
+      window.addEventListener('touchend',  onUp);
+
+      // ── Zoom slider ──────────────────────────────────────────────────────
+      function onZoom() {
+        const newScale = parseFloat(slider.value);
+        // Zoom toward the circle center
+        const cx = STAGE / 2, cy = STAGE / 2;
+        const ratio = newScale / scale;
+        const clamped = clamp(
+          cx - (cx - offsetX) * ratio,
+          cy - (cy - offsetY) * ratio,
+          newScale
+        );
+        scale = newScale;
+        offsetX = clamped.x; offsetY = clamped.y;
+        draw();
+      }
+      slider.addEventListener('input', onZoom);
+
+      // ── Cleanup helpers ──────────────────────────────────────────────────
+      function cleanup() {
+        stage.removeEventListener('mousedown',  onDown);
+        stage.removeEventListener('touchstart', onDown);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('mouseup',   onUp);
+        window.removeEventListener('touchend',  onUp);
+        slider.removeEventListener('input', onZoom);
+        modal.style.display = 'none';
+      }
+
+      // ── Confirm ──────────────────────────────────────────────────────────
+      document.getElementById('btnCropConfirm').onclick = () => {
+        // Export the live 300px canvas, scaled down to 280px output
+        const out    = document.createElement('canvas');
+        out.width    = 280;
+        out.height   = 280;
+        out.getContext('2d').drawImage(canvas, 0, 0, 280, 280);
+        const dataUrl = out.toDataURL('image/jpeg', 0.82);
+        const kb = Math.round(dataUrl.length * 0.75 / 1024);
+        cleanup();
+        onConfirm(dataUrl, kb);
+      };
+
+      // ── Cancel ───────────────────────────────────────────────────────────
+      document.getElementById('btnCropCancel').onclick = cleanup;
+    };
+    img.onerror = () => toast('⚠️ Could not load image. Please try another file.');
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(imageFile);
+}
+
 // Ensures uploaded photos (which can be 5MB-12MB from phones) are smoothly
 // downscaled to ~360-480px and compressed to ~25KB-40KB JPEG. This guarantees
 // they never exceed Firestore's 1MB document limit or localStorage's 5MB origin quota.
@@ -667,27 +805,15 @@ function setupPreachersManager() {
     photoFileInput?.click();
   });
 
-  photoFileInput?.addEventListener('change', async (e) => {
+  photoFileInput?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const btn = document.getElementById('btnTriggerPhotoUpload');
-    const origLabel = btn?.innerHTML;
-    try {
-      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Processing...'; }
-      toast('⏳ Compressing photo...');
-      // 280px max, 0.75 quality → ~20–45KB base64 — safe for Firestore & localStorage
-      const compressedDataUrl = await compressImageFile(file, 280, 0.75);
-      if (photoUrlInput) photoUrlInput.value = compressedDataUrl;
-      if (previewImg) previewImg.src = compressedDataUrl;
-      const kb = Math.round(compressedDataUrl.length * 0.75 / 1024);
-      toast(`✅ Photo ready! (${kb} KB) — Click Save to apply.`);
-    } catch (err) {
-      console.warn('Preacher photo compression error:', err);
-      toast('⚠️ Could not process image. Try a smaller photo or paste a URL below.');
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
-      if (photoFileInput) photoFileInput.value = '';
-    }
+    if (photoFileInput) photoFileInput.value = ''; // reset so same file can be re-selected
+    openPhotoCropModal(file, (dataUrl, kb) => {
+      if (photoUrlInput) photoUrlInput.value = dataUrl;
+      if (previewImg)    previewImg.src = dataUrl;
+      toast(`✅ Photo cropped & ready! (${kb ?? '?'} KB) — Click Save to apply.`);
+    });
   });
 
   btnDefaultAvatar?.addEventListener('click', () => {
@@ -947,26 +1073,15 @@ function setupLeadershipManager() {
   photoUrlInput?.addEventListener('paste', () => setTimeout(updateLeaderAvatarPreview, 50));
   photoUrlInput?.addEventListener('change', updateLeaderAvatarPreview);
 
-  photoFileInput?.addEventListener('change', async (e) => {
+  photoFileInput?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const btn = document.getElementById('btnTriggerLeaderPhotoUpload');
-    const origLabel = btn?.innerHTML;
-    try {
-      if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Processing...'; }
-      toast('⏳ Compressing photo...');
-      const compressedDataUrl = await compressImageFile(file, 280, 0.75);
-      if (photoUrlInput) photoUrlInput.value = compressedDataUrl;
-      if (previewImg) previewImg.src = compressedDataUrl;
-      const kb = Math.round(compressedDataUrl.length * 0.75 / 1024);
-      toast(`✅ Photo ready! (${kb} KB) — Click Save to apply.`);
-    } catch (err) {
-      console.warn('Leader photo compression error:', err);
-      toast('⚠️ Could not process image. Try a smaller photo or paste a URL below.');
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
-      if (photoFileInput) photoFileInput.value = '';
-    }
+    if (photoFileInput) photoFileInput.value = '';
+    openPhotoCropModal(file, (dataUrl, kb) => {
+      if (photoUrlInput) photoUrlInput.value = dataUrl;
+      if (previewImg)    previewImg.src = dataUrl;
+      toast(`✅ Photo cropped & ready! (${kb ?? '?'} KB) — Click Save to apply.`);
+    });
   });
 
   btnDefaultAvatar?.addEventListener('click', () => {
