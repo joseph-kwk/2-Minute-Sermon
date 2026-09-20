@@ -3,7 +3,7 @@ import { getEvents, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { topics } from './data/topics.js';
-import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses, getVerseForDate } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam } from './data/leadership.js';
 import { getPartners, savePartners } from './data/partners.js';
 import { getConversations, saveConversations, extractVideoId, ytThumb } from './data/conversations.js';
@@ -40,9 +40,16 @@ function getTodayDateStr() {
   return new Date().toISOString().split('T')[0];
 }
 
-function getVerseForDate(dateStr) {
-  const list = scheduledDailyVerses();
-  return list.find(v => v.publishDate === dateStr) || list[0];
+function formatVerseDate(dateStr) {
+  try {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-').map(Number);
+    if (parts.length === 3 && !isNaN(parts[0])) {
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+  } catch (_) {}
+  return dateStr;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -54,7 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupExploreDropdown();
   setupMobileDrawer();
   setupHeroCtas();
+  setupHeroAmbientEffects();
+  setupFooterWater();
   setupPromoVideo();
+  setupPersistentMiniPlayer();
+  setupScriptureCardGenerator();
   setupSermonFilters();
   setupDailyVerse();
   setupPrayerForm();
@@ -133,10 +144,14 @@ function animateLogoTitle() {
   let html = '';
 
   words.forEach((word, wi) => {
+    // Word 0 is '2-Minute' (crimson accent), Word 1 is 'Sermon' (obsidian charcoal)
+    const wordClass = wi === 0 ? 'logo-word-accent' : 'logo-word-main';
+    html += `<span class="${wordClass}">`;
     [...word].forEach((ch, ci) => {
       const delay = baseDelay + (wi * word.length + ci) * 48;
       html += `<span class="letter" style="animation-delay:${delay}ms">${ch}</span>`;
     });
+    html += `</span>`;
     if (wi < words.length - 1) html += '<span class="word-space"></span>';
   });
 
@@ -172,20 +187,37 @@ function observeNewCards(container) {
   });
 }
 
-// ─── HEADER SCROLL SHADOW ─────────────────────────────────────────────────────
+// ─── HEADER SCROLL SHADOW & READING PROGRESS ──────────────────────────────────
 function setupHeaderScroll() {
   const header = document.getElementById('appHeader');
+  const progressBar = document.getElementById('headerScrollProgress');
+
   window.addEventListener('scroll', () => {
-    header?.classList.toggle('scrolled', window.scrollY > 20);
+    const scrollY = window.scrollY;
+    header?.classList.toggle('scrolled', scrollY > 20);
+
+    if (progressBar) {
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+      progressBar.style.width = `${Math.min(100, Math.max(0, progress)).toFixed(1)}%`;
+    }
   }, { passive: true });
 }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 function setupNavigation() {
   document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
       const targetView = btn.getAttribute('data-view');
       if (!targetView) return;
+      // Prevent default jump for anchor links pointing to '#' or '#home'
+      if (btn.tagName === 'A') {
+        const href = btn.getAttribute('href');
+        if (href === '#' || href === '#home') {
+          e.preventDefault();
+        }
+      }
+
       if (targetView === 'admin') { window.location.href = '/admin.html'; return; }
       
       const aboutTab = btn.getAttribute('data-about-tab');
@@ -200,7 +232,10 @@ function setupNavigation() {
 
   function handleRouteHash() {
     const rawHash = window.location.hash.replace('#', '');
-    if (!rawHash) return;
+    if (!rawHash || rawHash === 'home') {
+      switchView('home');
+      return;
+    }
 
     if (rawHash === 'about-structure' || rawHash === 'about/structure') {
       switchView('about');
@@ -237,12 +272,29 @@ const VIEW_TITLES = {
 };
 
 export function switchView(viewId) {
+  const prevView = activeView;
   activeView = viewId;
   document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(`view-${viewId}`);
   if (target) {
     target.classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // If switching across different views, jump instantly to top so old scroll position isn't retained.
+    // If staying on the same view (e.g. clicking Home while already on Home), smooth scroll.
+    if (prevView && prevView !== viewId) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Always guarantee hero elements are 100% visible and correctly positioned when home is shown
+    if (viewId === 'home') {
+      const heroContainer = target.querySelector('.hero-container');
+      if (heroContainer) {
+        heroContainer.style.opacity = '1';
+        heroContainer.style.transform = 'translate3d(0, 0, 0)';
+      }
+    }
 
     if (VIEW_TITLES[viewId]) {
       document.title = VIEW_TITLES[viewId];
@@ -349,6 +401,1702 @@ function setupHeroCtas() {
   });
 }
 
+// --- FOOTER FLOWING WATER CANVAS - Natural Deep Ocean Simulation ---
+function setupFooterWater() {
+  const footer = document.querySelector('.app-footer');
+  if (!footer) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'footer-water-canvas';
+  footer.insertBefore(canvas, footer.firstChild);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let W = 0, H = 0;
+  let t = 0, rafId = null, isVisible = true;
+
+  function resize() {
+    W = canvas.width  = footer.offsetWidth;
+    H = canvas.height = footer.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  // 5 natural rolling river swells: deep roasted espresso, rich mahogany, sacred sermon crimson, and molten amber
+  const WAVES = [
+    { yRatio: 0.20, amp: 0.038, freq: 0.85, spd: 0.18, ph: 0.0, ph2: 1.4, c0: 'rgba(28, 14, 10, 0.94)', c1: 'rgba(12, 6, 4, 0.98)' },
+    { yRatio: 0.38, amp: 0.052, freq: 0.70, spd: 0.14, ph: 2.1, ph2: 0.8, c0: 'rgba(48, 20, 13, 0.92)', c1: 'rgba(18, 8, 5, 0.96)' },
+    { yRatio: 0.55, amp: 0.066, freq: 0.55, spd: 0.10, ph: 4.0, ph2: 2.7, c0: 'rgba(76, 26, 16, 0.90)', c1: 'rgba(28, 11, 7, 0.95)' },
+    { yRatio: 0.72, amp: 0.080, freq: 0.42, spd: 0.07, ph: 1.7, ph2: 3.9, c0: 'rgba(105, 36, 18, 0.88)', c1: 'rgba(38, 14, 8, 0.96)' },
+    { yRatio: 0.87, amp: 0.092, freq: 0.34, spd: 0.05, ph: 3.2, ph2: 1.8, c0: 'rgba(138, 46, 20, 0.90)', c1: 'rgba(52, 18, 10, 0.98)' }
+  ];
+
+  // Specular caustic shimmers: radiant golden embers and candlelight glimmers drifting on the waves
+  const SHIMMERS = Array.from({ length: 48 }, (_, i) => ({
+    xRatio: Math.random(),
+    waveIdx: i % WAVES.length,
+    yOffset: (Math.random() - 0.25) * 14,
+    len: 26 + Math.random() * 46,
+    height: 1.5 + Math.random() * 2.0,
+    speed: 0.00035 + Math.random() * 0.00065,
+    pulseSpeed: 1.2 + Math.random() * 1.8,
+    phase: Math.random() * Math.PI * 2,
+    baseAlpha: 0.06 + Math.random() * 0.10
+  }));
+
+  function surfaceY(x, w) {
+    const nx = x / (W || 1);
+    const wave1 = Math.sin(nx * Math.PI * 2 * w.freq + t * w.spd + w.ph);
+    const wave2 = Math.sin(nx * Math.PI * 4 * w.freq + t * w.spd * 0.7 + w.ph2) * 0.36;
+    const wave3 = Math.cos(nx * Math.PI * 1.6 * w.freq - t * w.spd * 0.38) * 0.20;
+    const raw = (wave1 + wave2 + wave3) / 1.56;
+    return H * w.yRatio + raw * H * w.amp;
+  }
+
+  function drawWaveBody(w) {
+    const SEG = Math.max(4, Math.ceil(W / 200));
+    ctx.beginPath();
+    ctx.moveTo(-2, H + 2);
+    ctx.lineTo(-2, surfaceY(0, w));
+    for (let x = 0; x <= W + SEG; x += SEG) {
+      const nextX = Math.min(W + SEG, x + SEG);
+      const cpX = (x + nextX) / 2;
+      ctx.quadraticCurveTo(cpX, surfaceY(cpX, w), nextX, surfaceY(nextX, w));
+    }
+    ctx.lineTo(W + 2, H + 2);
+    ctx.closePath();
+
+    const crestY = H * (w.yRatio - w.amp);
+    const grad = ctx.createLinearGradient(0, crestY, 0, H);
+    grad.addColorStop(0, w.c0);
+    grad.addColorStop(0.3, w.c0);
+    grad.addColorStop(1, w.c1);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  function drawShimmers() {
+    SHIMMERS.forEach(s => {
+      s.xRatio = (s.xRatio + s.speed) % 1.0;
+      const x = s.xRatio * W;
+      const wave = WAVES[s.waveIdx];
+      const y = surfaceY(x, wave) + s.yOffset;
+
+      const pulse = Math.sin(t * s.pulseSpeed + s.phase);
+      if (pulse <= 0) return;
+
+      const alpha = s.baseAlpha * pulse * pulse;
+      if (alpha < 0.01) return;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(x, y, s.len * 0.5, s.height, 0, 0, Math.PI * 2);
+      const glint = ctx.createRadialGradient(x, y, 0, x, y, s.len * 0.5);
+      glint.addColorStop(0,    `rgba(253, 224, 71, ${(alpha * 0.90).toFixed(3)})`);
+      glint.addColorStop(0.45, `rgba(245, 158, 11, ${(alpha * 0.45).toFixed(3)})`);
+      glint.addColorStop(1,    'rgba(180, 83, 9, 0)');
+      ctx.fillStyle = glint;
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function drawFrame() {
+    if (!isVisible) return;
+    t += 0.0055;
+    ctx.clearRect(0, 0, W, H);
+
+    // Deep nocturnal espresso & sacred obsidian river base
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,   '#080504');
+    bg.addColorStop(0.5, '#0f0a07');
+    bg.addColorStop(1,   '#180e09');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Diffuse ambient golden sunset glow
+    const moonX = W * 0.5;
+    const moon = ctx.createRadialGradient(moonX, H * 0.05, 0, moonX, H * 0.45, W * 0.48);
+    const mA = (0.065 + Math.sin(t * 0.22) * 0.014).toFixed(3);
+    moon.addColorStop(0,    `rgba(245, 158, 11, ${mA})`);
+    moon.addColorStop(0.55, 'rgba(198, 40, 40, 0.020)');
+    moon.addColorStop(1,    'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = moon;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw waves: back to front
+    WAVES.forEach(w => drawWaveBody(w));
+
+    // Draw radiant golden caustics & embers riding the waves
+    drawShimmers();
+
+    // Soft warm golden sunset sheen band down the center
+    const sheen = ctx.createLinearGradient(moonX - W * 0.25, 0, moonX + W * 0.25, 0);
+    const sA = (0.040 + Math.sin(t * 0.35) * 0.014).toFixed(3);
+    sheen.addColorStop(0,   'rgba(245, 158, 11, 0)');
+    sheen.addColorStop(0.5, `rgba(245, 158, 11, ${sA})`);
+    sheen.addColorStop(1,   'rgba(245, 158, 11, 0)');
+    ctx.fillStyle = sheen;
+    const topWaveY = surfaceY(W * 0.5, WAVES[0]);
+    ctx.fillRect(moonX - W * 0.25, 0, W * 0.5, topWaveY);
+
+    rafId = requestAnimationFrame(drawFrame);
+  }
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      isVisible = e.isIntersecting;
+      if (isVisible && !rafId) rafId = requestAnimationFrame(drawFrame);
+      else if (!isVisible && rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    });
+  }, { threshold: 0.01 });
+  obs.observe(footer);
+  rafId = requestAnimationFrame(drawFrame);
+}
+
+
+
+// ─── HERO AMBIENT EFFECTS (Static image + golden lantern particles) ──────────
+function setupHeroAmbientEffects() {
+  const heroSection = document.querySelector('.hero-section');
+  if (!heroSection) return;
+
+  // ─── AMBIENT GOLDEN LIGHT PARTICLES ────────────────────────
+  setupHeroParticles(heroSection, null);
+
+  // ─── SMOOTH SCROLL PARALLAX (text container only, no video) ─
+  setupHeroParallax(heroSection, null);
+}
+
+// ─── GOLDEN SUN-MOTE CANVAS PARTICLES ─────────────────────────────────────────
+function setupHeroParticles(heroSection, sectionObserver) {
+  const canvas = document.createElement('canvas');
+  canvas.className = 'hero-particles-canvas';
+  heroSection.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let width = (canvas.width = heroSection.offsetWidth);
+  let height = (canvas.height = heroSection.offsetHeight);
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = heroSection.offsetWidth;
+    height = canvas.height = heroSection.offsetHeight;
+  }, { passive: true });
+
+  const PARTICLE_COUNT = 16;
+  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    radius: Math.random() * 2.6 + 1.2,
+    baseAlpha: Math.random() * 0.35 + 0.20,
+    alphaSpeed: Math.random() * 0.015 + 0.008,
+    alphaOffset: Math.random() * Math.PI * 2,
+    vx: (Math.random() - 0.45) * 0.25,
+    vy: -(Math.random() * 0.35 + 0.15), // gentle calm upward drift
+    wobbleSpeed: Math.random() * 0.015 + 0.005,
+    wobbleAmp: Math.random() * 1.0 + 0.3,
+    color: Math.random() > 0.45 ? '251, 191, 36' : '245, 158, 11' // Amber & Gold
+  }));
+
+  let animFrameId = null;
+  let isRunning = true;
+  let time = 0;
+
+  function render() {
+    if (!isRunning) return;
+    time += 0.02;
+    ctx.clearRect(0, 0, width, height);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = particles[i];
+      p.y += p.vy;
+      p.x += p.vx + Math.sin(time * p.wobbleSpeed + p.alphaOffset) * 0.25;
+
+      // Wrap around edges seamlessly
+      if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
+      if (p.x < -10) p.x = width + 10;
+      if (p.x > width + 10) p.x = -10;
+
+      const currentAlpha = p.baseAlpha + Math.sin(time * p.alphaSpeed * 60 + p.alphaOffset) * 0.2;
+      const safeAlpha = Math.max(0.08, Math.min(0.85, currentAlpha));
+
+      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2);
+      gradient.addColorStop(0, `rgba(${p.color}, ${safeAlpha})`);
+      gradient.addColorStop(0.5, `rgba(${p.color}, ${safeAlpha * 0.5})`);
+      gradient.addColorStop(1, `rgba(${p.color}, 0)`);
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    animFrameId = requestAnimationFrame(render);
+  }
+
+  // Auto-pause particle loop when hero is off-screen for 100% smooth browsing
+  const particleObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        if (!isRunning) {
+          isRunning = true;
+          animFrameId = requestAnimationFrame(render);
+        }
+      } else {
+        isRunning = false;
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+      }
+    });
+  }, { threshold: 0.05 });
+  particleObserver.observe(heroSection);
+
+  animFrameId = requestAnimationFrame(render);
+}
+
+// ─── SMOOTH HERO SCROLL PARALLAX ─────────────────────────────────────────────
+function setupHeroParallax(heroSection, video) {
+  const container = heroSection.querySelector('.hero-container');
+  if (video) video.style.willChange = 'transform';
+  if (container) container.style.willChange = 'transform, opacity';
+  let ticking = false;
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        // Only run parallax calculations when home view is actively visible
+        if (activeView !== 'home') {
+          ticking = false;
+          return;
+        }
+
+        const scrollY = window.scrollY;
+        const heroHeight = heroSection.offsetHeight;
+        if (!heroHeight) {
+          ticking = false;
+          return;
+        }
+
+        if (scrollY <= 10) {
+          // At or near top of home: guarantee 100% full opacity and origin transform
+          if (container) {
+            container.style.transform = 'translate3d(0, 0, 0)';
+            container.style.opacity = '1';
+          }
+          if (video) {
+            video.style.transform = 'translate3d(-50%, -50%, 0)';
+          }
+        } else if (scrollY <= heroHeight + 50) {
+          // Subtle downward parallax on video background (0.28x speed)
+          if (video) {
+            const videoOffset = (scrollY * 0.28).toFixed(1);
+            video.style.transform = `translate3d(-50%, calc(-50% + ${videoOffset}px), 0)`;
+          }
+
+          // Gentle fade and upward shift for hero text container
+          if (container) {
+            const textOffset = (scrollY * 0.14).toFixed(1);
+            const opacity = Math.max(0, 1 - (scrollY / (heroHeight * 0.78)));
+            container.style.transform = `translate3d(0, ${textOffset}px, 0)`;
+            container.style.opacity = opacity.toFixed(2);
+          }
+        } else {
+          if (container) {
+            container.style.opacity = '0';
+          }
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
+// ─── V2: PERSISTENT FLOATING MINI-PLAYER ("Listen While You Browse") ──────────
+let currentMiniSermon = null;
+let miniPlayerAudio = null;
+let miniPlayerTimer = null;
+let isAudioPlaying = false;
+let currentPlayheadSec = 0;
+let sermonTotalDuration = 120; // dynamically set per sermon
+
+let ambientAudioCtx = null;
+let ambientGain = null;
+let ambientOscillators = [];
+
+// Real YouTube Audio Bridge state
+let ytAudioPlayer = null;
+let isYtAudioApiReady = false;
+let isYtPlayerReady = false;
+let currentYtVideoId = null;
+let ytProgressInterval = null;
+
+function loadYouTubeIframeApi() {
+  if (window.YT && window.YT.Player) {
+    isYtAudioApiReady = true;
+    return Promise.resolve(window.YT);
+  }
+  return new Promise((resolve) => {
+    let existingTag = document.getElementById('yt-iframe-api-script');
+    if (!existingTag) {
+      existingTag = document.createElement('script');
+      existingTag.id = 'yt-iframe-api-script';
+      existingTag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(existingTag);
+    }
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prevReady === 'function') prevReady();
+      isYtAudioApiReady = true;
+      resolve(window.YT);
+    };
+    if (window.YT && window.YT.Player) {
+      isYtAudioApiReady = true;
+      resolve(window.YT);
+    }
+  });
+}
+
+function handleYtPlayerStateChange(event) {
+  const YT = window.YT;
+  if (!YT) return;
+
+  const player = document.getElementById('persistentMiniPlayer');
+  const playBtn = document.getElementById('miniPlayerPlayBtn');
+  const badgeText = document.getElementById('miniPlayerBadgeText');
+
+  if (event.data === YT.PlayerState.PLAYING) {
+    isAudioPlaying = true;
+    player?.classList.add('is-playing');
+    if (badgeText) badgeText.textContent = '🎧 AUDIO FROM YOUTUBE';
+
+    if (playBtn) {
+      playBtn.querySelector('.mini-icon-play').style.display = 'none';
+      playBtn.querySelector('.mini-icon-pause').style.display = 'block';
+    }
+
+    try {
+      const dur = ytAudioPlayer?.getDuration();
+      if (dur && dur > 0 && dur < 7200) {
+        sermonTotalDuration = Math.round(dur);
+        const totalTimeEl = document.getElementById('miniPlayerTotalTime');
+        if (totalTimeEl) totalTimeEl.textContent = formatMinSec(sermonTotalDuration);
+        const durTag = document.getElementById('miniPlayerDuration');
+        if (durTag) durTag.textContent = formatMinSec(sermonTotalDuration);
+      }
+    } catch (_) {}
+
+    startYtProgressLoop();
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    isAudioPlaying = false;
+    player?.classList.remove('is-playing');
+    if (playBtn) {
+      playBtn.querySelector('.mini-icon-play').style.display = 'block';
+      playBtn.querySelector('.mini-icon-pause').style.display = 'none';
+    }
+    stopYtProgressLoop();
+  } else if (event.data === YT.PlayerState.ENDED) {
+    isAudioPlaying = false;
+    player?.classList.remove('is-playing');
+    if (playBtn) {
+      playBtn.querySelector('.mini-icon-play').style.display = 'block';
+      playBtn.querySelector('.mini-icon-pause').style.display = 'none';
+    }
+    currentPlayheadSec = 0;
+    updateMiniPlayerUI();
+    stopYtProgressLoop();
+  }
+}
+
+function startYtProgressLoop() {
+  stopYtProgressLoop();
+  ytProgressInterval = setInterval(() => {
+    if (ytAudioPlayer && isAudioPlaying) {
+      try {
+        const cur = ytAudioPlayer.getCurrentTime();
+        if (typeof cur === 'number' && !isNaN(cur)) {
+          currentPlayheadSec = Math.round(cur);
+          updateMiniPlayerUI();
+        }
+      } catch (_) {}
+    }
+  }, 350);
+}
+
+function stopYtProgressLoop() {
+  if (ytProgressInterval) {
+    clearInterval(ytProgressInterval);
+    ytProgressInterval = null;
+  }
+}
+
+function playYouTubeAudioBridge(videoId, startSec = 0) {
+  currentYtVideoId = videoId;
+  stopDevotionalAmbiance();
+
+  loadYouTubeIframeApi().then((YT) => {
+    if (!ytAudioPlayer) {
+      ytAudioPlayer = new YT.Player('miniPlayerYtIframe', {
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          start: startSec,
+          origin: window.location.origin
+        },
+        events: {
+          onReady: (event) => {
+            isYtPlayerReady = true;
+            try {
+              event.target.playVideo();
+            } catch (_) {}
+          },
+          onStateChange: handleYtPlayerStateChange,
+          onError: (err) => {
+            console.warn('[YouTube Audio Bridge] Player error, falling back to soothing ambiance:', err);
+            startDevotionalAmbiance();
+          }
+        }
+      });
+    } else {
+      try {
+        ytAudioPlayer.loadVideoById({
+          videoId: videoId,
+          startSeconds: startSec
+        });
+        ytAudioPlayer.playVideo();
+      } catch (e) {
+        console.warn('[YouTube Audio Bridge] Could not load video:', e);
+      }
+    }
+  });
+}
+
+function startDevotionalAmbiance() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!ambientAudioCtx) ambientAudioCtx = new AudioCtx();
+    if (ambientAudioCtx.state === 'suspended') ambientAudioCtx.resume();
+
+    stopDevotionalAmbiance();
+
+    ambientGain = ambientAudioCtx.createGain();
+    ambientGain.gain.setValueAtTime(0.001, ambientAudioCtx.currentTime);
+    ambientGain.gain.exponentialRampToValueAtTime(0.06, ambientAudioCtx.currentTime + 1.2);
+
+    const filter = ambientAudioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, ambientAudioCtx.currentTime);
+
+    // Warm sacred ambient frequencies (D major meditative chords)
+    const freqs = [146.83, 220.00, 293.66];
+    ambientOscillators = freqs.map(f => {
+      const osc = ambientAudioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, ambientAudioCtx.currentTime);
+      osc.connect(filter);
+      osc.start();
+      return osc;
+    });
+
+    filter.connect(ambientGain);
+    ambientGain.connect(ambientAudioCtx.destination);
+  } catch (_) {}
+}
+
+function stopDevotionalAmbiance() {
+  if (ambientGain && ambientAudioCtx) {
+    try {
+      ambientGain.gain.exponentialRampToValueAtTime(0.0001, ambientAudioCtx.currentTime + 0.4);
+      setTimeout(() => {
+        ambientOscillators.forEach(o => { try { o.stop(); o.disconnect(); } catch (_) {} });
+        ambientOscillators = [];
+      }, 400);
+    } catch (_) {
+      ambientOscillators.forEach(o => { try { o.stop(); o.disconnect(); } catch (_) {} });
+      ambientOscillators = [];
+    }
+  }
+}
+
+export function setupPersistentMiniPlayer() {
+  const player = document.getElementById('persistentMiniPlayer');
+  if (!player) return;
+
+  // Warm up the YouTube IFrame API ahead of time
+  loadYouTubeIframeApi().catch(() => {});
+
+  miniPlayerAudio = document.getElementById('miniPlayerAudio');
+  const playBtn   = document.getElementById('miniPlayerPlayBtn');
+  const rewindBtn = document.getElementById('miniPlayerRewindBtn');
+  const fwdBtn    = document.getElementById('miniPlayerForwardBtn');
+  const expandBtn = document.getElementById('miniPlayerExpandBtn');
+  const closeBtn  = document.getElementById('miniPlayerCloseBtn');
+  const trackBar  = document.getElementById('miniPlayerTrack');
+
+  // Play / Pause toggle
+  playBtn?.addEventListener('click', toggleMiniPlayerPlayback);
+
+  // Rewind 15s
+  rewindBtn?.addEventListener('click', () => {
+    seekMiniPlayer(Math.max(0, currentPlayheadSec - 15));
+  });
+
+  // Forward 15s
+  fwdBtn?.addEventListener('click', () => {
+    seekMiniPlayer(Math.min(sermonTotalDuration, currentPlayheadSec + 15));
+  });
+
+  // Expand into Full Sermon Details Modal
+  expandBtn?.addEventListener('click', () => {
+    if (currentMiniSermon) {
+      openSermonModal(currentMiniSermon.id);
+    }
+  });
+
+  // Close Player
+  closeBtn?.addEventListener('click', () => {
+    stopMiniPlayer();
+    player.hidden = true;
+    player.classList.remove('is-visible', 'is-playing');
+  });
+
+  // Click on Scrubber Track
+  trackBar?.addEventListener('click', (e) => {
+    const rect = trackBar.getBoundingClientRect();
+    const clickRatio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    seekMiniPlayer(Math.round(clickRatio * sermonTotalDuration));
+  });
+}
+
+function formatMinSec(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+export function playSermonInMiniPlayer(sermonId) {
+  const s = sermons().find(x => x.id === sermonId);
+  if (!s) return;
+
+  // If already playing this sermon, just toggle
+  if (currentMiniSermon && currentMiniSermon.id === s.id && isAudioPlaying) {
+    pauseMiniPlayerPlayback();
+    return;
+  }
+
+  currentMiniSermon = s;
+  sermonTotalDuration = s.durationSec || 120;
+
+  const player = document.getElementById('persistentMiniPlayer');
+  if (!player) return;
+
+  // Populate metadata
+  const thumb = document.getElementById('miniPlayerThumb');
+  if (thumb) {
+    thumb.src = s.thumbnailUrl || '/assets/logo.png';
+    thumb.onerror = () => { thumb.src = '/assets/logo.png'; };
+  }
+  const title = document.getElementById('miniPlayerTitle');
+  if (title) title.textContent = s.title;
+
+  const preacher = document.getElementById('miniPlayerPreacher');
+  if (preacher) preacher.textContent = `${s.preacherName} • ${s.scripture}`;
+
+  const badgeText = document.getElementById('miniPlayerBadgeText');
+  if (badgeText) {
+    badgeText.textContent = `🎧 AUDIO FROM YOUTUBE`;
+  }
+
+  const durTag = document.getElementById('miniPlayerDuration');
+  if (durTag) durTag.textContent = s.duration || '2:00';
+
+  const totalTime = document.getElementById('miniPlayerTotalTime');
+  if (totalTime) totalTime.textContent = s.duration || '2:00';
+
+  // Reset playhead
+  currentPlayheadSec = 0;
+  updateMiniPlayerUI();
+
+  // Show player with smooth entrance
+  player.hidden = false;
+  requestAnimationFrame(() => {
+    player.classList.add('is-visible');
+  });
+
+  startMiniPlayerPlayback();
+  showToast(`🎧 Audio from YouTube: ${s.title}`);
+}
+window.playSermonInMiniPlayer = playSermonInMiniPlayer;
+
+function startMiniPlayerPlayback() {
+  isAudioPlaying = true;
+  const player = document.getElementById('persistentMiniPlayer');
+  player?.classList.add('is-playing');
+
+  const playBtn = document.getElementById('miniPlayerPlayBtn');
+  if (playBtn) {
+    playBtn.querySelector('.mini-icon-play').style.display = 'none';
+    playBtn.querySelector('.mini-icon-pause').style.display = 'block';
+  }
+
+  // If we have a sermon with youtubeEmbedId, route audio through YouTube bridge
+  const videoId = currentMiniSermon?.youtubeEmbedId;
+  if (videoId) {
+    if (ytAudioPlayer && currentYtVideoId === videoId) {
+      try {
+        ytAudioPlayer.playVideo();
+      } catch (_) {
+        playYouTubeAudioBridge(videoId, currentPlayheadSec);
+      }
+    } else {
+      playYouTubeAudioBridge(videoId, currentPlayheadSec);
+    }
+  } else if (miniPlayerAudio && currentMiniSermon?.audioUrl) {
+    miniPlayerAudio.src = currentMiniSermon.audioUrl;
+    miniPlayerAudio.play().catch(() => {});
+  } else {
+    startDevotionalAmbiance();
+  }
+
+  // Backup fallback timer in case YouTube progress ticks are paused
+  clearInterval(miniPlayerTimer);
+  miniPlayerTimer = setInterval(() => {
+    if (isAudioPlaying && !ytAudioPlayer) {
+      currentPlayheadSec += 1;
+      if (currentPlayheadSec >= sermonTotalDuration) {
+        currentPlayheadSec = sermonTotalDuration;
+        pauseMiniPlayerPlayback();
+      }
+      updateMiniPlayerUI();
+    }
+  }, 1000);
+}
+
+function pauseMiniPlayerPlayback() {
+  isAudioPlaying = false;
+  const player = document.getElementById('persistentMiniPlayer');
+  player?.classList.remove('is-playing');
+
+  const playBtn = document.getElementById('miniPlayerPlayBtn');
+  if (playBtn) {
+    playBtn.querySelector('.mini-icon-play').style.display = 'block';
+    playBtn.querySelector('.mini-icon-pause').style.display = 'none';
+  }
+
+  if (ytAudioPlayer) {
+    try {
+      ytAudioPlayer.pauseVideo();
+    } catch (_) {}
+  }
+  stopYtProgressLoop();
+
+  if (miniPlayerAudio && !miniPlayerAudio.paused) {
+    miniPlayerAudio.pause();
+  }
+  stopDevotionalAmbiance();
+}
+
+function toggleMiniPlayerPlayback() {
+  if (isAudioPlaying) {
+    pauseMiniPlayerPlayback();
+  } else {
+    if (currentPlayheadSec >= sermonTotalDuration) {
+      currentPlayheadSec = 0;
+    }
+    startMiniPlayerPlayback();
+  }
+}
+
+function seekMiniPlayer(targetSec) {
+  currentPlayheadSec = Math.max(0, Math.min(sermonTotalDuration, targetSec));
+  if (ytAudioPlayer) {
+    try {
+      ytAudioPlayer.seekTo(currentPlayheadSec, true);
+    } catch (_) {}
+  }
+  if (miniPlayerAudio && miniPlayerAudio.duration) {
+    miniPlayerAudio.currentTime = (currentPlayheadSec / sermonTotalDuration) * miniPlayerAudio.duration;
+  }
+  updateMiniPlayerUI();
+}
+
+function stopMiniPlayer() {
+  pauseMiniPlayerPlayback();
+  if (ytAudioPlayer) {
+    try {
+      ytAudioPlayer.stopVideo();
+    } catch (_) {}
+  }
+  stopYtProgressLoop();
+  clearInterval(miniPlayerTimer);
+  currentPlayheadSec = 0;
+  currentMiniSermon = null;
+}
+
+function updateMiniPlayerUI() {
+  const curTimeEl = document.getElementById('miniPlayerCurrentTime');
+  if (curTimeEl) curTimeEl.textContent = formatMinSec(currentPlayheadSec);
+
+  const progEl = document.getElementById('miniPlayerProgress');
+  if (progEl) {
+    const pct = ((currentPlayheadSec / sermonTotalDuration) * 100).toFixed(1);
+    progEl.style.width = `${pct}%`;
+  }
+}
+
+// ─── V2: SCRIPTURE CARD GENERATOR ("Share as Image") ──────────────────────────
+let activeCardVerse = null;
+let userSelectedCardTheme = false;
+
+function getDefaultSeasonalTheme() {
+  return 'mountain_dawn';
+}
+
+let activeCardTheme = getDefaultSeasonalTheme();
+let activeCardRatio = 'story'; // 'story' (9:16) or 'square' (1:1)
+let activeCardFont  = 'inter'; // locked to Inter modern sans-serif
+
+// Fixed font for scripture cards — clean, bold, highly legible Inter
+const SCRIPTURE_FONTS = {
+  inter: { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' },
+  lora:  { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' }
+};
+
+export function setupScriptureCardGenerator() {
+  const modal = document.getElementById('scriptureCardModal');
+  if (!modal) return;
+
+  // Aspect ratio switchers
+  modal.querySelectorAll('.ratio-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCardRatio = btn.getAttribute('data-ratio') || 'story';
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
+    });
+  });
+
+  // Theme switchers
+  modal.querySelectorAll('.theme-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      userSelectedCardTheme = true;
+      modal.querySelectorAll('.theme-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCardTheme = btn.getAttribute('data-theme') || 'mountain_dawn';
+      if (activeCardVerse) renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
+    });
+  });
+
+
+
+  // ─── Rock-Solid Cross-Browser Download Engine ────────────────────────────────
+  function triggerDirectDownload(url, filename, isBlob = false) {
+    const a = document.createElement('a');
+    a.style.position = 'fixed';
+    a.style.left = '-9999px';
+    a.style.opacity = '0';
+    a.href = url;
+    a.download = filename;
+    // CRITICAL: NEVER set rel="noopener" on download anchors — Chrome cancels downloads!
+    document.body.appendChild(a);
+
+    // Dispatch synthetic mouse click (standard FileSaver.js approach)
+    try {
+      const clickEvt = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      a.dispatchEvent(clickEvt);
+    } catch (_) {
+      a.click();
+    }
+
+    // Keep blob URL active for 2 full minutes so Chrome can finish streaming 3.5MB+ file without Network Error
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      if (isBlob) {
+        setTimeout(() => {
+          try { URL.revokeObjectURL(url); } catch (_) {}
+        }, 120000);
+      }
+    }, 1000);
+  }
+
+  function downloadCanvasArtwork(canvas, filename) {
+    if (!canvas) return;
+
+    // Chrome honors the `download` attribute filename reliably with data: URLs.
+    // Blob URLs can have filename stripped due to browser security policy — use as fallback.
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      if (dataUrl && dataUrl.length > 100) {
+        triggerDirectDownload(dataUrl, filename, false);
+        return;
+      }
+    } catch (err) {
+      console.warn('toDataURL failed (canvas tainted?), trying blob:', err);
+    }
+
+    // Fallback: blob URL (may lose filename in Chrome but at least delivers the file)
+    if (canvas.toBlob) {
+      try {
+        canvas.toBlob((blob) => {
+          if (blob && blob.size > 0) {
+            const blobUrl = URL.createObjectURL(blob);
+            triggerDirectDownload(blobUrl, filename, true);
+          } else {
+            showToast('⚠️ Could not export image. Please try again.');
+          }
+        }, 'image/png');
+        return;
+      } catch (err) {
+        console.warn('toBlob also failed:', err);
+      }
+    }
+
+    showToast('⚠️ Download not supported in this browser.');
+  }
+
+  function downloadDataUrlFallback(canvas, filename) {
+    try {
+      const dataUrl = canvas.toDataURL('image/png');
+      triggerDirectDownload(dataUrl, filename, false);
+    } catch (err) {
+      console.error('DataURL download failed:', err);
+      // Last-resort fallback for sandboxed iframes or restricted WebViews
+      try {
+        const win = window.open('');
+        if (win) {
+          win.document.write(`<img src="${canvas.toDataURL('image/png')}" style="max-width:100%;height:auto;display:block;margin:20px auto;" alt="Scripture Card" /><p style="font-family:sans-serif;text-align:center;color:#666;">Right-click or hold down to save image.</p>`);
+          win.document.title = filename;
+        }
+      } catch (_) {}
+    }
+  }
+
+  // Native Share (Mobile Instagram / WhatsApp / System Sheet — Full Package)
+  document.getElementById('cardNativeShareBtn')?.addEventListener('click', async () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas || !activeCardVerse) return;
+
+    const btn = document.getElementById('cardNativeShareBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Preparing Full Package...`;
+    }
+
+    try {
+      const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
+      const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+      const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
+      const url = `${window.location.origin}/#daily-verse`;
+
+      const shareTitle = `Daily Verse: ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}`;
+      const shareText = `📖 Today's Verse — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n"${activeCardVerse.verseText}"\n\n🕊️ Reflection: ${activeCardVerse.reflection || ''}\n\n✨ 2-Minute Sermon: ${url}`;
+
+      let sharedNatively = false;
+
+      // 1. Try Native OS File Share (iOS Safari, Android Chrome, mobile apps)
+      if (navigator.canShare && canvas.toBlob) {
+        try {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob && blob.size > 0) {
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: shareTitle,
+                text: shareText,
+                files: [file]
+              });
+              sharedNatively = true;
+              showToast('✨ Verse card shared successfully!');
+            }
+          }
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            return; // User cancelled native sheet
+          }
+          console.warn('Native file share failed, trying text share:', err);
+        }
+      }
+
+      // 2. Try Native OS Text/Link Share if file share not accepted
+      if (!sharedNatively && navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: url
+          });
+          sharedNatively = true;
+          showToast('✨ Verse shared successfully!');
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            return;
+          }
+          console.warn('Native text share rejected:', err);
+        }
+      }
+
+      // 3. Desktop / Browser Fallback: Automatic download of high-res image AND copy full package to clipboard!
+      if (!sharedNatively) {
+        downloadCanvasArtwork(canvas, filename);
+        try {
+          await navigator.clipboard.writeText(shareText);
+          showToast('📥 Image downloaded & full scripture package copied to clipboard! (Ready to paste anywhere)');
+        } catch (_) {
+          showToast('📥 Scripture card downloaded in high resolution!');
+        }
+      }
+    } catch (err) {
+      console.error('Share full package error:', err);
+      showToast('⚠️ Could not complete share. Please try Download.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+  });
+
+  // Download High-Res PNG
+  document.getElementById('cardDownloadBtn')?.addEventListener('click', async () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas || !activeCardVerse) return;
+
+    const btn = document.getElementById('cardDownloadBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Exporting PNG...`;
+    }
+
+    try {
+      const safeBook = (activeCardVerse.book || 'Scripture').replace(/[^a-zA-Z0-9_-]/g, '-');
+      const safeRef = `${safeBook}-${activeCardVerse.chapter || '1'}_${activeCardVerse.verse || 'verse'}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+      const filename = `2MS-Verse-${safeRef}-${activeCardRatio}.png`;
+
+      downloadCanvasArtwork(canvas, filename);
+      showToast('📥 Scripture card downloaded in high resolution!');
+    } catch (err) {
+      console.error('Download card error:', err);
+      showToast('⚠️ Could not download card. Please try again.');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+  });
+
+  // Copy Image to Clipboard
+  document.getElementById('cardCopyBtn')?.addEventListener('click', async () => {
+    const canvas = document.getElementById('scriptureExportCanvas');
+    if (!canvas || !activeCardVerse) return;
+
+    const btn = document.getElementById('cardCopyBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loading-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Copying...`;
+    }
+
+    try {
+      let copiedImage = false;
+
+      if (canvas.toBlob && navigator.clipboard && window.ClipboardItem) {
+        try {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob && blob.size > 0) {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            copiedImage = true;
+            showToast('📋 High-res image copied to clipboard! Ready to paste (Ctrl+V / Cmd+V).');
+          }
+        } catch (clipErr) {
+          console.warn('Direct clipboard image copy unsupported:', clipErr);
+        }
+      }
+
+      if (!copiedImage) {
+        const shareText = `"${activeCardVerse.verseText}" — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n${window.location.origin}/#daily-verse`;
+        await navigator.clipboard.writeText(shareText);
+        showToast('📋 Verse text copied to clipboard! (Image copy unsupported in this browser)');
+      }
+    } catch (err) {
+      console.error('Clipboard copy error:', err);
+      showToast('⚠️ Could not copy image. Try Download instead!');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+  });
+
+  // Close Card Modal
+  document.getElementById('closeCardModalBtn')?.addEventListener('click', closeScriptureCardModal);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeScriptureCardModal();
+  });
+  modal.addEventListener('wheel', e => {
+    if (e.target === modal || modal.scrollHeight <= modal.clientHeight) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  modal.addEventListener('touchmove', e => {
+    if (e.target === modal || modal.scrollHeight <= modal.clientHeight) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
+let scrollLockCount = 0;
+let lockedScrollY = 0;
+
+export function lockPageScroll() {
+  scrollLockCount++;
+  if (scrollLockCount === 1) {
+    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.documentElement.classList.add('modal-open');
+    document.body.classList.add('modal-open');
+  }
+}
+window.lockPageScroll = lockPageScroll;
+
+export function unlockPageScroll() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    const restoreY = lockedScrollY;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+    window.scrollTo(0, restoreY);
+  }
+}
+window.unlockPageScroll = unlockPageScroll;
+
+export function openScriptureCardModal(verse) {
+  activeCardVerse = verse || getVerseForDate(getTodayDateStr());
+  if (!activeCardVerse) return;
+
+  const modal = document.getElementById('scriptureCardModal');
+  if (!modal) return;
+
+  // Auto-recommend current liturgical/natural season if user hasn't explicitly chosen one
+  if (!userSelectedCardTheme) {
+    activeCardTheme = getDefaultSeasonalTheme();
+  }
+
+  // Synchronize UI active state on theme pills
+  modal.querySelectorAll('.theme-pill').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-theme') === activeCardTheme);
+  });
+
+  lockPageScroll();
+  modal.hidden = false;
+  renderScriptureCardToCanvas(activeCardVerse, activeCardTheme, activeCardRatio, activeCardFont);
+}
+window.openScriptureCardModal = openScriptureCardModal;
+window.openScriptureCardForVerse = (verse) => openScriptureCardModal(verse);
+
+export function closeScriptureCardModal() {
+  const modal = document.getElementById('scriptureCardModal');
+  if (modal && !modal.hidden) {
+    modal.hidden = true;
+    unlockPageScroll();
+  }
+}
+window.closeScriptureCardModal = closeScriptureCardModal;
+
+// ─── TEMPLATE-DRIVEN LAYOUT ENGINE FOR SCRIPTURE CARDS ────────────────────────
+// 6 curated, lightweight natural presets (under 120KB each via CDN) paired with
+// atmospheric lighting, high-contrast typography, and procedural fallbacks.
+const SCRIPTURE_CARD_TEMPLATES = {
+  mountain_dawn: {
+    id: 'mountain_dawn',
+    name: 'Mountain Dawn',
+    imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#0c1322', '#1e293b', '#064e3b', '#f59e0b'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#fbbf24',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  },
+  living_waters: {
+    id: 'living_waters',
+    name: 'Living Waters',
+    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#021827', '#082f49', '#0369a1', '#38bdf8'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#38bdf8',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  },
+  golden_woods: {
+    id: 'golden_woods',
+    name: 'Golden Woods',
+    imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#1c0f05', '#5c2b09', '#9a3412', '#f59e0b'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#f59e0b',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  },
+  winter_twilight: {
+    id: 'winter_twilight',
+    name: 'Twilight',
+    imageUrl: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#030712', '#0f172a', '#1e1b4b', '#93c5fd'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#93c5fd',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  },
+  starry_solitude: {
+    id: 'starry_solitude',
+    name: 'Starry Night',
+    imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#05070c', '#0a0e18', '#111827', '#080a10'],
+    safeZone: {
+      story:  { xPercent: 0.10, yPercent: 0.28, widthPercent: 0.80, heightPercent: 0.44 },
+      square: { xPercent: 0.08, yPercent: 0.22, widthPercent: 0.84, heightPercent: 0.54 }
+    },
+    accentColor: '#fde68a',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  },
+  parchment: {
+    id: 'parchment',
+    name: 'Parchment',
+    imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
+    fallbackGrad: ['#faf4e8', '#f5ebe0', '#eedecb'],
+    safeZone: {
+      story:  { xPercent: 0.12, yPercent: 0.28, widthPercent: 0.76, heightPercent: 0.44 },
+      square: { xPercent: 0.10, yPercent: 0.22, widthPercent: 0.80, heightPercent: 0.54 }
+    },
+    accentColor: '#78350f',
+    badgeText: '• SCRIPTURE OF THE DAY •'
+  }
+};
+
+// Aliases for backwards compatibility with any legacy bookmarks/configs
+SCRIPTURE_CARD_TEMPLATES.midnight = SCRIPTURE_CARD_TEMPLATES.starry_solitude;
+SCRIPTURE_CARD_TEMPLATES.dawn     = SCRIPTURE_CARD_TEMPLATES.mountain_dawn;
+SCRIPTURE_CARD_TEMPLATES.emerald  = SCRIPTURE_CARD_TEMPLATES.living_waters;
+
+const cardImageCache = {};
+let logoImgCache = null;
+
+function getCachedCardImage(url) {
+  if (!url) return Promise.resolve(null);
+  if (cardImageCache[url] && cardImageCache[url].complete && cardImageCache[url].naturalWidth > 0) {
+    return Promise.resolve(cardImageCache[url]);
+  }
+  return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(null), 3000);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      clearTimeout(timer);
+      cardImageCache[url] = img;
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
+function getCachedLogo() {
+  if (logoImgCache && logoImgCache.complete && logoImgCache.naturalWidth > 0) {
+    return Promise.resolve(logoImgCache);
+  }
+  return new Promise(resolve => {
+    const timer = setTimeout(() => resolve(null), 2500);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      clearTimeout(timer);
+      logoImgCache = img;
+      resolve(img);
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve(null);
+    };
+    img.src = '/assets/logo.png';
+  });
+}
+
+function drawProceduralBackground(ctx, themeId, width, height) {
+  if (themeId === 'parchment') {
+    // Sacred Parchment: Warm antique parchment paper texture
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, '#fefbf3');
+    bgGrad.addColorStop(0.3, '#fbf3e4');
+    bgGrad.addColorStop(0.7, '#f4e5cb');
+    bgGrad.addColorStop(1, '#ebd7bc');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle warm center illumination
+    const centerGlow = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width * 0.65);
+    centerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    centerGlow.addColorStop(1, 'rgba(235, 215, 188, 0.0)');
+    ctx.fillStyle = centerGlow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Antique double gold/amber border
+    ctx.strokeStyle = 'rgba(120, 53, 15, 0.28)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(36, 36, width - 72, height - 72);
+
+    ctx.strokeStyle = 'rgba(180, 83, 9, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(44, 44, width - 88, height - 88);
+
+    // Corner decorative accents
+    const cornerOffsets = [
+      [36, 36], [width - 36, 36],
+      [36, height - 36], [width - 36, height - 36]
+    ];
+    ctx.fillStyle = 'rgba(120, 53, 15, 0.35)';
+    cornerOffsets.forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (themeId === 'mountain_dawn' || themeId === 'dawn') {
+    // Mountain Dawn: Alpine sunrise from deep indigo to emerald valley & golden dawn
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#0c1322');
+    bgGrad.addColorStop(0.32, '#1e293b');
+    bgGrad.addColorStop(0.62, '#064e3b');
+    bgGrad.addColorStop(0.85, '#b45309');
+    bgGrad.addColorStop(1, '#f59e0b');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Radiant dawn sunrise bloom
+    const dawnSun = ctx.createRadialGradient(width * 0.5, height * 0.88, 30, width * 0.5, height * 0.88, width * 0.75);
+    dawnSun.addColorStop(0, 'rgba(254, 240, 138, 0.38)');
+    dawnSun.addColorStop(0.55, 'rgba(245, 158, 11, 0.18)');
+    dawnSun.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = dawnSun;
+    ctx.fillRect(0, 0, width, height);
+  } else if (themeId === 'living_waters' || themeId === 'emerald') {
+    // Living Waters: Deep tranquil oceanic sapphire to coastal twilight
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#021827');
+    bgGrad.addColorStop(0.35, '#082f49');
+    bgGrad.addColorStop(0.70, '#0369a1');
+    bgGrad.addColorStop(1, '#0c4a6e');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Oceanic horizon light bloom
+    const waterGlow = ctx.createRadialGradient(width * 0.5, height * 0.52, 40, width * 0.5, height * 0.52, width * 0.7);
+    waterGlow.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+    waterGlow.addColorStop(0.65, 'rgba(14, 165, 233, 0.08)');
+    waterGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = waterGlow;
+    ctx.fillRect(0, 0, width, height);
+  } else if (themeId === 'golden_woods') {
+    // Golden Woods: Warm autumn cedar and golden sunbeams
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#1c0f05');
+    bgGrad.addColorStop(0.35, '#381a07');
+    bgGrad.addColorStop(0.70, '#78350f');
+    bgGrad.addColorStop(1, '#b45309');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Golden sunbeam canopy bloom
+    const sunbeamGlow = ctx.createRadialGradient(width * 0.5, height * 0.38, 40, width * 0.5, height * 0.38, width * 0.7);
+    sunbeamGlow.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
+    sunbeamGlow.addColorStop(0.65, 'rgba(217, 119, 6, 0.10)');
+    sunbeamGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = sunbeamGlow;
+    ctx.fillRect(0, 0, width, height);
+  } else if (themeId === 'winter_twilight') {
+    // Winter Twilight: Frosted alpine indigo with quiet starlight
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#030712');
+    bgGrad.addColorStop(0.35, '#0f172a');
+    bgGrad.addColorStop(0.70, '#1e1b4b');
+    bgGrad.addColorStop(1, '#172554');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Ice blue twilight bloom
+    const iceGlow = ctx.createRadialGradient(width * 0.5, height * 0.42, 40, width * 0.5, height * 0.42, width * 0.7);
+    iceGlow.addColorStop(0, 'rgba(147, 197, 253, 0.22)');
+    iceGlow.addColorStop(0.65, 'rgba(96, 165, 250, 0.08)');
+    iceGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = iceGlow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle frost stars
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
+    const frostPoints = [
+      [width * 0.2, height * 0.15, 1.4], [width * 0.8, height * 0.18, 1.6],
+      [width * 0.15, height * 0.45, 1.2], [width * 0.85, height * 0.48, 1.4],
+      [width * 0.3, height * 0.82, 1.5], [width * 0.7, height * 0.85, 1.3]
+    ];
+    frostPoints.forEach(([fx, fy, fr]) => {
+      ctx.beginPath();
+      ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else {
+    // Starry Solitude / Midnight Sanctuary: Rich obsidian celestial night
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#05070c');
+    bgGrad.addColorStop(0.4, '#0d111a');
+    bgGrad.addColorStop(0.8, '#131826');
+    bgGrad.addColorStop(1, '#07090e');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Celestial golden warmth
+    const celestialGlow = ctx.createRadialGradient(width * 0.5, height * 0.35, 40, width * 0.5, height * 0.35, width * 0.65);
+    celestialGlow.addColorStop(0, 'rgba(245, 158, 11, 0.14)');
+    celestialGlow.addColorStop(0.6, 'rgba(217, 119, 6, 0.04)');
+    celestialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = celestialGlow;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle starlight accents
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+    const stars = [
+      [width * 0.18, height * 0.12, 1.5], [width * 0.82, height * 0.16, 1.8],
+      [width * 0.25, height * 0.22, 1.2], [width * 0.74, height * 0.28, 1.4],
+      [width * 0.12, height * 0.32, 1.2], [width * 0.88, height * 0.38, 1.6],
+      [width * 0.32, height * 0.78, 1.3], [width * 0.68, height * 0.82, 1.5],
+      [width * 0.15, height * 0.85, 1.2], [width * 0.85, height * 0.88, 1.4]
+    ];
+    stars.forEach(([sx, sy, sr]) => {
+      ctx.beginPath();
+      ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  if (!text) return [];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = words[0] || '';
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const testLine = currentLine + ' ' + word;
+    const testWidth = ctx.measureText(testLine).width;
+    if (testWidth < maxWidth) {
+      currentLine = testLine;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+function fitTextInSafeZone(ctx, text, maxW, maxH, minFontSize = 20, maxFontSize = 56, fontId = 'inter') {
+  const fd = SCRIPTURE_FONTS[fontId] || SCRIPTURE_FONTS.inter || { family: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif', style: 'normal', weight: '700' };
+  let fontSize = maxFontSize;
+  let lines = [];
+  let lineHeight = Math.round(fontSize * 1.45);
+  let totalHeight = 0;
+
+  while (fontSize >= minFontSize) {
+    ctx.font = `${fd.style} ${fd.weight} ${fontSize}px ${fd.family}`;
+    lineHeight = Math.round(fontSize * 1.45);
+    lines = wrapCanvasText(ctx, text, maxW);
+    totalHeight = lines.length * lineHeight;
+
+    if (totalHeight <= maxH) {
+      break;
+    }
+    fontSize -= 2;
+  }
+
+  return { fontSize, lines, lineHeight, totalHeight };
+}
+
+function analyzeSafeZoneLuminance(ctx, x, y, w, h) {
+  try {
+    const imgData = ctx.getImageData(x, y, w, h);
+    const d = imgData.data;
+    let totalLum = 0;
+    let samples = 0;
+    for (let i = 0; i < d.length; i += 16 * 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+      totalLum += 0.299 * r + 0.587 * g + 0.114 * b;
+      samples++;
+    }
+    return samples > 0 ? (totalLum / samples) : 60;
+  } catch (_) {
+    return 60;
+  }
+}
+
+async function renderScriptureCardToCanvas(verse, themeId = 'midnight', ratio = 'story', fontId = 'lora', forcePureCanvas = false) {
+  const canvas = document.getElementById('scriptureExportCanvas');
+  if (!canvas || !verse) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  if (document.fonts && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (_) {}
+  }
+
+  const isStory = ratio === 'story';
+  const width  = 1080;
+  const height = isStory ? 1920 : 1080;
+
+  canvas.width  = width;
+  canvas.height = height;
+
+  const tpl = SCRIPTURE_CARD_TEMPLATES[themeId] || SCRIPTURE_CARD_TEMPLATES.midnight;
+
+  // 1. Paint rich procedural master base first (guaranteed clean origin)
+  drawProceduralBackground(ctx, themeId, width, height);
+
+  // If photo is enabled and not forcePureCanvas, overlay it
+  if (!forcePureCanvas && tpl.imageUrl) {
+    try {
+      const bgImg = await getCachedCardImage(tpl.imageUrl);
+      if (bgImg) {
+        const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
+        const targetRatio = width / height;
+        let renderW, renderH, offsetX, offsetY;
+
+        if (imgRatio > targetRatio) {
+          renderH = height;
+          renderW = height * imgRatio;
+          offsetX = (width - renderW) / 2;
+          offsetY = 0;
+        } else {
+          renderW = width;
+          renderH = width / imgRatio;
+          offsetX = 0;
+          offsetY = (height - renderH) / 2;
+        }
+        ctx.drawImage(bgImg, offsetX, offsetY, renderW, renderH);
+
+        const imgTint = ctx.createLinearGradient(0, 0, 0, height);
+        if (themeId === 'parchment') {
+          imgTint.addColorStop(0, 'rgba(250, 244, 232, 0.78)');
+          imgTint.addColorStop(1, 'rgba(238, 222, 203, 0.88)');
+        } else if (themeId === 'golden_woods') {
+          imgTint.addColorStop(0, 'rgba(28, 15, 5, 0.65)');
+          imgTint.addColorStop(0.5, 'rgba(40, 20, 8, 0.45)');
+          imgTint.addColorStop(1, 'rgba(28, 15, 5, 0.78)');
+        } else if (themeId === 'living_waters' || themeId === 'emerald') {
+          imgTint.addColorStop(0, 'rgba(2, 24, 39, 0.64)');
+          imgTint.addColorStop(0.5, 'rgba(4, 35, 58, 0.42)');
+          imgTint.addColorStop(1, 'rgba(2, 24, 39, 0.78)');
+        } else if (themeId === 'winter_twilight') {
+          imgTint.addColorStop(0, 'rgba(3, 7, 18, 0.68)');
+          imgTint.addColorStop(0.5, 'rgba(8, 15, 35, 0.46)');
+          imgTint.addColorStop(1, 'rgba(3, 7, 18, 0.80)');
+        } else if (themeId === 'mountain_dawn' || themeId === 'dawn') {
+          imgTint.addColorStop(0, 'rgba(12, 19, 34, 0.62)');
+          imgTint.addColorStop(0.5, 'rgba(18, 32, 48, 0.42)');
+          imgTint.addColorStop(1, 'rgba(12, 19, 34, 0.76)');
+        } else {
+          // starry_solitude / midnight
+          imgTint.addColorStop(0, 'rgba(5, 7, 12, 0.72)');
+          imgTint.addColorStop(0.5, 'rgba(10, 14, 22, 0.52)');
+          imgTint.addColorStop(1, 'rgba(5, 7, 12, 0.82)');
+        }
+        ctx.fillStyle = imgTint;
+        ctx.fillRect(0, 0, width, height);
+      }
+    } catch (imgErr) {
+      console.warn('Background image draw skipped, procedural base preserved:', imgErr);
+    }
+  }
+
+  // 2. Define "Safe Zone" Bounding Box
+  const sz = isStory ? tpl.safeZone.story : tpl.safeZone.square;
+  const safeX = Math.round(width * sz.xPercent);
+  const safeY = Math.round(height * sz.yPercent);
+  const safeW = Math.round(width * sz.widthPercent);
+  const safeH = Math.round(height * sz.heightPercent);
+
+  // 3. Dynamic Readability Filter (Scrim Layer)
+  const scrim = ctx.createRadialGradient(
+    safeX + safeW / 2, safeY + safeH / 2, 40,
+    safeX + safeW / 2, safeY + safeH / 2, safeW * 0.70
+  );
+  if (themeId === 'parchment') {
+    scrim.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
+    scrim.addColorStop(0.7, 'rgba(255, 255, 255, 0.35)');
+    scrim.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+  } else {
+    scrim.addColorStop(0, 'rgba(0, 0, 0, 0.72)');
+    scrim.addColorStop(0.65, 'rgba(0, 0, 0, 0.45)');
+    scrim.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+  }
+  ctx.fillStyle = scrim;
+  ctx.fillRect(safeX - 30, safeY - 30, safeW + 60, safeH + 60);
+
+  // 4. Contrast Analysis for Text Color
+  const avgLum = analyzeSafeZoneLuminance(ctx, safeX, safeY, safeW, safeH);
+  const isLight = (themeId === 'parchment') || (avgLum > 135);
+
+  const primaryTextColor = isLight ? '#1c1917' : '#ffffff';
+  const accentTextColor  = isLight ? '#78350f' : tpl.accentColor;
+
+  // 5. Header Badge Text
+  const badgeY = isStory ? Math.max(80, safeY - 45) : Math.max(60, safeY - 35);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.font = '700 15px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = accentTextColor;
+  ctx.letterSpacing = '3px';
+  ctx.fillText(tpl.badgeText || '• DAILY SCRIPTURE ENCOURAGEMENT •', width / 2, badgeY);
+
+  // 6. Auto-Scaling Font Loop for Scripture Quote (The Hero Content)
+  const rawQuote = verse.verseText || verse.text || verse.quote || '';
+  const quoteText = `"${rawQuote}"`;
+  const maxAvailableH = safeH - 80;
+  const { fontSize, lines, lineHeight, totalHeight } = fitTextInSafeZone(
+    ctx, quoteText, safeW - 40, maxAvailableH, 20, isStory ? 54 : 46, fontId
+  );
+  const fd = SCRIPTURE_FONTS[fontId] || SCRIPTURE_FONTS.lora;
+
+  const contentTotalH = totalHeight + 64;
+  const startY = safeY + Math.max(20, Math.round((safeH - contentTotalH) / 2));
+
+  // Set Readability Shadow on Text
+  ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.75)';
+  ctx.shadowBlur = isLight ? 4 : 14;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+
+  // Render Scripture Quote Lines
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.font = `${fd.style} ${fd.weight} ${fontSize}px ${fd.family}`;
+  ctx.fillStyle = primaryTextColor;
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], width / 2, startY + (i * lineHeight));
+  }
+
+  // 7. Render Scripture Reference Citation
+  const book = verse.book || 'Scripture';
+  const chapter = verse.chapter || '';
+  const verseNum = verse.verse || '';
+  const citation = chapter ? `${book} ${chapter}${verseNum ? ':' + verseNum : ''}` : book;
+  const refY = startY + (lines.length * lineHeight) + 24;
+
+  ctx.font = '700 24px "Cinzel", "Trajan Pro", Georgia, serif';
+  ctx.fillStyle = accentTextColor;
+  ctx.letterSpacing = '3px';
+  ctx.shadowBlur = isLight ? 2 : 8;
+  ctx.fillText(citation.toUpperCase(), width / 2, refY);
+
+  // Reset shadow for clean footer logo & imprint
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+
+  // 8. Logo & Footer Imprint (Logo placed at Bottom Right, not too big)
+  const padX = isStory ? 60 : 44;
+  const padY = isStory ? 70 : 44;
+  const logoSize = isStory ? 48 : 40; // Tasteful, crisp size in bottom right!
+  const logoY = height - padY - logoSize;
+  const logoX = width - padX - logoSize;
+
+  if (!forcePureCanvas) {
+    try {
+      const logo = await getCachedLogo();
+      if (logo) {
+        ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+      }
+    } catch (_) {}
+  }
+
+  // Brand Watermark at Bottom Left (Aligned with Bottom-Right Logo)
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = isLight ? '#78350f' : 'rgba(255, 255, 255, 0.90)';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('2-MINUTE SERMON', padX, logoY + 4);
+
+  ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Inter", sans-serif';
+  ctx.fillStyle = isLight ? 'rgba(120, 53, 15, 0.70)' : 'rgba(255, 255, 255, 0.60)';
+  ctx.letterSpacing = '1px';
+  ctx.fillText('2minutesermon.org', padX, logoY + 26);
+}
+
+async function getCanvasBlobSafely(canvas, verse, themeId, ratio, fontId = 'inter') {
+  try {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (blob) return blob;
+  } catch (err) {
+    console.warn('Canvas toBlob failed (possible CORS/taint). Re-rendering with pure procedural canvas...', err);
+  }
+
+  // Tainted or failed: re-render canvas cleanly without external images!
+  try {
+    await renderScriptureCardToCanvas(verse, themeId, ratio, fontId, true /* forcePureCanvas */);
+    const cleanBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    // Restore visual rendering on screen after clean export
+    renderScriptureCardToCanvas(verse, themeId, ratio, fontId, false);
+    if (cleanBlob) return cleanBlob;
+  } catch (err2) {
+    console.error('Clean canvas export failed:', err2);
+  }
+  return null;
+}
+
 function setupPromoVideo() {
   const posterWrap = document.getElementById('promoPosterWrap');
   posterWrap?.addEventListener('click', () => playPromoVideo());
@@ -386,14 +2134,54 @@ window.playPromoVideo = playPromoVideo;
 function renderHomeSermons() {
   const container = document.getElementById('homeSermonsGrid');
   if (!container) return;
-  container.innerHTML = sermons().slice(0, 6).map(s => createSermonCardHtml(s)).join('');
+  container.innerHTML = sermons().slice(0, 6).map(s => createSermonCardHtml(s, false)).join('');
   observeNewCards(container);
 }
 
-function createSermonCardHtml(s) {
+// ─── FAVORITES & DEVOTIONAL QUEUE ──────────────────────────────────────────
+const FAVORITES_STORAGE_KEY = '2ms_favorites';
+let savedFavorites = [];
+try {
+  savedFavorites = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) || '[]');
+} catch (_) {
+  savedFavorites = [];
+}
+
+export function toggleSermonFavorite(sermonId) {
+  const idx = savedFavorites.indexOf(sermonId);
+  if (idx > -1) {
+    savedFavorites.splice(idx, 1);
+    showToast('Removed from Saved Devotionals');
+  } else {
+    savedFavorites.push(sermonId);
+    showToast('★ Saved to Your Devotional Queue');
+  }
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(savedFavorites));
+  } catch (_) {}
+  updateFavoritesCountBadge();
+  filterAndRenderSermons();
+  renderHomeSermons();
+}
+window.toggleSermonFavorite = toggleSermonFavorite;
+
+function updateFavoritesCountBadge() {
+  const badge = document.getElementById('sermonFavCount');
+  if (badge) badge.textContent = savedFavorites.length;
+}
+
+let activeDurationFilter = 'all'; // 'all', 'under1', '1to2', 'over2', 'favorites'
+let activeViewMode = 'grid'; // 'grid' or 'list'
+
+function createSermonCardHtml(s, showFavorite = true) {
+  const isFav = savedFavorites.includes(s.id);
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
+        ${showFavorite ? `
+        <button class="sermon-card-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Favorite sermon">
+          ★
+        </button>` : ''}
         <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-img" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
@@ -409,6 +2197,9 @@ function createSermonCardHtml(s) {
           <button class="btn btn-primary btn-sm" onclick="window.openSermonModal('${s.id}')">
             ${svgPlay} Watch
           </button>
+          <button class="btn btn-outline btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen in background while you browse">
+            🎧 Listen
+          </button>
           <button class="btn btn-outline btn-sm" onclick="window.shareSermon('${s.title}', '${s.id}')">
             ${svgShare} Share
           </button>
@@ -418,8 +2209,47 @@ function createSermonCardHtml(s) {
   `;
 }
 
-// ─── SERMON FILTERS ───────────────────────────────────────────────────────────
+function createSermonListRowHtml(s) {
+  const isFav = savedFavorites.includes(s.id);
+  return `
+    <div class="sermon-list-row" data-sermon-id="${s.id}">
+      <div class="sermon-list-left">
+        <button class="sermon-list-play-btn" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen now while you browse" aria-label="Listen to sermon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-list-thumb" loading="lazy" onerror="this.src='/assets/logo.png'">
+        <div class="sermon-list-info">
+          <h4 class="sermon-list-title" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="View Details">${s.title}</h4>
+          <div class="sermon-list-meta">
+            <span><strong>${s.preacherName}</strong></span>
+            <span>&bull;</span>
+            <span>${s.scripture}</span>
+            <span>&bull;</span>
+            <span class="badge badge-season" style="font-size:0.72rem;padding:2px 8px;">${s.primarySeason}</span>
+            <span>&bull;</span>
+            <span>⏱️ ${s.duration}</span>
+          </div>
+        </div>
+      </div>
+      <div class="sermon-list-actions">
+        <button class="sermon-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}">
+          ★
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="window.openSermonModal('${s.id}')">
+          Watch
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')">
+          🎧 Listen
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ─── SERMON FILTERS & VIEWS ───────────────────────────────────────────────────
 function setupSermonFilters() {
+  updateFavoritesCountBadge();
+
   const searchInput = document.getElementById('sermonSearchInput');
   const clearBtn    = document.getElementById('searchClearBtn');
 
@@ -430,6 +2260,49 @@ function setupSermonFilters() {
   clearBtn?.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
     if (clearBtn) clearBtn.hidden = true;
+    filterAndRenderSermons();
+  });
+
+  // Duration quick filter chips
+  document.querySelectorAll('.duration-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+      document.getElementById('favFilterChip')?.classList.remove('active');
+      btn.classList.add('active');
+      activeDurationFilter = btn.dataset.duration || 'all';
+      filterAndRenderSermons();
+    });
+  });
+
+  // Favorites filter chip
+  const favChip = document.getElementById('favFilterChip');
+  favChip?.addEventListener('click', () => {
+    const isCurrentlyActive = favChip.classList.contains('active');
+    document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+    if (isCurrentlyActive) {
+      favChip.classList.remove('active');
+      document.querySelector('.duration-chip[data-duration="all"]')?.classList.add('active');
+      activeDurationFilter = 'all';
+    } else {
+      favChip.classList.add('active');
+      activeDurationFilter = 'favorites';
+    }
+    filterAndRenderSermons();
+  });
+
+  // View Mode Switcher (Grid vs Audio List)
+  const gridBtn = document.getElementById('viewModeGridBtn');
+  const listBtn = document.getElementById('viewModeListBtn');
+  gridBtn?.addEventListener('click', () => {
+    activeViewMode = 'grid';
+    gridBtn.classList.add('active');
+    listBtn?.classList.remove('active');
+    filterAndRenderSermons();
+  });
+  listBtn?.addEventListener('click', () => {
+    activeViewMode = 'list';
+    listBtn.classList.add('active');
+    gridBtn?.classList.remove('active');
     filterAndRenderSermons();
   });
 
@@ -447,6 +2320,10 @@ function setupSermonFilters() {
     const sort = document.getElementById('filterSort');
     if (sort) sort.value = 'newest';
     activeSeasonChip = 'all';
+    activeDurationFilter = 'all';
+    document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+    document.querySelector('.duration-chip[data-duration="all"]')?.classList.add('active');
+    document.getElementById('favFilterChip')?.classList.remove('active');
     renderSeasonChips();
     filterAndRenderSermons();
   });
@@ -475,6 +2352,7 @@ function populateDropdownFilterOptions() {
   const preachSel  = document.getElementById('filterPreacher');
   const adminPre   = document.getElementById('adminPreacher');
   const adminSea   = document.getElementById('adminSeason');
+  const scriptSel  = document.getElementById('filterScripture');
 
   if (topicSel)
     topicSel.innerHTML = `<option value="all">All Topics</option>` +
@@ -483,6 +2361,16 @@ function populateDropdownFilterOptions() {
   if (preachSel)
     preachSel.innerHTML = `<option value="all">All Preachers</option>` +
       preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+
+  if (scriptSel) {
+    const prevVal = scriptSel.value || 'all';
+    const books = Array.from(new Set(sermons().map(s => s.scriptureBook).filter(Boolean))).sort();
+    scriptSel.innerHTML = `<option value="all">All Scripture Books</option>` +
+      books.map(b => `<option value="${b}">${b}</option>`).join('');
+    if (books.includes(prevVal)) {
+      scriptSel.value = prevVal;
+    }
+  }
 
   if (adminPre)
     adminPre.innerHTML = preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
@@ -500,11 +2388,43 @@ function filterAndRenderSermons() {
   const sort       = document.getElementById('filterSort')?.value || 'newest';
 
   let results = sermons().filter(s => {
+    // Season filter (supports slugs, aliases, Xmas/Christmas, Easter/Passover, etc.)
     if (activeSeasonChip !== 'all') {
-      const primary   = s.primarySeason.toLowerCase().includes(activeSeasonChip);
-      const secondary = s.secondarySeasons?.some(x => x.toLowerCase().includes(activeSeasonChip));
+      const activeSeasonObj = seasons.find(sea => sea.slug === activeSeasonChip);
+      const aliases = (activeSeasonObj?.aliases && activeSeasonObj.aliases.length) 
+        ? activeSeasonObj.aliases 
+        : [activeSeasonChip, activeSeasonObj?.name || ''];
+
+      const matchSeason = (str) => {
+        if (!str) return false;
+        const sNorm = str.toLowerCase().trim();
+        const sClean = sNorm.replace(/[-\s_]/g, '');
+        return aliases.some(al => {
+          const alNorm = (al || '').toLowerCase().trim();
+          const alClean = alNorm.replace(/[-\s_]/g, '');
+          return sNorm.includes(alNorm) || alNorm.includes(sNorm) || (sClean && sClean === alClean);
+        });
+      };
+
+      const primary   = matchSeason(s.primarySeason);
+      const secondary = s.secondarySeasons?.some(x => matchSeason(x));
       if (!primary && !secondary) return false;
     }
+
+    // Duration & Favorites quick filters
+    if (activeDurationFilter === 'favorites') {
+      if (!savedFavorites.includes(s.id)) return false;
+    } else if (activeDurationFilter === 'under1') {
+      const sec = s.durationSec || 120;
+      if (sec >= 60) return false;
+    } else if (activeDurationFilter === '1to2') {
+      const sec = s.durationSec || 120;
+      if (sec < 60 || sec > 120) return false;
+    } else if (activeDurationFilter === 'over2') {
+      const sec = s.durationSec || 120;
+      if (sec <= 120) return false;
+    }
+
     if (topic !== 'all' && !s.topics.includes(topic)) return false;
     if (preacher !== 'all' && s.preacherName !== preacher) return false;
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
@@ -519,6 +2439,7 @@ function filterAndRenderSermons() {
   if (sort === 'newest') results.sort((a,b) => new Date(b.publishDate) - new Date(a.publishDate));
   else if (sort === 'views') results.sort((a,b) => b.views - a.views);
   else if (sort === 'title') results.sort((a,b) => a.title.localeCompare(b.title));
+  else if (sort === 'duration') results.sort((a,b) => (a.durationSec || 120) - (b.durationSec || 120));
 
   const countEl = document.getElementById('resultsCount');
   if (countEl) countEl.textContent = results.length;
@@ -527,6 +2448,7 @@ function filterAndRenderSermons() {
   if (!grid) return;
 
   if (!results.length) {
+    grid.className = 'sermons-grid';
     grid.innerHTML = `
       <div class="sermons-empty-state" style="grid-column:1/-1;text-align:center;padding:56px 24px;background:#fff;border-radius:16px;border:1px solid rgba(0,0,0,0.06);box-shadow:0 4px 20px rgba(0,0,0,0.04);">
         <div style="font-size:2.8rem;margin-bottom:14px;">🔍</div>
@@ -537,7 +2459,13 @@ function filterAndRenderSermons() {
         </button>
       </div>`;
   } else {
-    grid.innerHTML = results.map(s => createSermonCardHtml(s)).join('');
+    if (activeViewMode === 'list') {
+      grid.className = 'sermons-list-view';
+      grid.innerHTML = results.map(s => createSermonListRowHtml(s)).join('');
+    } else {
+      grid.className = 'sermons-grid';
+      grid.innerHTML = results.map(s => createSermonCardHtml(s)).join('');
+    }
     observeNewCards(grid);
   }
 }
@@ -594,6 +2522,9 @@ export function openSermonModal(sermonId) {
           <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           Watch on YouTube
         </a>
+        <button class="btn btn-secondary" onclick="window.playSermonInMiniPlayer('${s.id}'); window.closeSermonModal();">
+          🎧 Listen While You Browse
+        </button>
         <button class="btn btn-outline" onclick="window.shareSermon('${s.title}','${s.id}')">
           ${svgShare} Share
         </button>
@@ -603,6 +2534,7 @@ export function openSermonModal(sermonId) {
       </div>
     </div>`;
 
+  lockPageScroll();
   modal.hidden = false;
   document.title = `${s.title} — 2-Minute Sermon`;
 
@@ -632,6 +2564,7 @@ function closeSermonModal() {
   const modal = document.getElementById('sermonModal');
   if (modal && !modal.hidden) {
     modal.hidden = true;
+    unlockPageScroll();
     document.getElementById('sermonModalBody').innerHTML = '';
     const schemaScript = document.getElementById('dynamicSermonSchema');
     if (schemaScript) schemaScript.remove();
@@ -642,15 +2575,23 @@ window.closeSermonModal = closeSermonModal;
 
 document.getElementById('closeSermonModalBtn')?.addEventListener('click', closeSermonModal);
 
-// Modal backdrop click
-document.getElementById('sermonModal')?.addEventListener('click', e => {
-  if (e.target === document.getElementById('sermonModal')) closeSermonModal();
+// Modal backdrop click & scroll isolation
+const sermonModalEl = document.getElementById('sermonModal');
+sermonModalEl?.addEventListener('click', e => {
+  if (e.target === sermonModalEl) closeSermonModal();
 });
+sermonModalEl?.addEventListener('wheel', e => {
+  if (e.target === sermonModalEl) e.preventDefault();
+}, { passive: false });
+sermonModalEl?.addEventListener('touchmove', e => {
+  if (e.target === sermonModalEl) e.preventDefault();
+}, { passive: false });
 
 // Keyboard Accessibility: Escape key closes modals and menus
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeSermonModal();
+    closeScriptureCardModal();
     closeDropdown();
     closeMobileDrawer();
   }
@@ -661,19 +2602,21 @@ export function renderDailyVerse() {
   const verse = getVerseForDate(getTodayDateStr());
   if (!verse) return;
 
+  const displayDate = formatVerseDate(verse.publishDate) || verse.publishDate;
   const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  setEl('dvDateDisplay', verse.publishDate);
+  setEl('dvDateDisplay', displayDate);
   setEl('dvQuoteDisplay', `"${verse.verseText}"`);
   setEl('dvRefDisplay', `— ${verse.book} ${verse.chapter}:${verse.verse}`);
   setEl('dvReflectionDisplay', verse.reflection);
 
   const full = document.getElementById('dailyVerseFullContainer');
   if (full) {
+    const queue = scheduledDailyVerses();
     full.innerHTML = `
       <div class="daily-verse-card" style="margin-bottom:36px;">
         <div class="verse-header">
-          <span class="verse-label">Today's Scheduled Verse</span>
-          <span class="verse-date">${verse.publishDate}</span>
+          <span class="verse-label">${verse.isFallback ? "Today's Daily Verse" : "Today's Scheduled Verse"}</span>
+          <span class="verse-date">${displayDate}</span>
         </div>
         <blockquote class="verse-quote">"${verse.verseText}"</blockquote>
         <div class="verse-meta">— ${verse.book} ${verse.chapter}:${verse.verse}</div>
@@ -681,13 +2624,16 @@ export function renderDailyVerse() {
       </div>
       <h2 style="margin-bottom:20px;">Upcoming Verse Queue</h2>
       <div style="display:flex;flex-direction:column;gap:16px;">
-        ${scheduledDailyVerses().map(v => `
+        ${queue.length ? queue.map(v => `
           <div class="hub-card reveal-on-scroll">
-            <span class="badge badge-season">${v.publishDate}</span>
+            <span class="badge badge-season">${formatVerseDate(v.publishDate) || v.publishDate}</span>
             <h3 style="margin:10px 0 4px;">"${v.verseText}"</h3>
             <div style="font-weight:700;color:var(--color-sermon-red);margin-bottom:6px;">— ${v.book} ${v.chapter}:${v.verse}</div>
             <p style="font-size:0.88rem;color:#777;">${v.reflection}</p>
-          </div>`).join('')}
+          </div>`).join('') : `
+          <div class="hub-card reveal-on-scroll" style="text-align:center;padding:36px 20px;">
+            <p style="color:#777;margin:0;font-size:0.95rem;">Daily scripture is rotating automatically from our inspirational devotional collection.<br><small style="color:#999;">Check back tomorrow for fresh daily encouragement.</small></p>
+          </div>`}
       </div>`;
     // trigger reveal for newly injected cards
     setTimeout(() => full.querySelectorAll('.reveal-on-scroll').forEach(el => el.classList.add('revealed')), 100);
@@ -727,7 +2673,10 @@ export function setupDailyVerse() {
   const shareBtn = document.getElementById('dvShareBtn');
   if (shareBtn && !shareBtn.dataset.bound) {
     shareBtn.dataset.bound = 'true';
-    shareBtn.addEventListener('click', () => shareDailyVerse());
+    shareBtn.addEventListener('click', () => {
+      const verse = getVerseForDate(getTodayDateStr());
+      if (verse) openScriptureCardModal(verse);
+    });
   }
 }
 window.setupDailyVerse = setupDailyVerse;
@@ -1193,8 +3142,8 @@ function renderSeasonsHub() {
   c.innerHTML = seasons.filter(s => s.slug !== 'all').map(s => `
     <div class="hub-card" onclick="window.selectSeasonChip('${s.slug}');window.switchView('sermons');">
       <h3 style="font-size:1.3rem;margin-bottom:8px;">${s.name}</h3>
-      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;">${s.description}</p>
-      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;">Browse Season →</span>
+      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;flex-grow:1;">${s.description}</p>
+      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">Browse Season →</span>
     </div>`).join('');
   observeNewCards(c);
 }
@@ -1205,8 +3154,8 @@ function renderTopicsHub() {
   c.innerHTML = topics.map(t => `
     <div class="hub-card" onclick="window.filterByTopicName('${t.name}')">
       <h3 style="font-size:1.3rem;margin-bottom:8px;">${t.name}</h3>
-      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;">${t.description}</p>
-      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;">View ${t.count} Sermons →</span>
+      <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;flex-grow:1;">${t.description}</p>
+      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">View ${t.count} Sermons →</span>
     </div>`).join('');
   observeNewCards(c);
 }
@@ -1220,15 +3169,17 @@ function renderPreachersHub() {
   const c = document.getElementById('preachersHubGrid');
   if (!c) return;
   c.innerHTML = preachers().map(p => `
-    <div class="hub-card text-center">
+    <div class="hub-card preacher-hub-card text-center">
       <img src="${p.photoUrl}" alt="${p.name}" class="preacher-card-img"
            onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=84'">
-      <h3 style="font-size:1.2rem;margin-bottom:4px;">${p.name}</h3>
-      <div style="font-size:0.8rem;color:var(--color-sermon-red);font-weight:600;margin-bottom:10px;">${p.denomination} &bull; ${p.country}</div>
-      <p style="font-size:0.85rem;color:#777;margin-bottom:18px;line-height:1.5;">${p.bio}</p>
-      <button class="btn btn-outline btn-sm btn-full" onclick="window.filterByPreacherName('${p.name}')">
-        View Sermons
-      </button>
+      <h3 class="preacher-card-name">${p.name}</h3>
+      <div class="preacher-card-meta">${p.denomination} &bull; ${p.country}</div>
+      <p class="preacher-card-bio">${p.bio}</p>
+      <div class="preacher-card-footer">
+        <button class="btn btn-outline btn-sm btn-full" onclick="window.filterByPreacherName('${p.name}')">
+          View Sermons
+        </button>
+      </div>
     </div>`).join('');
   observeNewCards(c);
 }
@@ -1541,21 +3492,7 @@ window.renderConversationsHub = renderConversationsHub;
 
 export function shareDailyVerse() {
   const verse = getVerseForDate(getTodayDateStr());
-  if (!verse) return;
-  const shareTitle = `Daily Verse: ${verse.book} ${verse.chapter}:${verse.verse}`;
-  const shareText = `📖 Today's Verse — ${verse.book} ${verse.chapter}:${verse.verse}\n\n"${verse.verseText}"\n\n🕊️ Reflection: ${verse.reflection}\n\n✨ Read and listen on 2-Minute Sermon:`;
-  const url = `${window.location.origin}/#daily-verse`;
-
-  if (navigator.share) {
-    navigator.share({
-      title: shareTitle,
-      text: `${shareText}\n${url}`,
-      url: url
-    }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${shareText}\n${url}`);
-    showToast('🔗 Daily Verse link & scripture copied to clipboard!');
-  }
+  if (verse) openScriptureCardModal(verse);
 }
 window.shareDailyVerse = shareDailyVerse;
 

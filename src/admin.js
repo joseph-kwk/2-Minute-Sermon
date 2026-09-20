@@ -5,7 +5,7 @@ import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durati
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
-import { getDailyVerses, saveDailyVerses } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
 import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
@@ -20,6 +20,7 @@ let pendingPrayers = [
 ];
 
 const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
+const SESSION_KEY     = '2ms_steward_authenticated';
 let authenticated   = false;
 let activePanel     = 'dashboard';
 
@@ -40,6 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSettingsPanel();
   setupBackupPanel();
   populateSelects();
+
+  // Restore authenticated session if active in current browser tab
+  checkExistingSession();
 
   // ── Real-time Cloud Data Sync Listeners for Admin ─────────────────────────
   const refreshAdminView = () => {
@@ -71,6 +75,25 @@ function updateTopbarDate() {
   if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 }
 
+// ── Check Existing Session on Load ───────────────────────────────────────
+function checkExistingSession() {
+  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+    authenticated = true;
+    const overlay = document.getElementById('adminAuthOverlay');
+    const dash    = document.getElementById('adminDashboard');
+    if (overlay && dash) {
+      overlay.hidden = true;
+      dash.hidden    = false;
+      renderDashboardStats();
+      renderSermonsList();
+      renderVerseQueue();
+      renderPreachersList();
+      renderEventsList();
+      renderPrayerInbox();
+    }
+  }
+}
+
 // ── AUTH ─────────────────────────────────────────────────────────────────
 function setupAuthForm() {
   const form      = document.getElementById('adminAuthForm');
@@ -94,6 +117,8 @@ function setupAuthForm() {
 
     if (VALID_PASSWORDS.includes(pass)) {
       authenticated = true;
+      sessionStorage.setItem(SESSION_KEY, 'true');
+
       if (noticeEl) {
         noticeEl.hidden = true;
         noticeEl.classList.remove('visible');
@@ -104,6 +129,7 @@ function setupAuthForm() {
         dash.hidden    = false;
         dash.style.animation = 'fadeIn 0.3s ease';
         renderDashboardStats();
+        renderSermonsList();
         renderVerseQueue();
         renderPreachersList();
         renderEventsList();
@@ -130,10 +156,17 @@ function setupAuthForm() {
   document.head.appendChild(st);
 }
 
-// ── Sign out (Modernized & Smooth) ─────────────────────────────────────────
+// ── Unified Sign Out (Clean session removal & mobile drawer dismissal) ────
 function handleSignOut() {
-  closeMobileSidebar();
   authenticated = false;
+  sessionStorage.removeItem(SESSION_KEY);
+
+  // Unconditionally close mobile drawer and backdrop if open
+  const sidebar  = document.querySelector('.admin-sidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop');
+  if (sidebar)  sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+
   const dash      = document.getElementById('adminDashboard');
   const overlay   = document.getElementById('adminAuthOverlay');
   const passInput = document.getElementById('adminAuthPass');
@@ -165,43 +198,48 @@ function handleSignOut() {
 
 document.getElementById('adminSignOutBtn')?.addEventListener('click', handleSignOut);
 document.getElementById('adminTopSignOutBtn')?.addEventListener('click', handleSignOut);
-
-// ── MOBILE NAVIGATION CONTROLS ───────────────────────────────────────────
-function openMobileSidebar() {
-  const sidebar = document.getElementById('adminSidebar');
-  const backdrop = document.getElementById('adminNavBackdrop');
-  sidebar?.classList.add('open');
-  backdrop?.classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeMobileSidebar() {
-  const sidebar = document.getElementById('adminSidebar');
-  const backdrop = document.getElementById('adminNavBackdrop');
-  sidebar?.classList.remove('open');
-  backdrop?.classList.remove('visible');
-  document.body.style.overflow = '';
-}
-
-function setupMobileNav() {
-  document.getElementById('adminMobileMenuBtn')?.addEventListener('click', openMobileSidebar);
-  document.getElementById('adminSidebarCloseBtn')?.addEventListener('click', closeMobileSidebar);
-  document.getElementById('adminNavBackdrop')?.addEventListener('click', closeMobileSidebar);
-
-  window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeMobileSidebar();
-  });
-}
+document.getElementById('adminTopbarSignOutBtn')?.addEventListener('click', handleSignOut);
 
 // ── SIDEBAR NAV ─────────────────────────────────────────────────────────
 function setupSidebarNav() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const backdrop = document.getElementById('adminSidebarBackdrop');
+  const menuBtn = document.getElementById('adminMobileMenuBtn');
+
+  function closeMobileSidebar() {
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
+  }
+
+  function openMobileSidebar() {
+    if (sidebar) sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (sidebar && sidebar.classList.contains('open')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener('click', closeMobileSidebar);
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMobileSidebar();
+  });
+
   document.querySelectorAll('.admin-nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.getAttribute('data-panel');
-      if (panel) {
-        switchPanel(panel);
-        closeMobileSidebar();
-      }
+      if (panel) switchPanel(panel);
+      closeMobileSidebar();
     });
   });
 }
@@ -320,6 +358,7 @@ function setupVerseScheduler() {
 
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
     if (!confirm('Clear all scheduled verses?')) return;
+    scheduledDailyVerses.forEach(v => deleteDailyVerse(v.id));
     scheduledDailyVerses.length = 0;
     saveDailyVerses(scheduledDailyVerses);
     renderVerseQueue();
@@ -332,10 +371,25 @@ function renderVerseQueue() {
   const c = document.getElementById('adminVerseQueueList');
   const countEl = document.getElementById('verseQueueCount');
   if (countEl) countEl.textContent = scheduledDailyVerses.length;
+
+  // Update live status banner
+  const statusEl = document.getElementById('adminTodayVerseStatus');
+  if (statusEl) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayVerse = getVerseForDate(todayStr);
+    if (!todayVerse.isFallback) {
+      statusEl.className = 'admin-verse-status-banner is-scheduled';
+      statusEl.innerHTML = `<span>🟢</span> <div><strong>Today (${todayStr}):</strong> Custom scheduled verse active on live site — <em>${todayVerse.book} ${todayVerse.chapter}:${todayVerse.verse}</em></div>`;
+    } else {
+      statusEl.className = 'admin-verse-status-banner is-fallback';
+      statusEl.innerHTML = `<span>ℹ️</span> <div><strong>Today (${todayStr}):</strong> Auto-rotating from the <strong>Evergreen Devotional Collection</strong> (<em>${todayVerse.book} ${todayVerse.chapter}:${todayVerse.verse}</em>). The live site always displays fresh scripture automatically — you can schedule a custom verse anytime!</div>`;
+    }
+  }
+
   if (!c) return;
 
   if (!scheduledDailyVerses.length) {
-    c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px 0;">No verses scheduled yet.</p>`;
+    c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px 0;">No custom verses scheduled yet.<br><small style="color:rgba(255,255,255,0.2);">Live site is automatically serving the daily evergreen devotional rotation.</small></p>`;
     return;
   }
 
@@ -354,7 +408,10 @@ function renderVerseQueue() {
 }
 
 window.removeVerse = idx => {
-  scheduledDailyVerses.splice(idx, 1);
+  const removed = scheduledDailyVerses.splice(idx, 1)[0];
+  if (removed && removed.id) {
+    deleteDailyVerse(removed.id);
+  }
   saveDailyVerses(scheduledDailyVerses);
   renderVerseQueue();
   renderDashboardStats();
@@ -526,6 +583,197 @@ function populateSelects() {
       .map(s => `<option value="${s.name}">${s.name}</option>`).join('');
 }
 
+// ── Image Auto-Compressor & Downscaler (HTML5 Canvas) ─────────────────────
+// ── PHOTO CROP MODAL ENGINE ────────────────────────────────────────────────
+// Opens a circular drag-to-crop modal. onConfirm(dataUrl) is called with the
+// final 280×280 JPEG data URL when the user clicks "Use This Photo".
+function openPhotoCropModal(imageFile, onConfirm) {
+  const modal  = document.getElementById('photoCropModal');
+  const canvas = document.getElementById('cropCanvas');
+  const stage  = document.getElementById('cropStage');
+  const slider = document.getElementById('cropZoomSlider');
+  if (!modal || !canvas || !stage || !slider) {
+    // Fallback: skip crop and compress directly
+    compressImageFile(imageFile, 280, 0.82).then(onConfirm).catch(() => {});
+    return;
+  }
+
+  const STAGE = stage.offsetWidth || 300; // respect responsive size
+  canvas.width  = STAGE;
+  canvas.height = STAGE;
+  const ctx = canvas.getContext('2d');
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      // Minimum scale: image must fully cover the circle
+      const minScale = Math.max(STAGE / img.width, STAGE / img.height);
+      let scale = minScale;
+      // Center image initially
+      let offsetX = (STAGE - img.width  * scale) / 2;
+      let offsetY = (STAGE - img.height * scale) / 2;
+
+      slider.min   = minScale;
+      slider.max   = Math.min(minScale * 4, 6);
+      slider.step  = 0.001;
+      slider.value = scale;
+
+      // Clamp: image must always cover all 4 edges of the circle
+      function clamp(ox, oy, sc) {
+        const iw = img.width  * sc;
+        const ih = img.height * sc;
+        return {
+          x: Math.max(STAGE - iw, Math.min(0, ox)),
+          y: Math.max(STAGE - ih, Math.min(0, oy))
+        };
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, STAGE, STAGE);
+        ctx.fillStyle = '#0d0d0f';
+        ctx.fillRect(0, 0, STAGE, STAGE);
+        ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+      }
+      draw();
+      modal.style.display = 'flex';
+
+      // ── Drag to pan ──────────────────────────────────────────────────────
+      let isDragging = false, dragX = 0, dragY = 0, startX = 0, startY = 0;
+
+      function getXY(e) {
+        return e.touches
+          ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+          : { x: e.clientX,            y: e.clientY            };
+      }
+
+      function onDown(e) {
+        e.preventDefault();
+        isDragging = true;
+        const p = getXY(e);
+        dragX = p.x; dragY = p.y;
+        startX = offsetX; startY = offsetY;
+      }
+      function onMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const p = getXY(e);
+        const clamped = clamp(startX + (p.x - dragX), startY + (p.y - dragY), scale);
+        offsetX = clamped.x; offsetY = clamped.y;
+        draw();
+      }
+      function onUp() { isDragging = false; }
+
+      stage.addEventListener('mousedown',  onDown, { passive: false });
+      stage.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('mousemove', onMove, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup',   onUp);
+      window.addEventListener('touchend',  onUp);
+
+      // ── Zoom slider ──────────────────────────────────────────────────────
+      function onZoom() {
+        const newScale = parseFloat(slider.value);
+        // Zoom toward the circle center
+        const cx = STAGE / 2, cy = STAGE / 2;
+        const ratio = newScale / scale;
+        const clamped = clamp(
+          cx - (cx - offsetX) * ratio,
+          cy - (cy - offsetY) * ratio,
+          newScale
+        );
+        scale = newScale;
+        offsetX = clamped.x; offsetY = clamped.y;
+        draw();
+      }
+      slider.addEventListener('input', onZoom);
+
+      // ── Cleanup helpers ──────────────────────────────────────────────────
+      function cleanup() {
+        stage.removeEventListener('mousedown',  onDown);
+        stage.removeEventListener('touchstart', onDown);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('mouseup',   onUp);
+        window.removeEventListener('touchend',  onUp);
+        slider.removeEventListener('input', onZoom);
+        modal.style.display = 'none';
+      }
+
+      // ── Confirm ──────────────────────────────────────────────────────────
+      document.getElementById('btnCropConfirm').onclick = () => {
+        // Export the live 300px canvas, scaled down to 280px output
+        const out    = document.createElement('canvas');
+        out.width    = 280;
+        out.height   = 280;
+        out.getContext('2d').drawImage(canvas, 0, 0, 280, 280);
+        const dataUrl = out.toDataURL('image/jpeg', 0.82);
+        const kb = Math.round(dataUrl.length * 0.75 / 1024);
+        cleanup();
+        onConfirm(dataUrl, kb);
+      };
+
+      // ── Cancel ───────────────────────────────────────────────────────────
+      document.getElementById('btnCropCancel').onclick = cleanup;
+    };
+    img.onerror = () => toast('⚠️ Could not load image. Please try another file.');
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(imageFile);
+}
+
+// Ensures uploaded photos (which can be 5MB-12MB from phones) are smoothly
+// downscaled to ~360-480px and compressed to ~25KB-40KB JPEG. This guarantees
+// they never exceed Firestore's 1MB document limit or localStorage's 5MB origin quota.
+function compressImageFile(file, maxDim = 400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return reject(new Error('Selected file is not a supported image format.'));
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read file from disk.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Failed to decode image data.'));
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return resolve(e.target.result);
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(optimizedDataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ── PREACHERS MANAGER ─────────────────────────────────────────────────────
 function setupPreachersManager() {
   const form = document.getElementById('adminAddPreacherForm');
@@ -539,8 +787,23 @@ function setupPreachersManager() {
   const btnTriggerUpload = document.getElementById('btnTriggerPhotoUpload');
   const btnDefaultAvatar = document.getElementById('btnDefaultAvatar');
 
+  function convertToDirectImageUrl(url) {
+    // Auto-convert Google Drive share links to a direct embeddable image URL.
+    // lh3.googleusercontent.com/d/ID serves the image directly in <img> tags.
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) {
+      return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+    }
+    const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+    if (driveOpen) {
+      return `https://lh3.googleusercontent.com/d/${driveOpen[1]}`;
+    }
+    return url;
+  }
+
   function updateAvatarPreview() {
-    const customUrl = photoUrlInput?.value.trim();
+    const rawUrl = photoUrlInput?.value.trim();
+    const customUrl = rawUrl ? convertToDirectImageUrl(rawUrl) : '';
     const name = nameInput?.value.trim() || 'Minister';
     const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
 
@@ -548,6 +811,8 @@ function setupPreachersManager() {
       if (customUrl) {
         previewImg.src = customUrl;
         previewImg.onerror = () => { previewImg.src = fallback; };
+        // Also update the input with the converted URL so it saves correctly
+        if (photoUrlInput && customUrl !== rawUrl) photoUrlInput.value = customUrl;
       } else {
         previewImg.src = fallback;
       }
@@ -558,7 +823,10 @@ function setupPreachersManager() {
     if (!photoUrlInput?.value) updateAvatarPreview();
   });
 
+  // Listen on input, paste, and change so preview fires reliably in all browsers
   photoUrlInput?.addEventListener('input', updateAvatarPreview);
+  photoUrlInput?.addEventListener('paste', () => setTimeout(updateAvatarPreview, 50));
+  photoUrlInput?.addEventListener('change', updateAvatarPreview);
 
   btnTriggerUpload?.addEventListener('click', () => {
     photoFileInput?.click();
@@ -567,17 +835,12 @@ function setupPreachersManager() {
   photoFileInput?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast('⚠️ Image is large (>2MB). Please select a smaller photo.');
-    }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataUrl = evt.target.result;
+    if (photoFileInput) photoFileInput.value = ''; // reset so same file can be re-selected
+    openPhotoCropModal(file, (dataUrl, kb) => {
       if (photoUrlInput) photoUrlInput.value = dataUrl;
-      if (previewImg) previewImg.src = dataUrl;
-      toast('🖼️ Preacher photo uploaded!');
-    };
-    reader.readAsDataURL(file);
+      if (previewImg)    previewImg.src = dataUrl;
+      toast(`✅ Photo cropped & ready! (${kb ?? '?'} KB) — Click Save to apply.`);
+    });
   });
 
   btnDefaultAvatar?.addEventListener('click', () => {
@@ -588,8 +851,28 @@ function setupPreachersManager() {
     toast('⚡ Default initials avatar set.');
   });
 
+  const cancelBtn = document.getElementById('btnCancelPreacherEdit');
+  const titleEl = document.getElementById('preacherFormTitle');
+  const submitBtn = document.getElementById('btnPreacherSubmit');
+  const editIdInput = document.getElementById('editPreacherId');
+
+  function resetPreacherForm() {
+    form.reset();
+    if (editIdInput) editIdInput.value = '';
+    if (titleEl) titleEl.textContent = 'Add Preacher Profile';
+    if (submitBtn) submitBtn.textContent = '➕ Add Preacher to Directory';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    updateAvatarPreview();
+  }
+
+  cancelBtn?.addEventListener('click', () => {
+    resetPreacherForm();
+    toast('Edit cancelled.');
+  });
+
   form?.addEventListener('submit', e => {
     e.preventDefault();
+    const editId       = editIdInput?.value.trim();
     const name         = nameInput?.value.trim() || '';
     const denomination = denomInput?.value.trim() || '';
     const country      = countryInput?.value.trim() || '';
@@ -600,6 +883,29 @@ function setupPreachersManager() {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
     }
 
+    if (editId) {
+      // Update existing preacher in place
+      const idx = preachers.findIndex(p => p.id === editId);
+      if (idx >= 0) {
+        preachers[idx] = {
+          ...preachers[idx],
+          name,
+          denomination,
+          country,
+          photoUrl,
+          bio
+        };
+        savePreachers(preachers);
+        populateSelects();
+        renderPreachersList();
+        renderDashboardStats();
+        resetPreacherForm();
+        toast(`✅ Preacher "${name}" updated successfully!`);
+        return;
+      }
+    }
+
+    // Creating new preacher
     const newPreacher = { 
       id: `p-${Date.now()}`, 
       name, 
@@ -614,8 +920,7 @@ function setupPreachersManager() {
     populateSelects();
     renderPreachersList();
     renderDashboardStats();
-    form.reset();
-    updateAvatarPreview();
+    resetPreacherForm();
     toast(`🎙️ ${name} added to the preacher directory!`);
   });
 }
@@ -634,8 +939,48 @@ function renderPreachersList() {
         <strong>${p.name}</strong>
         <span>${p.denomination} · ${p.country}</span>
       </div>
-      <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher(${idx})">✕</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button class="admin-btn admin-btn-sm admin-btn-outline edit-preacher-btn" data-id="${p.id}" title="Edit minister details & photo">✏️ Edit</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher(${idx})" title="Remove minister">✕</button>
+      </div>
     </div>`).join('');
+
+  // Attach Edit Click Handlers
+  c.querySelectorAll('.edit-preacher-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const p = preachers.find(item => item.id === id);
+      if (!p) return;
+
+      const editIdInput = document.getElementById('editPreacherId');
+      const nameInput = document.getElementById('newPreacherName');
+      const denomInput = document.getElementById('newPreacherDenomination');
+      const countryInput = document.getElementById('newPreacherCountry');
+      const photoUrlInput = document.getElementById('newPreacherPhoto');
+      const bioInput = document.getElementById('newPreacherBio');
+      const previewImg = document.getElementById('adminPreacherPhotoPreview');
+      const titleEl = document.getElementById('preacherFormTitle');
+      const submitBtn = document.getElementById('btnPreacherSubmit');
+      const cancelBtn = document.getElementById('btnCancelPreacherEdit');
+
+      if (editIdInput) editIdInput.value = p.id;
+      if (nameInput) nameInput.value = p.name || '';
+      if (denomInput) denomInput.value = p.denomination || '';
+      if (countryInput) countryInput.value = p.country || '';
+      if (bioInput) bioInput.value = p.bio || '';
+      if (photoUrlInput) photoUrlInput.value = p.photoUrl || '';
+      if (previewImg && p.photoUrl) previewImg.src = p.photoUrl;
+
+      if (titleEl) titleEl.textContent = `✏️ Edit Minister: ${p.name}`;
+      if (submitBtn) submitBtn.textContent = '💾 Save Preacher Changes';
+      if (cancelBtn) cancelBtn.style.display = 'block';
+
+      // Smoothly scroll to the form
+      document.getElementById('adminAddPreacherForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      nameInput?.focus();
+      toast(`✏️ Editing ${p.name}. Update photo, bio, or location above.`);
+    });
+  });
 }
 
 window.removePreacher = idx => {
@@ -752,26 +1097,18 @@ function setupLeadershipManager() {
     if (!photoUrlInput?.value) updateLeaderAvatarPreview();
   });
 
-  photoUrlInput?.addEventListener('input', updateLeaderAvatarPreview);
-
-  btnTriggerUpload?.addEventListener('click', () => {
-    photoFileInput?.click();
-  });
+  photoUrlInput?.addEventListener('paste', () => setTimeout(updateLeaderAvatarPreview, 50));
+  photoUrlInput?.addEventListener('change', updateLeaderAvatarPreview);
 
   photoFileInput?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast('⚠️ Image is large (>2MB). Please select a smaller photo.');
-    }
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataUrl = evt.target.result;
+    if (photoFileInput) photoFileInput.value = '';
+    openPhotoCropModal(file, (dataUrl, kb) => {
       if (photoUrlInput) photoUrlInput.value = dataUrl;
-      if (previewImg) previewImg.src = dataUrl;
-      toast('🖼️ Leader photo uploaded!');
-    };
-    reader.readAsDataURL(file);
+      if (previewImg)    previewImg.src = dataUrl;
+      toast(`✅ Photo cropped & ready! (${kb ?? '?'} KB) — Click Save to apply.`);
+    });
   });
 
   btnDefaultAvatar?.addEventListener('click', () => {
@@ -1030,15 +1367,18 @@ function setupPartnersManager() {
 
   uploadBtn?.addEventListener('click', () => fileInput?.click());
 
-  fileInput?.addEventListener('change', e => {
+  fileInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        if (previewImg) previewImg.src = ev.target.result;
-        if (logoUrlInput) logoUrlInput.value = ev.target.result;
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      toast('⏳ Optimizing logo...');
+      const compressedDataUrl = await compressImageFile(file, 480, 0.85);
+      if (previewImg) previewImg.src = compressedDataUrl;
+      if (logoUrlInput) logoUrlInput.value = compressedDataUrl;
+      toast('🖼️ Partner logo optimized & uploaded!');
+    } catch (err) {
+      console.warn('Partner logo compression error:', err);
+      toast('⚠️ Could not process image. Please try another file or paste a URL.');
     }
   });
 

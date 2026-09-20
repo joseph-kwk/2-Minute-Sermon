@@ -29,13 +29,15 @@
   <meta name="twitter:description" content="Short, scripture-rooted messages from ministers worldwide. Experience spiritual growth in 2 minutes a day.">
   <meta name="twitter:image" content="https://www.2minutesermon.org/assets/logo.png">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/assets/logo.png">
+  <!-- Favicon (Clean white background, un-squeezed aspect ratio) -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Merriweather:wght@300;400;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
 
   <!-- Styles -->
   <link rel="stylesheet" href="/src/style.css">
@@ -74,6 +76,7 @@
 <body>
   <!-- Global Header -->
   <header class="app-header" id="appHeader">
+    <div class="header-scroll-progress" id="headerScrollProgress"></div>
     <div class="container header-container">
       <!-- Universal Logo -->
       <a href="#" class="brand-logo" id="logoLink" data-view="home">
@@ -81,7 +84,7 @@
           <img src="/assets/logo.png" alt="2-Minute Sermon" class="logo-img-main">
         </div>
         <div class="logo-text">
-          <span class="logo-title" id="animatedLogoTitle" aria-label="2-Minute Sermon"></span>
+          <span class="logo-title" id="animatedLogoTitle" aria-label="2-Minute Sermon"><span class="logo-word-accent">2-Minute</span><span class="word-space"></span><span class="logo-word-main">Sermon</span></span>
           <span class="logo-subtitle">Scripture in a Few Minutes</span>
         </div>
       </a>
@@ -252,11 +255,13 @@
 
       <!-- Promo Video Cinema Showcase Section -->
       <section class="section section-promo-video reveal-on-scroll" id="promoVideoSection">
-        <div class="container">
-          <div class="section-header text-center" style="text-align:center;margin-bottom:28px;">
-            <span class="section-tag">Ministry Introduction</span>
-            <h2 class="section-title">2-Minute Sermon — Scripture in a Few Minutes</h2>
-            <p class="section-desc">Watch our short video to experience how scripture-rooted messages from ministers worldwide are designed for your daily rhythm.</p>
+        <div class="promo-ambient-glow promo-glow-left" aria-hidden="true"></div>
+        <div class="promo-ambient-glow promo-glow-right" aria-hidden="true"></div>
+        <div class="promo-backdrop-rings" aria-hidden="true"></div>
+        <div class="container" style="position:relative;z-index:2;">
+          <div class="section-header text-center" style="text-align:center;margin-bottom:24px;">
+            <span class="section-tag-pill promo-tag-pill" style="margin-bottom:10px;"><span class="badge-dot dot-red"></span>OFFICIAL OVERVIEW</span>
+            <p class="section-desc promo-section-desc">Experience the mission and heartbeat of bite-sized, scripture-rooted encouragement.</p>
           </div>
 
           <div class="promo-cinema-frame" id="promoCinemaFrame">
@@ -314,7 +319,7 @@
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Copy Verse
               </button>
-              <button class="btn btn-sm btn-outline" id="dvShareBtn">
+              <button class="btn btn-sm btn-primary" id="dvShareBtn" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%); box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35);">
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                 Share Verse
               </button>
@@ -326,42 +331,57 @@
       <!-- Quick Nav Hub Tiles -->
       <section class="section section-tiles reveal-on-scroll">
         <div class="container">
-          <h2 class="section-title text-center">Browse Sermon Channels</h2>
-          <p class="section-desc text-center">Explore structured channels tailored to your current spiritual season and questions.</p>
+          <div class="section-header-center">
+            <span class="section-tag-pill"><span class="badge-dot dot-red"></span>SPIRITUAL PATHWAYS</span>
+            <h2 class="section-title text-center">Browse Sermon Channels</h2>
+            <p class="section-desc text-center">Explore structured channels tailored to your current spiritual season and questions.</p>
+          </div>
 
           <div class="tiles-grid">
-            <div class="tile-card" data-view="seasons">
-              <div class="tile-icon-box">
-                <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <div class="tile-card tile-card-seasons" data-view="seasons">
+              <div class="tile-card-header">
+                <div class="tile-icon-box">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+                <span class="tile-channel-badge badge-seasons">14 Seasons</span>
               </div>
               <h3 class="tile-title">Seasons Hub</h3>
-              <p class="tile-desc">Easter, Advent, Lent, Holy Week, Christmas, Pentecost & seasonal devotionals.</p>
+              <p class="tile-desc">Easter, Advent, Lent, Holy Week, Christmas, Pentecost &amp; seasonal devotionals.</p>
               <span class="tile-link">Explore Seasons →</span>
             </div>
 
-            <div class="tile-card" data-view="topics">
-              <div class="tile-icon-box">
-                <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            <div class="tile-card tile-card-topics" data-view="topics">
+              <div class="tile-card-header">
+                <div class="tile-icon-box">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                </div>
+                <span class="tile-channel-badge badge-topics">8 Core Themes</span>
               </div>
-              <h3 class="tile-title">Topics & Themes</h3>
+              <h3 class="tile-title">Topics &amp; Themes</h3>
               <p class="tile-desc">Faith, Healing, Encouragement, Forgiveness, Grace, Hope, and Prayer.</p>
               <span class="tile-link">Explore Topics →</span>
             </div>
 
-            <div class="tile-card" data-view="preachers">
-              <div class="tile-icon-box">
-                <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            <div class="tile-card tile-card-preachers" data-view="preachers">
+              <div class="tile-card-header">
+                <div class="tile-icon-box">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </div>
+                <span class="tile-channel-badge badge-preachers">Global Teachers</span>
               </div>
               <h3 class="tile-title">Preachers Directory</h3>
               <p class="tile-desc">Pastors, teachers, and evangelists from global Christian denominations.</p>
               <span class="tile-link">Meet Ministers →</span>
             </div>
 
-            <div class="tile-card" data-view="prayers">
-              <div class="tile-icon-box">
-                <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <div class="tile-card tile-card-prayers" data-view="prayers">
+              <div class="tile-card-header">
+                <div class="tile-icon-box">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                </div>
+                <span class="tile-channel-badge badge-prayers">24/7 Prayer Circle</span>
               </div>
-              <h3 class="tile-title">Prayers & Requests</h3>
+              <h3 class="tile-title">Prayers &amp; Requests</h3>
               <p class="tile-desc">Submit confidential prayer requests or stand in faith with written prayers.</p>
               <span class="tile-link">Request Prayer →</span>
             </div>
@@ -389,8 +409,26 @@
     <section class="view-section" id="view-sermons">
       <div class="page-header">
         <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Sermon Library</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>16+ Verified Videos</span>
+            </div>
+          </div>
           <h1 class="page-title">Sermon Library</h1>
-          <p class="page-subtitle">Browse short, scripture-based 2-minute sermons by season, topic, scripture book, or preacher.</p>
+          <p class="page-subtitle">Bite-sized, scripture-rooted 2-minute messages organized by sacred season, theme, and scripture book.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill active" data-view="sermons">All Sermons</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+            <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
+            <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
+            <a href="#daily-verse" class="sub-pill" data-view="daily-verse">Daily Verse</a>
+          </div>
         </div>
       </div>
 
@@ -403,6 +441,19 @@
           </div>
 
           <div class="season-chips-container" id="seasonChipsContainer"></div>
+
+          <!-- Quick Filters: Duration & Favorites -->
+          <div class="quick-filter-chips-row">
+            <span class="quick-filter-label">Length:</span>
+            <button class="chip duration-chip active" data-duration="all">All</button>
+            <button class="chip duration-chip" data-duration="under1">⚡ Under 1 Min</button>
+            <button class="chip duration-chip" data-duration="1to2">⏱️ 1–2 Mins</button>
+            <button class="chip duration-chip" data-duration="over2">📖 2+ Mins</button>
+            <div class="quick-filter-separator"></div>
+            <button class="chip fav-filter-chip" id="favFilterChip" data-fav-only="false">
+              ★ Saved (<span id="sermonFavCount">0</span>)
+            </button>
+          </div>
 
           <div class="filters-row">
             <div class="filter-group">
@@ -422,12 +473,7 @@
             <div class="filter-group">
               <label for="filterScripture">Scripture Book</label>
               <select id="filterScripture" class="select-input">
-                <option value="all">All Books</option>
-                <option value="Matthew">Matthew</option>
-                <option value="John">John</option>
-                <option value="2 Corinthians">2 Corinthians</option>
-                <option value="Hebrews">Hebrews</option>
-                <option value="Zechariah">Zechariah</option>
+                <option value="all">All Scripture Books</option>
               </select>
             </div>
 
@@ -437,13 +483,26 @@
                 <option value="newest">Newest First</option>
                 <option value="views">Most Viewed</option>
                 <option value="title">Alphabetical</option>
+                <option value="duration">Duration (Shortest First)</option>
               </select>
             </div>
           </div>
         </div>
 
         <div class="results-count-bar">
-          <span>Showing <strong id="resultsCount">0</strong> sermons</span>
+          <div class="results-count-left">
+            <span>Showing <strong id="resultsCount">0</strong> sermons</span>
+          </div>
+          <div class="view-mode-toggle" id="viewModeToggle" role="group" aria-label="View Layout Mode">
+            <button class="view-mode-btn active" id="viewModeGridBtn" data-mode="grid" title="Visual Cards View">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Grid</span>
+            </button>
+            <button class="view-mode-btn" id="viewModeListBtn" data-mode="list" title="Audio Podcast List View">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <span>Audio List</span>
+            </button>
+          </div>
           <button class="btn-link" id="resetFiltersBtn">Reset Filters</button>
         </div>
 
@@ -455,8 +514,28 @@
     <section class="view-section" id="view-seasons">
       <div class="page-header">
         <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item" data-view="sermons">Sermons</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Liturgical Seasons</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>Sacred Calendar</span>
+            </div>
+          </div>
           <h1 class="page-title">Liturgical Seasons</h1>
-          <p class="page-subtitle">Walk through the sacred calendar with targeted 2-minute devotionals for every season.</p>
+          <p class="page-subtitle">Walk through the sacred calendar with targeted 2-minute devotionals for Christmas, Easter, Lent, Advent, and beyond.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#seasons" class="sub-pill active" data-view="seasons">Seasons Hub</a>
+            <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
+            <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
+            <a href="#daily-verse" class="sub-pill" data-view="daily-verse">Daily Verse</a>
+          </div>
         </div>
       </div>
       <div class="container section">
@@ -468,8 +547,28 @@
     <section class="view-section" id="view-topics">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">Topics & Themes</h1>
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item" data-view="sermons">Sermons</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Topics</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>8 Core Themes</span>
+            </div>
+          </div>
+          <h1 class="page-title">Topics &amp; Themes</h1>
           <p class="page-subtitle">Find scripture-rooted encouragement tailored to your exact heart need today.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+            <a href="#topics" class="sub-pill active" data-view="topics">Topics &amp; Themes</a>
+            <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
+            <a href="#daily-verse" class="sub-pill" data-view="daily-verse">Daily Verse</a>
+          </div>
         </div>
       </div>
       <div class="container section">
@@ -481,8 +580,26 @@
     <section class="view-section" id="view-preachers">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">Preachers & Ministers</h1>
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Preachers Directory</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>Ordained &amp; Accredited</span>
+            </div>
+          </div>
+          <h1 class="page-title">Preachers &amp; Ministers</h1>
           <p class="page-subtitle">Meet the ordained pastors, teachers, and evangelists behind the 2-minute sermons.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+            <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
+            <a href="#preachers" class="sub-pill active" data-view="preachers">Preachers</a>
+            <a href="#about" class="sub-pill" data-view="about">Leadership Team</a>
+          </div>
         </div>
       </div>
       <div class="container section">
@@ -494,8 +611,25 @@
     <section class="view-section" id="view-daily-verse">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">Daily Verse & Reflection</h1>
-          <p class="page-subtitle">Inspiration for your morning quiet time and daily meditation.</p>
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Daily Verse</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>Daily Manna</span>
+            </div>
+          </div>
+          <h1 class="page-title">Daily Verse &amp; Reflection</h1>
+          <p class="page-subtitle">Inspiration for your morning quiet time, meditation, and scripture card sharing.</p>
+          <div class="sub-header-pills">
+            <a href="#daily-verse" class="sub-pill active" data-view="daily-verse">Today's Verse</a>
+            <a href="#prayers" class="sub-pill" data-view="prayers">Prayers &amp; Requests</a>
+            <a href="#conversations" class="sub-pill" data-view="conversations">The Conversation</a>
+            <a href="#sermons" class="sub-pill" data-view="sermons">Watch Sermons</a>
+          </div>
         </div>
       </div>
       <div class="container section">
@@ -507,8 +641,24 @@
     <section class="view-section" id="view-prayers">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">Prayers & Prayer Requests</h1>
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Prayers</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>Intercession &amp; Hope</span>
+            </div>
+          </div>
+          <h1 class="page-title">Prayers &amp; Prayer Requests</h1>
           <p class="page-subtitle">Submit your confidential prayer requests or stand in faith with written prayers.</p>
+          <div class="sub-header-pills">
+            <a href="#prayers" class="sub-pill active" data-view="prayers">Prayer Wall</a>
+            <a href="#daily-verse" class="sub-pill" data-view="daily-verse">Daily Scripture</a>
+            <a href="#contact" class="sub-pill" data-view="contact">Contact Ministry</a>
+          </div>
         </div>
       </div>
       <div class="container section">
@@ -565,13 +715,28 @@
       </div>
     </section>
 
-
     <!-- View 9: Events -->
     <section class="view-section" id="view-events">
       <div class="page-header">
         <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Ministry Events</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>Global Gatherings</span>
+            </div>
+          </div>
           <h1 class="page-title">Ministry Events</h1>
           <p class="page-subtitle">Join live prayer summits, online workshops, and global worship streams.</p>
+          <div class="sub-header-pills">
+            <a href="#events" class="sub-pill active" data-view="events">Upcoming Events</a>
+            <a href="#conversations" class="sub-pill" data-view="conversations">The Conversation</a>
+            <a href="#contact" class="sub-pill" data-view="contact">Host an Event</a>
+          </div>
         </div>
       </div>
       <div class="container section">
@@ -583,6 +748,17 @@
     <section class="view-section" id="view-about">
       <div class="page-header">
         <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">About Us</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>Worldwide Movement</span>
+            </div>
+          </div>
           <h1 class="page-title">About 2-Minute Sermon</h1>
           <p class="page-subtitle">Empowering believers worldwide with bite-sized, scripture-packed truth.</p>
         </div>
@@ -732,16 +908,28 @@
 
     <!-- View: The Conversation -->
     <section class="view-section" id="view-conversations">
-      <div class="page-header" style="background: linear-gradient(135deg, rgba(26,26,30,0.95) 0%, rgba(198,40,40,0.25) 100%), var(--color-charcoal);">
+      <div class="page-header" style="background: linear-gradient(135deg, #18191c 0%, #232429 100%);">
         <div class="container">
-          <div class="hero-badge" style="margin-bottom:12px;background:rgba(217,119,6,0.18);border-color:rgba(217,119,6,0.35);color:#FBBF24;">
-            <span class="live-dot" style="background:#FBBF24;"></span> Round-Table Dialogue &amp; Biblical Clarification
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">The Conversation</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot" style="background:#FBBF24;box-shadow:0 0 6px rgba(251,191,36,0.6);"></span>
+              <span style="color:#FBBF24;">Round-Table Dialogue</span>
+            </div>
           </div>
-          <h1 class="page-title" style="color:#fff;">The Conversation</h1>
-          <p class="page-subtitle" style="color:rgba(255,255,255,0.88);max-width:720px;margin:0 auto;line-height:1.6;">
-            Bible topics &bull; Clarification on Biblical subjects &bull; Teaching &bull; Learning.<br>
-            A program where ministers and guests discuss critical Christian topics to empower, equip, and educate our audience.
+          <h1 class="page-title">The Conversation</h1>
+          <p class="page-subtitle">
+            Deeper dialogues with pastors and Christian leaders exploring theological questions, biblical clarification, and practical discipleship.
           </p>
+          <div class="sub-header-pills">
+            <a href="#conversations" class="sub-pill active" data-view="conversations">All Episodes</a>
+            <a href="#sermons" class="sub-pill" data-view="sermons">2-Min Sermons</a>
+            <a href="#contact" class="sub-pill" data-view="contact">Suggest a Topic</a>
+          </div>
         </div>
       </div>
 
@@ -779,8 +967,24 @@
     <section class="view-section" id="view-contact">
       <div class="page-header">
         <div class="container">
-          <h1 class="page-title">Contact & Ministry Inquiry</h1>
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Contact Us</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot"></span>
+              <span>We'd Love to Hear From You</span>
+            </div>
+          </div>
+          <h1 class="page-title">Contact &amp; Ministry Inquiry</h1>
           <p class="page-subtitle">Have questions or want to submit a sermon? Reach out to our ministry team.</p>
+          <div class="sub-header-pills">
+            <a href="#contact" class="sub-pill active" data-view="contact">General Inquiry</a>
+            <a href="#prayers" class="sub-pill" data-view="prayers">Send Prayer Request</a>
+            <a href="#sermons" class="sub-pill" data-view="sermons">Browse Sermons</a>
+          </div>
         </div>
       </div>
       <div class="container section content-narrow">
@@ -817,6 +1021,17 @@
     <section class="view-section" id="view-admin">
       <div class="page-header">
         <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">The Steward CMS</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot" style="background:#3b82f6;box-shadow:0 0 6px rgba(59,130,246,0.6);"></span>
+              <span>Administrative Suite</span>
+            </div>
+          </div>
           <h1 class="page-title">Content Management Suite</h1>
           <p class="page-subtitle">Full administrative controls for daily verses, sermons, preachers directory, prayer inbox, and CMS backups.</p>
         </div>
@@ -1024,17 +1239,29 @@
   <!-- Newsletter Section -->
   <section class="newsletter-section">
     <div class="container newsletter-container">
+      <span class="newsletter-tag-pill"><span class="badge-dot dot-red"></span>WEEKLY SCRIPTURE INBOX</span>
       <h2 class="newsletter-title">Receive Weekly 2-Minute Sermons</h2>
       <p class="newsletter-subtitle">Get weekly scripture encouragement and sermon highlights delivered directly to your inbox.</p>
       <form class="newsletter-form" id="newsletterForm">
         <input type="email" class="newsletter-input" placeholder="Enter your email address..." required>
         <button type="submit" class="btn btn-primary newsletter-btn">Subscribe Now</button>
       </form>
+      <div class="newsletter-perks">
+        <span>✓ Free Weekly Delivery</span> • <span>✓ Zero Spam</span> • <span>✓ Unsubscribe Anytime</span>
+      </div>
     </div>
   </section>
 
   <!-- App Footer -->
   <footer class="app-footer">
+    <div class="footer-ambient-glow"></div>
+    <div class="footer-scripture-anchor">
+      <div class="container text-center">
+        <blockquote class="footer-anchor-quote">“Your word is a lamp to my feet and a light to my path.”</blockquote>
+        <span class="footer-anchor-ref">— Psalm 119:105</span>
+      </div>
+    </div>
+
     <div class="container footer-container">
       <div class="footer-col footer-brand-col">
         <div class="footer-logo-wrap">
@@ -1095,7 +1322,10 @@
 
     <div class="footer-bottom">
       <div class="container flex-between footer-bottom-container">
-        <span>&copy; 2026 2-Minute Sermon Ministry. All rights reserved.</span>
+        <div class="footer-bottom-left">
+          <span>&copy; 2026 2-Minute Sermon Ministry. All rights reserved.</span>
+          <span class="footer-live-badge"><span class="live-dot pulse-gold"></span> Broadcasting across 40+ nations</span>
+        </div>
         <div class="footer-legal">
           <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> • <a href="/terms" target="_blank" rel="noopener">Terms of Use</a> • <a href="/sitemap" target="_blank" rel="noopener">Sitemap</a>
         </div>
@@ -1108,6 +1338,154 @@
     <div class="modal-dialog modal-lg">
       <button class="modal-close-btn" id="closeSermonModalBtn" aria-label="Close modal">✕</button>
       <div class="sermon-modal-body" id="sermonModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Persistent "Listen While You Browse" Floating Mini-Player -->
+  <aside class="persistent-mini-player" id="persistentMiniPlayer" hidden aria-label="Audio player for 2-Minute Sermon">
+    <div class="mini-player-bar">
+      <!-- Media Artwork & Animated Equalizer -->
+      <div class="mini-player-media-wrap">
+        <img id="miniPlayerThumb" src="/assets/logo.png" alt="Sermon Artwork" class="mini-player-thumb">
+        <div class="mini-player-equalizer" id="miniPlayerEqualizer" aria-hidden="true">
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+        </div>
+      </div>
+
+      <!-- Track Details -->
+      <div class="mini-player-details">
+        <div class="mini-player-header-row">
+          <span class="mini-player-badge" id="miniPlayerBadge"><span class="yt-live-pulse" id="miniPlayerPulse"></span><span id="miniPlayerBadgeText">🎧 AUDIO FROM YOUTUBE</span></span>
+          <span class="mini-player-duration-tag" id="miniPlayerDuration">2:00</span>
+        </div>
+        <div class="mini-player-title" id="miniPlayerTitle">Select a sermon to listen</div>
+        <div class="mini-player-preacher" id="miniPlayerPreacher">2-Minute Sermon Ministry</div>
+
+        <!-- Scrubber Progress Bar -->
+        <div class="mini-player-scrubber-row">
+          <span class="mini-player-time" id="miniPlayerCurrentTime">0:00</span>
+          <div class="mini-player-track" id="miniPlayerTrack" role="slider" aria-label="Audio playback progress" tabindex="0">
+            <div class="mini-player-progress" id="miniPlayerProgress"></div>
+          </div>
+          <span class="mini-player-time" id="miniPlayerTotalTime">2:00</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="mini-player-controls">
+        <button class="mini-btn" id="miniPlayerRewindBtn" title="Rewind 15 seconds" aria-label="Rewind 15 seconds">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 19l-9-7 9-7v14z"></path><path d="M22 19l-9-7 9-7v14z"></path></svg>
+          <span class="mini-btn-label">15s</span>
+        </button>
+
+        <button class="mini-btn mini-btn-play" id="miniPlayerPlayBtn" title="Play / Pause" aria-label="Play or Pause">
+          <svg class="mini-icon-play" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg class="mini-icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+
+        <button class="mini-btn" id="miniPlayerForwardBtn" title="Forward 15 seconds" aria-label="Forward 15 seconds">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 19l9-7-9-7v14z"></path><path d="M2 19l9-7-9-7v14z"></path></svg>
+          <span class="mini-btn-label">15s</span>
+        </button>
+
+        <button class="mini-btn mini-btn-expand" id="miniPlayerExpandBtn" title="Expand Full Sermon" aria-label="Expand Full Sermon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        </button>
+
+        <button class="mini-btn mini-btn-close" id="miniPlayerCloseBtn" title="Close Player" aria-label="Close Player">✕</button>
+      </div>
+    </div>
+    <!-- Underlying audio element -->
+    <audio id="miniPlayerAudio" preload="auto"></audio>
+    <!-- Real YouTube Audio Bridge IFrame Container -->
+    <div id="miniPlayerYtContainer" class="mini-player-yt-container" aria-hidden="true">
+      <div id="miniPlayerYtIframe"></div>
+    </div>
+  </aside>
+
+  <!-- Scripture Card Generator Modal -->
+  <div class="modal-backdrop" id="scriptureCardModal" hidden>
+    <div class="modal-dialog modal-card-generator">
+      <button class="modal-close-btn" id="closeCardModalBtn" aria-label="Close modal">✕</button>
+      <div class="card-generator-wrap">
+        <div class="card-generator-header">
+          <span class="badge badge-season"><span class="badge-dot dot-orange"></span>Full Scripture Package</span>
+          <h2 class="card-generator-title">Share Verse Card</h2>
+          <p class="card-generator-subtitle" style="font-size:0.92rem;color:rgba(255,255,255,0.7);margin-top:4px;">
+            Export stunning high-res artwork with scripture quote, reference, and reflection ready to share.
+          </p>
+        </div>
+
+        <div class="card-generator-body">
+          <!-- Preview Frame -->
+          <div class="card-preview-viewport">
+            <div class="card-preview-stage" id="cardPreviewStage">
+              <canvas id="scriptureExportCanvas" class="scripture-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Customization Controls -->
+          <div class="card-controls-panel">
+            <div class="control-group">
+              <label class="control-label">Aspect Ratio</label>
+              <div class="aspect-ratio-selector">
+                <button class="ratio-btn active" data-ratio="story">
+                  <span class="ratio-icon ratio-story"></span>
+                  <span>Story / Status (9:16)</span>
+                </button>
+                <button class="ratio-btn" data-ratio="square">
+                  <span class="ratio-icon ratio-square"></span>
+                  <span>Square Feed (1:1)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Card Theme &amp; Mood</label>
+              <div class="theme-palette-grid">
+                <button class="theme-pill" data-theme="mountain_dawn" title="Mountain Dawn" aria-label="Mountain Dawn">
+                  <span class="theme-icon">🌸</span>
+                </button>
+                <button class="theme-pill" data-theme="living_waters" title="Living Waters" aria-label="Living Waters">
+                  <span class="theme-icon">🌊</span>
+                </button>
+                <button class="theme-pill" data-theme="golden_woods" title="Golden Woods" aria-label="Golden Woods">
+                  <span class="theme-icon">🍂</span>
+                </button>
+                <button class="theme-pill" data-theme="winter_twilight" title="Twilight" aria-label="Twilight">
+                  <span class="theme-icon">❄️</span>
+                </button>
+                <button class="theme-pill" data-theme="starry_solitude" title="Starry Night" aria-label="Starry Night">
+                  <span class="theme-icon">🌌</span>
+                </button>
+                <button class="theme-pill" data-theme="parchment" title="Parchment" aria-label="Parchment">
+                  <span class="theme-icon">📜</span>
+                </button>
+              </div>
+            </div>
+
+
+
+            <div class="card-export-actions">
+              <button class="card-action-btn btn-action-share" id="cardNativeShareBtn" title="Share full package: image + scripture + reference + link">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Share Verse (Full Package)
+              </button>
+              <button class="card-action-btn btn-action-download" id="cardDownloadBtn" title="Download high-resolution PNG image directly">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download Image (PNG)
+              </button>
+              <button class="card-action-btn btn-action-copy" id="cardCopyBtn" title="Copy artwork to clipboard">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy Image to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
