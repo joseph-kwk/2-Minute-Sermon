@@ -159,29 +159,29 @@ if (isFirebaseConfigured()) {
   });
 }
 
-/** Read preachers from localStorage; seeds from static data on first run or auto-upgrades legacy placeholders. */
+/** Read preachers from localStorage; falls back to seed data if cache is empty. */
 export function getPreachers() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       const hasLegacy = Array.isArray(parsed) && parsed.some(p => p.name === 'Pastor John Doe' || p.name === 'Rev. Sarah Jenkins');
-      if (!hasLegacy && Array.isArray(parsed) && parsed.length >= seedPreachers.length) return parsed;
+      if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (_) { /* storage unavailable */ }
-  savePreachers(seedPreachers);
   return [...seedPreachers];
 }
 
-/** Persist preachers array to localStorage and Firebase if configured. */
+/** Persist preachers array to localStorage only. */
 export function savePreachers(arr) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
-  if (isFirebaseConfigured()) {
-    arr.forEach(p => saveDocument('preachers', p.id, p));
-  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    window.dispatchEvent(new CustomEvent('2ms:preachers:updated', { detail: arr }));
+    window.dispatchEvent(new Event('storage'));
+  } catch (_) {}
 }
 
-/** Add or update a preacher profile */
+/** Add or update a preacher profile and sync to Firebase */
 export function upsertPreacher(preacher) {
   const all = getPreachers();
   const idx = all.findIndex(p => p.id === preacher.id);
@@ -193,7 +193,7 @@ export function upsertPreacher(preacher) {
   return all;
 }
 
-/** Delete a preacher profile */
+/** Delete a preacher profile and sync to Firebase */
 export function deletePreacher(id) {
   const all = getPreachers().filter(p => p.id !== id);
   savePreachers(all);

@@ -150,11 +150,6 @@ export function saveLeadershipTeam(team) {
     window.dispatchEvent(new Event('storage'));
     window.dispatchEvent(new CustomEvent('2ms:leadership:updated', { detail: team }));
   } catch (_) {}
-  if (isFirebaseConfigured()) {
-    team.forEach(member => {
-      saveDocument('leadership', member.id, member);
-    });
-  }
 }
 
 export function upsertLeader(leader) {
@@ -166,9 +161,15 @@ export function upsertLeader(leader) {
     team.push(leader);
   }
   saveLeadershipTeam(team);
+  if (isFirebaseConfigured()) {
+    saveDocument('leadership', leader.id, leader);
+  }
 }
 
 export function deleteLeader(id) {
   const team = getLeadershipTeam().filter(m => m.id !== id);
   saveLeadershipTeam(team);
+  if (isFirebaseConfigured()) {
+    deleteDocument('leadership', id);
+  }
 }

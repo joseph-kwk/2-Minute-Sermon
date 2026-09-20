@@ -40,22 +40,25 @@ if (isFirebaseConfigured()) {
 
 // ── localStorage-backed CMS store ───────────────────────────────────────────
 
-/** Read events from localStorage; seeds from static data on first run. */
+/** Read events from localStorage; falls back to seed data if cache is empty. */
 export function getEvents() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch (_) { /* storage unavailable */ }
-  saveEvents(seedEvents);
   return [...seedEvents];
 }
 
-/** Persist events array to localStorage and Firebase if configured. */
+/** Persist events array to localStorage only. */
 export function saveEvents(arr) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
-  if (isFirebaseConfigured()) {
-    arr.forEach(e => saveDocument('events', e.id, e));
-  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    window.dispatchEvent(new CustomEvent('2ms:events:updated', { detail: arr }));
+    window.dispatchEvent(new Event('storage'));
+  } catch (_) {}
 }
 
 /** Add or update an event (matched by id). Returns updated array. */

@@ -48,11 +48,6 @@ export function savePartners(partners) {
     window.dispatchEvent(new Event('storage'));
     window.dispatchEvent(new CustomEvent('2ms:partners:updated', { detail: partners }));
   } catch (_) {}
-  if (isFirebaseConfigured()) {
-    partners.forEach(p => {
-      saveDocument('partners', p.id, p);
-    });
-  }
 }
 
 export function upsertPartner(partner) {
@@ -64,9 +59,15 @@ export function upsertPartner(partner) {
     partners.push(partner);
   }
   savePartners(partners);
+  if (isFirebaseConfigured()) {
+    saveDocument('partners', partner.id, partner);
+  }
 }
 
 export function deletePartner(id) {
   const partners = getPartners().filter(p => p.id !== id);
   savePartners(partners);
+  if (isFirebaseConfigured()) {
+    deleteDocument('partners', id);
+  }
 }

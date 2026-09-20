@@ -3,9 +3,9 @@
 
 import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
-import { getPreachers, savePreachers } from './data/preachers.js';
+import { getPreachers, savePreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
-import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
 import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
@@ -330,7 +330,7 @@ function setupVerseScheduler() {
       scheduledDailyVerses.push(entry);
       scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
     }
-    saveDailyVerses(scheduledDailyVerses);
+    upsertDailyVerse(entry);
 
     e.target.reset();
     if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
@@ -903,7 +903,8 @@ function setupPreachersManager() {
           photoUrl,
           bio
         };
-        savePreachers(preachers);
+        upsertPreacher(preachers[idx]);
+        preachers = getPreachers();
         populateSelects();
         renderPreachersList();
         renderDashboardStats();
@@ -923,8 +924,8 @@ function setupPreachersManager() {
       bio 
     };
 
-    preachers.push(newPreacher);
-    savePreachers(preachers);
+    upsertPreacher(newPreacher);
+    preachers = getPreachers();
     populateSelects();
     renderPreachersList();
     renderDashboardStats();
@@ -992,9 +993,11 @@ function renderPreachersList() {
 }
 
 window.removePreacher = idx => {
-  const name = preachers[idx]?.name;
-  preachers.splice(idx, 1);
-  savePreachers(preachers);
+  const p = preachers[idx];
+  if (!p) return;
+  const name = p.name;
+  deletePreacher(p.id);
+  preachers = getPreachers();
   populateSelects();
   renderPreachersList();
   renderDashboardStats();

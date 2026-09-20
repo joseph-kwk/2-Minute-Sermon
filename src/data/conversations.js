@@ -96,8 +96,7 @@ export function getConversations() {
       if (!hasPlaceholders && Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (_) {}
-  saveConversations(INITIAL_CONVERSATIONS);
-  return INITIAL_CONVERSATIONS;
+  return [...INITIAL_CONVERSATIONS];
 }
 
 export function saveConversations(list) {
@@ -106,11 +105,6 @@ export function saveConversations(list) {
     window.dispatchEvent(new Event('storage'));
     window.dispatchEvent(new CustomEvent('2ms:conversations:updated', { detail: list }));
   } catch (_) {}
-  if (isFirebaseConfigured()) {
-    list.forEach(c => {
-      saveDocument('conversations', c.id, c);
-    });
-  }
 }
 
 export function upsertConversation(item) {

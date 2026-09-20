@@ -335,25 +335,25 @@ if (isFirebaseConfigured()) {
   });
 }
 
-/** Read verses from localStorage; seeds from static data on first run. */
+/** Read verses from localStorage; falls back to seed data if cache is empty. */
 export function getDailyVerses() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (_) { /* storage unavailable */ }
-  saveDailyVerses(seedDailyVerses);
   return [...seedDailyVerses];
 }
 
-/** Persist daily verses array to localStorage and Firebase if configured. */
+/** Persist daily verses array to localStorage only. */
 export function saveDailyVerses(arr) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
-  if (isFirebaseConfigured()) {
-    arr.forEach(v => saveDocument('dailyVerses', v.id, v));
-  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    window.dispatchEvent(new CustomEvent('2ms:verses:updated', { detail: arr }));
+    window.dispatchEvent(new Event('storage'));
+  } catch (_) {}
 }
 
 /** Add or update a scheduled daily verse */
