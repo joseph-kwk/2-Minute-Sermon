@@ -7,6 +7,8 @@ import { getDailyVerses, saveDailyVerses, getVerseForDate } from './data/dailyVe
 import { getLeadershipTeam, saveLeadershipTeam } from './data/leadership.js';
 import { getPartners, savePartners } from './data/partners.js';
 import { getConversations, saveConversations, extractVideoId, ytThumb } from './data/conversations.js';
+import { addSubscriber } from './data/subscribers.js';
+import { getReflectionsForDate, addReflection, toggleLikeReflection } from './data/reflections.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
 const sermons    = () => getSermons();
@@ -74,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupAdminPortal();
   setupAboutTabs();
   setupConversationsView();
+  setupCommunityReflections();
 
   renderHomeSermons();
   filterAndRenderSermons();
@@ -82,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPreachersHub();
   renderConversationsHub();
   renderEventsGrid();
+  renderCommunityReflections();
   renderAdminPreachersList();
   renderAboutTeamRoster();
   renderAboutPartners();
@@ -221,9 +225,16 @@ function setupNavigation() {
       if (targetView === 'admin') { window.location.href = '/admin.html'; return; }
       
       const aboutTab = btn.getAttribute('data-about-tab');
+      const scrollToId = btn.getAttribute('data-scroll-to');
       switchView(targetView);
       if (targetView === 'about' && aboutTab) {
         switchAboutTab(aboutTab);
+      }
+      if (scrollToId) {
+        setTimeout(() => {
+          const targetEl = document.getElementById(scrollToId);
+          if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
       }
       closeDropdown();
       closeMobileDrawer();
@@ -274,6 +285,11 @@ const VIEW_TITLES = {
 export function switchView(viewId) {
   const prevView = activeView;
   activeView = viewId;
+  document.body.setAttribute('data-active-view', viewId);
+  const newsletterSec = document.querySelector('.newsletter-section');
+  if (newsletterSec) {
+    newsletterSec.style.display = viewId === 'daily-verse' ? 'none' : '';
+  }
   document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(`view-${viewId}`);
   if (target) {
@@ -369,7 +385,12 @@ const PROMO_VIDEO_ID = 'SJFqqNvTeh8';
 function setupHeroCtas() {
   document.getElementById('heroPrimaryCta')?.addEventListener('click', (e) => {
     e.preventDefault();
-    playPromoVideo();
+    const latest = sermons()[0];
+    if (latest) {
+      openSermonModal(latest.id);
+    } else {
+      switchView('sermons');
+    }
   });
 
   document.getElementById('heroSecondaryCta')?.addEventListener('click', (e) => {
@@ -1038,6 +1059,67 @@ export function playSermonInMiniPlayer(sermonId) {
   showToast(`🎧 Audio from YouTube: ${s.title}`);
 }
 window.playSermonInMiniPlayer = playSermonInMiniPlayer;
+
+export function playConversationInMiniPlayer(convId) {
+  const c = conversations().find(x => String(x.id) === String(convId));
+  if (!c) return;
+
+  const virtualSermon = {
+    id: `conv-${c.id}`,
+    title: c.title,
+    preacherName: c.panelists || 'The Conversation',
+    scripture: c.scriptures || c.category || 'Panel Discussion',
+    duration: c.duration || '25:00',
+    durationSec: c.durationSec || 1500,
+    thumbnailUrl: c.thumbnailUrl,
+    youtubeEmbedId: c.youtubeEmbedId
+  };
+
+  if (currentMiniSermon && currentMiniSermon.id === virtualSermon.id && isAudioPlaying) {
+    pauseMiniPlayerPlayback();
+    return;
+  }
+
+  currentMiniSermon = virtualSermon;
+  sermonTotalDuration = virtualSermon.durationSec;
+
+  const player = document.getElementById('persistentMiniPlayer');
+  if (!player) return;
+
+  const thumb = document.getElementById('miniPlayerThumb');
+  if (thumb) {
+    thumb.src = virtualSermon.thumbnailUrl || '/assets/logo.png';
+    thumb.onerror = () => { thumb.src = '/assets/logo.png'; };
+  }
+  const title = document.getElementById('miniPlayerTitle');
+  if (title) title.textContent = virtualSermon.title;
+
+  const preacher = document.getElementById('miniPlayerPreacher');
+  if (preacher) preacher.textContent = `${virtualSermon.preacherName} • ${virtualSermon.scripture}`;
+
+  const badgeText = document.getElementById('miniPlayerBadgeText');
+  if (badgeText) {
+    badgeText.textContent = `🎙️ THE CONVERSATION AUDIO`;
+  }
+
+  const durTag = document.getElementById('miniPlayerDuration');
+  if (durTag) durTag.textContent = virtualSermon.duration;
+
+  const totalTime = document.getElementById('miniPlayerTotalTime');
+  if (totalTime) totalTime.textContent = virtualSermon.duration;
+
+  currentPlayheadSec = 0;
+  updateMiniPlayerUI();
+
+  player.hidden = false;
+  requestAnimationFrame(() => {
+    player.classList.add('is-visible');
+  });
+
+  startMiniPlayerPlayback();
+  showToast(`🎧 Audio: ${virtualSermon.title}`);
+}
+window.playConversationInMiniPlayer = playConversationInMiniPlayer;
 
 function startMiniPlayerPlayback() {
   isAudioPlaying = true;
@@ -2097,8 +2179,31 @@ async function getCanvasBlobSafely(canvas, verse, themeId, ratio, fontId = 'inte
   return null;
 }
 
+function extractPromoVideoId(urlOrId) {
+  if (!urlOrId) return PROMO_VIDEO_ID;
+  const trimmed = urlOrId.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : PROMO_VIDEO_ID;
+}
+
+function getActivePromoVideoId() {
+  const settings = getMinistrySettings();
+  return extractPromoVideoId(settings.promoVideoUrl) || PROMO_VIDEO_ID;
+}
+
 function setupPromoVideo() {
   const posterWrap = document.getElementById('promoPosterWrap');
+  const promoImg = posterWrap?.querySelector('.promo-poster-img');
+  const videoId = getActivePromoVideoId();
+
+  if (promoImg) {
+    promoImg.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    promoImg.onerror = () => {
+      promoImg.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    };
+  }
+
   posterWrap?.addEventListener('click', () => playPromoVideo());
   posterWrap?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -2114,11 +2219,12 @@ function playPromoVideo() {
   const playerWrap = document.getElementById('promoPlayerWrap');
   if (!playerWrap || !posterWrap) return;
 
+  const videoId = getActivePromoVideoId();
   posterWrap.style.display = 'none';
   playerWrap.hidden = false;
   playerWrap.innerHTML = `
     <iframe 
-      src="https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
+      src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
       title="2-Minute Sermon Promo Video" 
       frameborder="0" 
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -2592,6 +2698,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeSermonModal();
     closeScriptureCardModal();
+    closeSermonShareModal();
     closeDropdown();
     closeMobileDrawer();
   }
@@ -2607,36 +2714,66 @@ export function renderDailyVerse() {
   setEl('dvDateDisplay', displayDate);
   setEl('dvQuoteDisplay', `"${verse.verseText}"`);
   setEl('dvRefDisplay', `— ${verse.book} ${verse.chapter}:${verse.verse}`);
-  setEl('dvReflectionDisplay', verse.reflection);
 
   const full = document.getElementById('dailyVerseFullContainer');
   if (full) {
-    const queue = scheduledDailyVerses();
     full.innerHTML = `
-      <div class="daily-verse-card" style="margin-bottom:36px;">
+      <div class="daily-verse-card" style="margin-bottom:24px;">
         <div class="verse-header">
-          <span class="verse-label">${verse.isFallback ? "Today's Daily Verse" : "Today's Scheduled Verse"}</span>
+          <span class="verse-label">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            ${verse.isFallback ? "Today's Daily Verse" : "Today's Scripture"}
+          </span>
           <span class="verse-date">${displayDate}</span>
         </div>
         <blockquote class="verse-quote">"${verse.verseText}"</blockquote>
         <div class="verse-meta">— ${verse.book} ${verse.chapter}:${verse.verse}</div>
-        <p class="verse-reflection">${verse.reflection}</p>
+        
+        <div class="verse-actions" style="margin-top:20px;">
+          <button class="btn btn-sm btn-outline" id="dvFullListenBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            Listen (TTS)
+          </button>
+          <button class="btn btn-sm btn-outline" id="dvFullCopyBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Verse
+          </button>
+          <button class="btn btn-sm btn-primary" id="dvFullShareBtn" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%); box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35);">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            Share Verse Card
+          </button>
+        </div>
       </div>
-      <h2 style="margin-bottom:20px;">Upcoming Verse Queue</h2>
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        ${queue.length ? queue.map(v => `
-          <div class="hub-card reveal-on-scroll">
-            <span class="badge badge-season">${formatVerseDate(v.publishDate) || v.publishDate}</span>
-            <h3 style="margin:10px 0 4px;">"${v.verseText}"</h3>
-            <div style="font-weight:700;color:var(--color-sermon-red);margin-bottom:6px;">— ${v.book} ${v.chapter}:${v.verse}</div>
-            <p style="font-size:0.88rem;color:#777;">${v.reflection}</p>
-          </div>`).join('') : `
-          <div class="hub-card reveal-on-scroll" style="text-align:center;padding:36px 20px;">
-            <p style="color:#777;margin:0;font-size:0.95rem;">Daily scripture is rotating automatically from our inspirational devotional collection.<br><small style="color:#999;">Check back tomorrow for fresh daily encouragement.</small></p>
-          </div>`}
-      </div>`;
-    // trigger reveal for newly injected cards
-    setTimeout(() => full.querySelectorAll('.reveal-on-scroll').forEach(el => el.classList.add('revealed')), 100);
+
+      <!-- Pastor's Daily Reflection -->
+      <div class="pastor-reflection-card" style="background:#fff;border-radius:18px;border:1px solid var(--color-lightgray);border-left:5px solid var(--color-sermon-red);padding:28px 32px;box-shadow:var(--shadow-sm);margin-bottom:32px;">
+        <div style="margin-bottom:12px;">
+          <h3 style="margin:0 0 4px;font-family:var(--font-heading);font-size:1.25rem;color:var(--color-dark);letter-spacing:-0.01em;">Pastor's Daily Reflection</h3>
+          <span style="font-size:0.82rem;color:var(--color-mediumgray);display:block;">Spiritual encouragement and guidance for today</span>
+        </div>
+        <p style="font-size:1.06rem;color:#2c2c2c;line-height:1.75;margin:0;font-style:italic;">
+          "${verse.reflection || 'Take a moment to meditate on this scripture today. May the Lord grant you peace, strength, and clarity in all you do.'}"
+        </p>
+      </div>
+    `;
+
+    document.getElementById('dvFullListenBtn')?.addEventListener('click', () => {
+      if (!('speechSynthesis' in window)) { showToast('TTS not supported on this browser.'); return; }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(`${verse.book} chapter ${verse.chapter} verse ${verse.verse}. ${verse.verseText}`);
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+      showToast("🔊 Reading Today's Verse aloud…");
+    });
+
+    document.getElementById('dvFullCopyBtn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(`"${verse.verseText}" — ${verse.book} ${verse.chapter}:${verse.verse}`);
+      showToast('📋 Verse copied to clipboard!');
+    });
+
+    document.getElementById('dvFullShareBtn')?.addEventListener('click', () => {
+      openScriptureCardModal(verse);
+    });
   }
 }
 window.renderDailyVerse = renderDailyVerse;
@@ -2720,7 +2857,17 @@ function setupPrayerForm() {
   });
 
   document.querySelectorAll('.copy-prayer-btn').forEach(btn => {
-    btn.addEventListener('click', () => showToast('📋 Written prayer copied!'));
+    btn.addEventListener('click', (e) => {
+      const card = e.target.closest('.written-prayer-card');
+      const text = card ? card.querySelector('p')?.textContent : '';
+      const title = card ? card.querySelector('h3')?.textContent : '';
+      if (text) {
+        navigator.clipboard.writeText(`${title ? `${title}\n\n` : ''}${text}`);
+        showToast('📋 Written prayer copied to clipboard!');
+      } else {
+        showToast('📋 Written prayer copied!');
+      }
+    });
   });
 }
 
@@ -2754,6 +2901,8 @@ const DEFAULT_FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkjnbzgw';
 const DEFAULT_YT_CHANNEL     = 'https://www.youtube.com/c/2MinuteSermonP';
 const DEFAULT_FB_PAGE        = 'https://www.facebook.com/2minutesermon';
 const DEFAULT_IG_PAGE        = 'https://www.instagram.com/2_minutesermon/';
+const DEFAULT_TIKTOK_PAGE    = 'https://www.tiktok.com/@2minutesermon';
+const DEFAULT_PROMO_URL      = 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
 
 // ─── SETTINGS HELPERS (reads from localStorage & Firestore) ─────────────────
 function getMinistrySettings() {
@@ -2779,6 +2928,15 @@ function getMinistrySettings() {
       if (!parsed.instagramUrl || parsed.instagramUrl === 'https://instagram.com' || parsed.instagramUrl === 'https://instagram.com/') {
         parsed.instagramUrl = DEFAULT_IG_PAGE;
       }
+      if (!parsed.tiktokUrl) {
+        parsed.tiktokUrl = DEFAULT_TIKTOK_PAGE;
+      }
+      if (!parsed.promoVideoUrl) {
+        parsed.promoVideoUrl = DEFAULT_PROMO_URL;
+      }
+      if (!parsed.timezone) {
+        parsed.timezone = 'EST';
+      }
       return parsed;
     }
   } catch (_) {}
@@ -2789,6 +2947,9 @@ function getMinistrySettings() {
     youtubeUrl: DEFAULT_YT_CHANNEL,
     facebookUrl: DEFAULT_FB_PAGE,
     instagramUrl: DEFAULT_IG_PAGE,
+    tiktokUrl: DEFAULT_TIKTOK_PAGE,
+    promoVideoUrl: DEFAULT_PROMO_URL,
+    timezone: 'EST',
     twitterUrl: '',
     spotifyUrl: ''
   };
@@ -2800,7 +2961,8 @@ function updateFooterSocialLinks() {
   const map = {
     youtube: normalizeUrl(s.youtubeUrl) || DEFAULT_YT_CHANNEL,
     facebook: normalizeUrl(s.facebookUrl) || DEFAULT_FB_PAGE,
-    instagram: normalizeUrl(s.instagramUrl) || DEFAULT_IG_PAGE
+    instagram: normalizeUrl(s.instagramUrl) || DEFAULT_IG_PAGE,
+    tiktok: normalizeUrl(s.tiktokUrl) || DEFAULT_TIKTOK_PAGE
   };
 
   const socialIcons = document.querySelectorAll('.social-icon');
@@ -2844,6 +3006,10 @@ function setupNewsletterForm() {
       showToast('⚠️ Please enter a valid email address.');
       return;
     }
+
+    // Save subscriber to local & Firestore store
+    addSubscriber(email, 'Website Newsletter Form');
+
     const { endpointUrl } = getMinistrySettings();
     if (endpointUrl) {
       await postToEndpoint(endpointUrl, { type: 'newsletter', email, _subject: 'New Newsletter Subscriber' });
@@ -3193,6 +3359,7 @@ function renderEventsGrid() {
   const c = document.getElementById('eventsGrid');
   if (!c) return;
   const list = events();
+  const tz = getMinistrySettings().timezone || 'EST';
 
   if (!list.length) {
     c.innerHTML = `
@@ -3208,7 +3375,7 @@ function renderEventsGrid() {
     <div class="event-card">
       <div class="event-card-header">
         <span class="badge badge-season">${ev.category || 'Ministry Event'}</span>
-        <span class="event-date-pill">${ev.date}${ev.time ? ` · ${ev.time}` : ''}</span>
+        <span class="event-date-pill">${ev.date}${ev.time ? ` · ${ev.time} ${tz}` : ''}</span>
       </div>
       <h3 class="event-card-title">${ev.title}</h3>
       <div class="event-card-location">
@@ -3359,9 +3526,13 @@ let activeConvFilter = 'all';
 export function setupConversationsView() {
   document.querySelectorAll('[data-conv-filter]').forEach(chip => {
     chip.addEventListener('click', () => {
-      document.querySelectorAll('[data-conv-filter]').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      activeConvFilter = chip.getAttribute('data-conv-filter');
+      const filter = chip.getAttribute('data-conv-filter');
+      if (activeView !== 'conversations') {
+        switchView('conversations');
+      }
+      document.querySelectorAll('#conversationFilterBar [data-conv-filter]').forEach(c => c.classList.remove('active'));
+      document.querySelector(`#conversationFilterBar [data-conv-filter="${filter}"]`)?.classList.add('active');
+      activeConvFilter = filter;
       renderConversationsHub(activeConvFilter);
     });
   });
@@ -3395,6 +3566,7 @@ export function renderConversationsHub(filter = 'all') {
           </div>
           <div class="conv-featured-body">
             <div class="conv-badge-row">
+              ${featured.format === 'plus' ? '<span class="conv-category-badge" style="background:#0f172a;color:#f8fafc;font-weight:700;border:1px solid rgba(255,255,255,0.2);">2-MIN PLUS • 3–15 MIN</span>' : ''}
               <span class="conv-category-badge">${featured.category}</span>
               <span class="conv-status-badge">${featured.status}</span>
               <span style="font-size:0.8rem;color:var(--color-mediumgray);">Published: ${featured.publishDate}</span>
@@ -3414,6 +3586,9 @@ export function renderConversationsHub(filter = 'all') {
                 <a href="${featured.youtubeUrl}" target="_blank" rel="noopener" class="btn btn-primary">
                   ${svgPlay} Watch Conversation
                 </a>
+                <button class="btn btn-secondary" onclick="window.playConversationInMiniPlayer('${featured.id}')" title="Listen in background while you browse">
+                  🎧 Listen
+                </button>
               `}
               <button class="btn btn-outline" onclick="window.shareConversation('${encodeURIComponent(featured.title)}','${featured.id}')">
                 ${svgShare} Share
@@ -3431,6 +3606,10 @@ export function renderConversationsHub(filter = 'all') {
   let filtered = allEpisodes;
   if (filter === 'Upcoming') {
     filtered = allEpisodes.filter(c => c.status === 'Upcoming');
+  } else if (filter === 'plus') {
+    filtered = allEpisodes.filter(c => c.format === 'plus' || (c.title && c.title.toLowerCase().includes('plus')));
+  } else if (filter === 'conversation') {
+    filtered = allEpisodes.filter(c => c.format !== 'plus' && (!c.title || !c.title.toLowerCase().includes('plus')));
   } else if (filter && filter !== 'all') {
     filtered = allEpisodes.filter(c => c.category === filter);
   }
@@ -3439,9 +3618,9 @@ export function renderConversationsHub(filter = 'all') {
     gridContainer.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:48px 24px;background:#fff;border-radius:16px;border:1px solid var(--color-lightgray);">
         <div style="font-size:2.4rem;margin-bottom:10px;">🎙️</div>
-        <h3 style="font-family:var(--font-heading);margin-bottom:6px;">No Conversations in this Category</h3>
-        <p style="color:var(--color-mediumgray);font-size:0.92rem;max-width:360px;margin:0 auto 16px;">More round-table episodes are currently in production with our preachers network.</p>
-        <button class="btn btn-outline btn-sm" onclick="document.querySelector('[data-conv-filter=\\'all\\']')?.click()">View All Episodes</button>
+        <h3 style="font-family:var(--font-heading);margin-bottom:6px;">No Episodes in this Category</h3>
+        <p style="color:var(--color-mediumgray);font-size:0.92rem;max-width:360px;margin:0 auto 16px;">More messages and round-table panels are currently in production with our preachers network.</p>
+        <button class="btn btn-outline btn-sm" onclick="document.querySelector('#conversationFilterBar [data-conv-filter=\\'all\\']')?.click()">View All Episodes</button>
       </div>`;
     return;
   }
@@ -3461,8 +3640,11 @@ export function renderConversationsHub(filter = 'all') {
           <span class="conv-card-duration">${c.duration}</span>
         </div>
         <div class="conv-card-body">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span class="conv-category-badge" style="font-size:0.7rem;padding:2px 8px;">${c.category}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
+            <div style="display:flex;gap:4px;align-items:center;">
+              ${c.format === 'plus' ? '<span class="conv-category-badge" style="background:#0f172a;color:#f8fafc;font-weight:700;font-size:0.68rem;padding:2px 6px;border:1px solid rgba(255,255,255,0.2);">2-MIN PLUS</span>' : ''}
+              <span class="conv-category-badge" style="font-size:0.7rem;padding:2px 8px;">${c.category}</span>
+            </div>
             <span class="conv-status-badge" style="font-size:0.68rem;">${c.status}</span>
           </div>
           <h3 class="conv-card-title">${c.title}</h3>
@@ -3477,6 +3659,11 @@ export function renderConversationsHub(filter = 'all') {
               <a href="${c.youtubeUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-primary" style="padding:6px 12px;font-size:0.8rem;">
                 ${isUpcoming ? 'Details' : 'Watch'}
               </a>
+              ${!isUpcoming ? `
+                <button class="btn btn-sm btn-outline" onclick="window.playConversationInMiniPlayer('${c.id}')" title="Listen in background while you browse" style="padding:6px 10px;font-size:0.8rem;">
+                  🎧 Listen
+                </button>
+              ` : ''}
               <button class="btn btn-sm btn-outline" onclick="window.shareConversation('${encodeURIComponent(c.title)}','${c.id}')" title="Share Episode" style="padding:6px 10px;">
                 ${svgShare}
               </button>
@@ -3489,6 +3676,124 @@ export function renderConversationsHub(filter = 'all') {
   observeNewCards(gridContainer);
 }
 window.renderConversationsHub = renderConversationsHub;
+
+// ─── COMMUNITY REFLECTIONS & FELLOWSHIP ───────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[tag] || tag));
+}
+
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return 'Recently';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+export function setupCommunityReflections() {
+  const form = document.getElementById('addReflectionForm');
+  const authorInput = document.getElementById('reflectionAuthorInput');
+  const contentInput = document.getElementById('reflectionContentInput');
+  const charCountEl = document.getElementById('reflectionCharCount');
+
+  contentInput?.addEventListener('input', () => {
+    const len = contentInput.value.length;
+    if (charCountEl) {
+      charCountEl.textContent = `${len} / 500 characters`;
+      charCountEl.style.color = len >= 480 ? 'var(--color-sermon-red)' : 'var(--color-mediumgray)';
+    }
+  });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const content = contentInput?.value.trim();
+    if (!content) {
+      showToast('⚠️ Please write a brief reflection before submitting.');
+      return;
+    }
+    if (content.length > 500) {
+      showToast('⚠️ Reflections are limited to 500 characters.');
+      return;
+    }
+    const author = authorInput?.value.trim() || 'Fellow Believer';
+    const verse = getVerseForDate(getTodayDateStr());
+    const verseDate = verse?.publishDate || getTodayDateStr();
+
+    addReflection({ verseDate, author, content });
+    form.reset();
+    if (charCountEl) charCountEl.textContent = '0 / 500 characters';
+    renderCommunityReflections();
+    showToast('🕊️ Thank you! Your reflection was shared with fellowship.');
+  });
+
+  window.addEventListener('2ms:reflections:updated', renderCommunityReflections);
+}
+
+export function renderCommunityReflections() {
+  const container = document.getElementById('reflectionsFeedContainer');
+  const countBadge = document.getElementById('reflectionsCountBadge');
+  if (!container) return;
+
+  const verse = getVerseForDate(getTodayDateStr());
+  const verseDate = verse?.publishDate || getTodayDateStr();
+  const list = getReflectionsForDate(verseDate);
+
+  if (countBadge) {
+    countBadge.textContent = `💬 ${list.length} Reflection${list.length === 1 ? '' : 's'}`;
+  }
+
+  if (!list.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:24px;color:var(--color-mediumgray);font-size:0.9rem;border-radius:12px;background:var(--color-offwhite);">
+        Be the first to share a devotional reflection or prayer on today's scripture!
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = list.map(r => {
+    const timeAgo = formatTimeAgo(r.timestamp);
+    const likedKey = `2ms_liked_${r.id}`;
+    const isLiked = localStorage.getItem(likedKey) === '1';
+
+    return `
+      <div class="community-reflection-item" style="padding:16px;background:var(--color-offwhite);border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--color-sermon-red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;">
+              ${(r.author || 'B')[0].toUpperCase()}
+            </div>
+            <strong style="font-size:0.9rem;color:#222;">${escapeHtml(r.author || 'Fellow Believer')}</strong>
+          </div>
+          <span style="font-size:0.78rem;color:var(--color-mediumgray);">${timeAgo}</span>
+        </div>
+        <p style="margin:0 0 10px;font-size:0.92rem;color:#333;line-height:1.55;white-space:pre-wrap;">${escapeHtml(r.content)}</p>
+        <div style="display:flex;justify-content:flex-end;">
+          <button class="btn btn-sm btn-outline" onclick="window.toggleLikeReflectionAction('${r.id}')" style="font-size:0.8rem;padding:5px 12px;gap:5px;border-radius:20px;font-weight:600;${isLiked ? 'color:var(--color-sermon-red);border-color:var(--color-sermon-red);background:rgba(198,40,40,0.06);' : ''}">
+            ${isLiked ? '❤️ Liked' : '🤍 Like'} ${r.likes ? `(${r.likes})` : ''}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderCommunityReflections = renderCommunityReflections;
+
+window.toggleLikeReflectionAction = (id) => {
+  toggleLikeReflection(id);
+  renderCommunityReflections();
+};
 
 export function shareDailyVerse() {
   const verse = getVerseForDate(getTodayDateStr());
@@ -3537,24 +3842,296 @@ export function showToast(msg, duration = 4000) {
 window.showToast = showToast;
 
 export function shareSermon(title, id) {
-  const sermonList = sermons() || [];
-  const s = sermonList.find(item => String(item.id) === String(id));
-  const url = `${window.location.origin}/#sermon-${id}`;
-
-  let shareText = `🎙️ Watch "${title}" on 2-Minute Sermon`;
-  if (s) {
-    shareText = `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture}\n🕊️ Experience spiritual growth in 2 minutes:`;
-  }
-
-  if (navigator.share) {
-    navigator.share({
-      title: s ? `${s.title} | 2-Minute Sermon` : title,
-      text: `${shareText}\n${url}`,
-      url: url
-    }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${shareText}\n${url}`);
-    showToast(`🔗 Link copied for "${title}"`);
-  }
+  openSermonShareModal(id);
 }
 window.shareSermon = shareSermon;
+
+export function openSermonShareModal(sermonId) {
+  const sermonList = sermons() || [];
+  const s = sermonList.find(item => String(item.id) === String(sermonId)) || sermonList[0];
+  if (!s) return;
+
+  const modal = document.getElementById('sermonShareModal');
+  if (!modal) return;
+
+  const url = `${window.location.origin}/#sermon-${s.id}`;
+  const ytDirectUrl = s.youtubeId ? `https://youtu.be/${s.youtubeId}` : (s.youtubeUrl || url);
+
+  // Set card preview
+  const thumbEl = document.getElementById('shareModalThumb');
+  if (thumbEl) {
+    thumbEl.src = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
+  }
+  const durEl = document.getElementById('shareModalDuration');
+  if (durEl) durEl.textContent = s.duration || '2:00';
+  const preacherEl = document.getElementById('shareModalPreacher');
+  if (preacherEl) preacherEl.textContent = s.preacher || '2-Minute Sermon';
+  const titleEl = document.getElementById('shareModalTitle');
+  if (titleEl) titleEl.textContent = s.title || 'Sermon';
+  const scripEl = document.getElementById('shareModalScripture');
+  if (scripEl) scripEl.textContent = s.scripture ? `📖 ${s.scripture}` : 'Daily Encouragement';
+
+  const linkInput = document.getElementById('shareModalLinkInput');
+  if (linkInput) linkInput.value = url;
+
+  // Formatted text for group chat
+  const formattedMsg = `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture || 'Daily Word'}\n🕊️ Watch on 2-Minute Sermon:\n${url}\n\n▶️ Direct Video:\n${ytDirectUrl}`;
+
+  // WhatsApp Button
+  const waBtn = document.getElementById('btnShareWhatsapp');
+  if (waBtn) {
+    waBtn.onclick = () => {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(formattedMsg)}`, '_blank');
+    };
+  }
+
+  // Facebook Button
+  const fbBtn = document.getElementById('btnShareFacebook');
+  if (fbBtn) {
+    fbBtn.onclick = () => {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(ytDirectUrl)}`, '_blank');
+    };
+  }
+
+  // X Button
+  const xBtn = document.getElementById('btnShareX');
+  if (xBtn) {
+    xBtn.onclick = () => {
+      const tweet = `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture || ''}\n\nWatch this 2-minute message:`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}&url=${encodeURIComponent(url)}`, '_blank');
+    };
+  }
+
+  // Native Share Button
+  const nativeBtn = document.getElementById('btnShareNative');
+  if (nativeBtn) {
+    nativeBtn.onclick = () => {
+      if (navigator.share) {
+        navigator.share({
+          title: `"${s.title}" | 2-Minute Sermon`,
+          text: `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture || ''}`,
+          url: url
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(formattedMsg);
+        showToast('📋 Sermon details copied to clipboard!');
+      }
+    };
+  }
+
+  // Download Story Card Button
+  const storyBtn = document.getElementById('btnDownloadStoryCard');
+  if (storyBtn) {
+    storyBtn.onclick = () => {
+      generateSermonStoryCard(s);
+    };
+  }
+
+  // Copy Link Button
+  const copyLinkBtn = document.getElementById('btnCopyShareLink');
+  if (copyLinkBtn) {
+    copyLinkBtn.onclick = () => {
+      navigator.clipboard.writeText(url);
+      showToast('🔗 Sermon link copied to clipboard!');
+    };
+  }
+
+  // Copy Formatted Message Button
+  const copyMsgBtn = document.getElementById('btnCopyFormattedMsg');
+  if (copyMsgBtn) {
+    copyMsgBtn.onclick = () => {
+      navigator.clipboard.writeText(formattedMsg);
+      showToast('📋 Formatted sermon message copied for chat/SMS!');
+    };
+  }
+
+  // Wire close buttons
+  document.getElementById('closeSermonShareBtn')?.addEventListener('click', closeSermonShareModal, { once: true });
+  modal.onclick = (e) => {
+    if (e.target.id === 'sermonShareModal') closeSermonShareModal();
+  };
+
+  // Show modal
+  modal.removeAttribute('hidden');
+  document.body.style.overflow = 'hidden';
+}
+window.openSermonShareModal = openSermonShareModal;
+
+export function closeSermonShareModal() {
+  const modal = document.getElementById('sermonShareModal');
+  if (!modal) return;
+  modal.setAttribute('hidden', '');
+  document.body.style.overflow = '';
+}
+window.closeSermonShareModal = closeSermonShareModal;
+
+export function generateSermonStoryCard(s) {
+  const canvas = document.getElementById('sermonStoryCanvas');
+  if (!canvas || !s) return;
+
+  const W = 1080;
+  const H = 1920;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  showToast('🎨 Rendering high-res Story card…');
+
+  // Background Gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#090b10');
+  bgGrad.addColorStop(0.5, '#131722');
+  bgGrad.addColorStop(1, '#080a0e');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle radial glow behind card
+  const glow = ctx.createRadialGradient(W / 2, 700, 50, W / 2, 700, 650);
+  glow.addColorStop(0, 'rgba(198, 40, 40, 0.28)');
+  glow.addColorStop(0.6, 'rgba(245, 158, 11, 0.12)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Load YouTube Thumbnail
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    drawContent(true);
+  };
+  img.onerror = () => {
+    drawContent(false);
+  };
+  img.src = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
+
+  function drawContent(hasImg = true) {
+    // Header Branding
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 34px sans-serif';
+    ctx.fillText('2 - M I N U T E   S E R M O N', W / 2, 160);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.font = '500 28px sans-serif';
+    ctx.fillText('SCRIPTURE & ENCOURAGEMENT WORLDWIDE', W / 2, 210);
+
+    // Draw Thumbnail Box
+    const thumbW = 900;
+    const thumbH = 506; // 16:9
+    const thumbX = (W - thumbW) / 2;
+    const thumbY = 280;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(thumbX, thumbY, thumbW, thumbH, 28);
+    ctx.clip();
+    if (hasImg) {
+      ctx.drawImage(img, thumbX, thumbY, thumbW, thumbH);
+    } else {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(thumbX, thumbY, thumbW, thumbH);
+    }
+    // Subtle inner vignette
+    const vig = ctx.createLinearGradient(0, thumbY + 300, 0, thumbY + thumbH);
+    vig.addColorStop(0, 'transparent');
+    vig.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(thumbX, thumbY, thumbW, thumbH);
+    ctx.restore();
+
+    // Red border around thumbnail
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(thumbX, thumbY, thumbW, thumbH, 28);
+    ctx.stroke();
+    ctx.restore();
+
+    // Duration badge on bottom right of thumb
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(thumbX + thumbW - 130, thumbY + thumbH - 58, 110, 42, 8);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(s.duration || '2:00', thumbX + thumbW - 75, thumbY + thumbH - 30);
+
+    // Preacher Pill
+    const pillY = thumbY + thumbH + 70;
+    ctx.fillStyle = 'rgba(198, 40, 40, 0.2)';
+    ctx.strokeStyle = 'rgba(198, 40, 40, 0.6)';
+    ctx.lineWidth = 2;
+    const preacherText = `🎙️ ${s.preacher || 'Ministry Pastor'}`.toUpperCase();
+    ctx.font = 'bold 26px sans-serif';
+    const pW = ctx.measureText(preacherText).width + 50;
+    ctx.beginPath();
+    ctx.roundRect((W - pW) / 2, pillY, pW, 52, 26);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillText(preacherText, W / 2, pillY + 35);
+
+    // Sermon Title (Multiline wrap)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 54px Georgia, serif';
+    const words = (s.title || '').split(' ');
+    let line = '';
+    let titleY = pillY + 130;
+    const maxLineW = 880;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxLineW && n > 0) {
+        ctx.fillText(line.trim(), W / 2, titleY);
+        line = words[n] + ' ';
+        titleY += 68;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line.trim(), W / 2, titleY);
+
+    // Scripture Citation
+    if (s.scripture) {
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'italic 34px Georgia, serif';
+      ctx.fillText(`— ${s.scripture} —`, W / 2, titleY + 75);
+    }
+
+    // Bottom Call to Action Card
+    const ctaY = 1620;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(100, ctaY, W - 200, 160, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText('Experience Spiritual Growth in 2 Minutes', W / 2, ctaY + 65);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = '24px sans-serif';
+    ctx.fillText('Watch free at 2minutesermon.org', W / 2, ctaY + 115);
+
+    // Trigger Download
+    setTimeout(() => {
+      try {
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const link = document.createElement('a');
+        link.download = `2min-sermon-${(s.title || 'message').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-story.jpg`;
+        link.href = dataUrl;
+        link.click();
+        showToast('📸 Story Graphic downloaded successfully!');
+      } catch (err) {
+        showToast('⚠️ Could not export graphic: ' + err.message);
+      }
+    }, 150);
+  }
+}
+window.generateSermonStoryCard = generateSermonStoryCard;

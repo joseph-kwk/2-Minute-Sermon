@@ -1,0 +1,6 @@
+# robots.txt for https://www.2minutesermon.org
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+Sitemap: https://www.2minutesermon.org/sitemap.xml

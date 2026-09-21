@@ -94,6 +94,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           Ministry Partners
         </button>
+        <button class="admin-nav-item" data-panel="subscribers">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          Subscribers
+        </button>
         <button class="admin-nav-item" data-panel="settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           Ministry Settings
@@ -228,10 +232,7 @@
                 <label>Pastoral Reflection</label>
                 <textarea id="adminDvReflection" rows="2" placeholder="Brief 1-2 line encouragement..." class="admin-input" required></textarea>
               </div>
-              <div style="display:flex;gap:10px;">
-                <button type="submit" class="admin-btn admin-btn-primary flex-1">📅 Save & Schedule</button>
-                <button type="button" class="admin-btn admin-btn-outline" id="autoGen30Btn">⚡ Auto-Fill 30 Days</button>
-              </div>
+              <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;">📅 Save & Schedule Verse</button>
             </form>
           </div>
 
@@ -493,9 +494,22 @@
       <div class="admin-panel" id="panel-leadership">
         <div class="admin-panel-grid">
           <div class="admin-card">
-            <h2 class="admin-card-title">Add Leadership Member</h2>
+            <h2 class="admin-card-title" id="leaderFormHeading">Add Leadership Member</h2>
             <p class="admin-card-sub">Register ministry directors, advisory council members, and department leads.</p>
             <form id="adminAddLeadershipForm">
+              <input type="hidden" id="editLeaderId">
+
+              <!-- Quick Import from Preachers -->
+              <div class="admin-form-group" style="margin-bottom:14px;background:rgba(255,255,255,0.03);padding:10px 14px;border-radius:var(--radius);border:1px dashed var(--admin-border);">
+                <label class="admin-form-label" style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;">
+                  <span>⚡ Quick Autofill from Preacher (Optional)</span>
+                  <span style="font-size:0.72rem;color:var(--admin-text-muted);">Reuses preacher's photo &amp; bio with 1 click</span>
+                </label>
+                <select id="leaderPreacherImportSelect" class="admin-input" style="font-size:0.85rem;">
+                  <option value="">-- Choose Preacher to Autofill --</option>
+                </select>
+              </div>
+
               <!-- Photo Preview, Upload & URL -->
               <div class="admin-form-group" style="display:flex;gap:18px;align-items:flex-start;padding:14px;background:rgba(255,255,255,0.03);border:1px solid var(--admin-border);border-radius:var(--radius);margin-bottom:18px;">
                 <div style="flex-shrink:0;">
@@ -542,9 +556,14 @@
                 <label>Biography &amp; Ministry Affiliations</label>
                 <textarea id="newLeaderBio" rows="3" placeholder="e.g. Assistant Pastor at Allington Baptist Church, Accredited Preacher in Britain Methodist Church..." class="admin-input" required></textarea>
               </div>
-              <button type="submit" class="admin-btn admin-btn-primary" style="width:100%;">
-                ➕ Add to Who is Who (Team)
-              </button>
+              <div style="display:flex;gap:10px;">
+                <button type="submit" id="btnSubmitLeader" class="admin-btn admin-btn-primary" style="flex:1;">
+                  ➕ Add to Who is Who (Team)
+                </button>
+                <button type="button" id="btnCancelLeaderEdit" class="admin-btn admin-btn-outline" style="display:none;">
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
 
@@ -580,6 +599,20 @@
 
               <div class="admin-form-row">
                 <div class="admin-form-group">
+                  <label>Format / Ministry Series</label>
+                  <select id="newConvFormat" class="admin-input">
+                    <option value="conversation">The Conversation (Roundtable Panel • 20+ mins)</option>
+                    <option value="plus">2-Minute PLUS (Extended Message • 3–15 mins)</option>
+                  </select>
+                </div>
+                <div class="admin-form-group">
+                  <label>Duration</label>
+                  <input type="text" id="newConvDuration" placeholder="e.g. 28:45 or 11:22" class="admin-input" required>
+                </div>
+              </div>
+
+              <div class="admin-form-row">
+                <div class="admin-form-group">
                   <label>Category / Theological Focus</label>
                   <select id="newConvCategory" class="admin-input">
                     <option value="Biblical Leadership">Biblical Leadership</option>
@@ -588,11 +621,9 @@
                     <option value="Theology &amp; Doctrine">Theology &amp; Doctrine</option>
                     <option value="Apologetics &amp; Culture">Apologetics &amp; Culture</option>
                     <option value="Faith &amp; Family">Faith &amp; Family</option>
+                    <option value="Prayer &amp; Faith">Prayer &amp; Faith</option>
+                    <option value="Kingdom Teaching">Kingdom Teaching</option>
                   </select>
-                </div>
-                <div class="admin-form-group">
-                  <label>Duration</label>
-                  <input type="text" id="newConvDuration" placeholder="e.g. 28:45 or Coming Up" class="admin-input" required>
                 </div>
               </div>
 
@@ -749,13 +780,35 @@
               <span class="admin-form-hint">If using a serverless form service (Formspree, Web3Forms, or custom API), paste your endpoint URL here.</span>
             </div>
 
+            <div class="admin-form-row" style="margin-top:16px;">
+              <div class="admin-form-group">
+                <label class="admin-form-label" for="settingTimezone">Ministry Primary Timezone</label>
+                <select id="settingTimezone" class="admin-input">
+                  <option value="EST">EST (Eastern Time — Standard)</option>
+                  <option value="CST">CST (Central Time)</option>
+                </select>
+                <span class="admin-form-hint">Appended to event listings and broadcast times.</span>
+              </div>
+              <div class="admin-form-group">
+                <label class="admin-form-label" for="settingPromoVideoUrl">Homepage Cinema Promo Video</label>
+                <input type="text" id="settingPromoVideoUrl" class="admin-input" placeholder="https://www.youtube.com/watch?v=SJFqqNvTeh8">
+                <span class="admin-form-hint">YouTube link or ID for the official overview showcase.</span>
+              </div>
+            </div>
+
             <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--admin-border);">
-              <h3 style="font-size:1.1rem;margin-bottom:6px;font-family:var(--admin-font);">🌐 Official Social Media Channels (3 Footer Channels)</h3>
+              <h3 style="font-size:1.1rem;margin-bottom:6px;font-family:var(--admin-font);">🌐 Official Social Media Channels</h3>
               <p class="admin-card-sub" style="margin-bottom:16px;">Set your official social channel URLs. These link directly from the public site navigation &amp; footer.</p>
 
-              <div class="admin-form-group" style="margin-top:12px;">
-                <label class="admin-form-label" for="settingYoutubeUrl">YouTube Channel URL</label>
-                <input type="url" id="settingYoutubeUrl" class="admin-input" placeholder="https://www.youtube.com/c/2MinuteSermonP">
+              <div class="admin-form-row" style="margin-top:12px;">
+                <div class="admin-form-group">
+                  <label class="admin-form-label" for="settingYoutubeUrl">YouTube Channel URL</label>
+                  <input type="url" id="settingYoutubeUrl" class="admin-input" placeholder="https://www.youtube.com/c/2MinuteSermonP">
+                </div>
+                <div class="admin-form-group">
+                  <label class="admin-form-label" for="settingTiktokUrl">TikTok Profile URL</label>
+                  <input type="url" id="settingTiktokUrl" class="admin-input" placeholder="https://www.tiktok.com/@2minutesermon">
+                </div>
               </div>
 
               <div class="admin-form-row" style="margin-top:12px;">
@@ -774,6 +827,42 @@
               💾 Save Ministry Settings
             </button>
           </form>
+        </div>
+      </div>
+
+      <!-- ── Panel: Newsletter Subscribers & Monthly Ministry Guide ── -->
+      <div class="admin-panel" id="panel-subscribers">
+        <div class="admin-split-grid">
+          <div class="admin-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+              <div>
+                <h2 class="admin-card-title" style="margin:0;">Newsletter Subscribers (<span id="subscribersCount">0</span>)</h2>
+                <p class="admin-card-sub" style="margin-top:4px;">Direct audience list subscribed for weekly encouragement &amp; monthly newsletters.</p>
+              </div>
+              <button type="button" class="admin-btn admin-btn-primary admin-btn-sm" id="btnExportSubscribersCsv" style="gap:6px;">
+                📥 Export CSV
+              </button>
+            </div>
+
+            <div class="admin-scroll-list" id="adminSubscribersList" style="max-height:480px;"></div>
+          </div>
+
+          <div class="admin-card" style="background:rgba(217,119,6,0.04);border:1px solid rgba(217,119,6,0.25);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <span style="font-size:1.6rem;">📬</span>
+              <h2 class="admin-card-title" style="margin:0;color:#f59e0b;">Monthly Newsletter Best Practices</h2>
+            </div>
+            <p style="font-size:0.85rem;color:var(--admin-text-muted);line-height:1.55;margin-bottom:14px;">
+              What should the ministry team do each month to make newsletters deeply engaging and impactful?
+            </p>
+            <ul style="padding-left:18px;font-size:0.84rem;color:#ddd;line-height:1.75;display:flex;flex-direction:column;gap:8px;">
+              <li><strong>Pick One Unifying Monthly Theme:</strong> Align around a clear focus (e.g. <em>Grace in the Storm</em>, <em>Living with Eternity in View</em>, <em>The Power of Secret Prayer</em>).</li>
+              <li><strong>Highlight 2 Top Bite-Sized Sermons:</strong> Feature 2 specific 2-minute videos that received powerful engagement, with direct YouTube links.</li>
+              <li><strong>Include 1 "The Conversation" Deep-Dive:</strong> Point readers to the latest panel dialogue for viewers wanting theological depth.</li>
+              <li><strong>Share 1 Pastoral Blessing / Reflection:</strong> Keep it under 250 words so busy readers can absorb it in 60 seconds on their phone.</li>
+              <li><strong>Export &amp; Import to Mailchimp / Brevo / Substack:</strong> Click <em>"Export CSV"</em> on the left and upload your subscribers seamlessly to any email platform.</li>
+            </ul>
+          </div>
         </div>
       </div>
 

@@ -2703,6 +2703,31 @@ textarea.text-input { resize: vertical; }
   border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 6px 20px rgba(198, 40, 40, 0.5);
   transform: translateY(-3px) scale(1.1);
+  color: #ffffff;
+}
+.social-icon[data-social="youtube"]:hover {
+  background: #FF0000;
+  border-color: #FF0000;
+  box-shadow: 0 6px 20px rgba(255, 0, 0, 0.55);
+  color: #ffffff;
+}
+.social-icon[data-social="facebook"]:hover {
+  background: #1877F2;
+  border-color: #1877F2;
+  box-shadow: 0 6px 20px rgba(24, 119, 242, 0.55);
+  color: #ffffff;
+}
+.social-icon[data-social="instagram"]:hover {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  border-color: #e1306c;
+  box-shadow: 0 6px 20px rgba(225, 48, 108, 0.55);
+  color: #ffffff;
+}
+.social-icon[data-social="tiktok"]:hover {
+  background: #010101;
+  border-color: #25f4ee;
+  box-shadow: 0 6px 20px rgba(37, 244, 238, 0.5), 0 0 14px rgba(254, 44, 85, 0.5);
+  color: #ffffff;
 }
 .footer-heading { font-size: 1rem; color: var(--color-white); margin-bottom: 16px; font-weight: 600; letter-spacing: 0.3px; }
 .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
@@ -2911,13 +2936,34 @@ body.modal-open {
     padding-right: 20px !important;
   }
 
-  /* Centered Hero Typography & Buttons */
   .hero-title {
     font-size: 2.1rem !important;
     text-align: center;
     line-height: 1.25;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  /* Mobile Headings & Typography Scaling */
+  .section-title {
+    font-size: 1.65rem !important;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .newsletter-title {
+    font-size: 1.55rem !important;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .newsletter-subtitle {
+    font-size: 0.95rem !important;
+    margin-bottom: 22px;
+  }
+  .section-desc {
+    font-size: 0.92rem !important;
+    line-height: 1.5;
   }
 
   .hero-subtitle {
@@ -3734,3 +3780,357 @@ body.modal-open {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   DEVOTIONAL & REFLECTIONS SANCTUARY PAGE POLISH
+   ========================================================================== */
+#view-daily-verse {
+  padding-bottom: 72px !important;
+}
+
+.devotional-container {
+  max-width: 980px !important;
+  margin: 0 auto !important;
+  padding: 0 16px 50px !important;
+}
+
+/* Compact desktop height for daily verse card on the verse page */
+.devotional-container .daily-verse-card {
+  padding: 26px 32px !important;
+  border-radius: 20px !important;
+  margin-bottom: 22px !important;
+}
+
+.devotional-container .daily-verse-card .verse-header {
+  margin-bottom: 14px !important;
+}
+
+.devotional-container .daily-verse-card .verse-quote {
+  font-size: 1.45rem !important;
+  margin: 0 auto 10px !important;
+  line-height: 1.42 !important;
+}
+
+.devotional-container .daily-verse-card .verse-meta {
+  margin-bottom: 12px !important;
+  font-size: 0.95rem !important;
+}
+
+.devotional-container .daily-verse-card .verse-actions {
+  margin-top: 14px !important;
+}
+
+.pastor-reflection-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid var(--color-lightgray);
+  border-left: 5px solid var(--color-sermon-red);
+  padding: 26px 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+  box-sizing: border-box;
+}
+
+.community-reflections-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid var(--color-lightgray);
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.reflection-form {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 28px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.reflection-input,
+.reflection-textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: block;
+  line-height: 1.6;
+}
+
+.reflection-textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.reflection-input:focus,
+.reflection-textarea:focus {
+  outline: none;
+  border-color: var(--color-sermon-red);
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.12);
+  background: #ffffff;
+}
+
+.reflection-input::placeholder,
+.reflection-textarea::placeholder {
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+/* Dynamically hide newsletter specifically on the daily verse view */
+body[data-active-view="daily-verse"] .newsletter-section {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  #view-daily-verse {
+    padding-bottom: 48px !important;
+  }
+  .devotional-container {
+    padding: 0 12px 30px !important;
+  }
+  .devotional-container .daily-verse-card {
+    padding: 20px 16px !important;
+  }
+  .devotional-container .daily-verse-card .verse-quote {
+    font-size: 1.2rem !important;
+  }
+  .pastor-reflection-card {
+    padding: 20px 16px !important;
+    border-radius: 14px !important;
+  }
+  .community-reflections-card {
+    padding: 20px 16px !important;
+    border-radius: 14px !important;
+  }
+  .reflection-form {
+    padding: 16px 12px !important;
+    border-radius: 12px !important;
+  }
+  .reflection-input,
+  .reflection-textarea {
+    font-size: 0.92rem;
+    padding: 12px 14px;
+  }
+}
+
+/* ==========================================================================
+   SERMON SHARE MODAL & SOCIAL PREVIEWS
+   ========================================================================== */
+.modal-share-dialog {
+  max-width: 480px !important;
+  width: 92% !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35) !important;
+  padding: 28px !important;
+  box-sizing: border-box;
+  color: #1e293b;
+  position: relative;
+  text-align: left;
+}
+
+.share-modal-title {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  margin: 6px 0 4px;
+  color: #0f172a;
+}
+
+.share-modal-sub {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.share-preview-card {
+  display: flex;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 18px;
+  align-items: center;
+}
+
+.share-preview-thumb-wrap {
+  position: relative;
+  width: 105px;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.share-preview-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.share-preview-duration {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.share-preview-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.share-preview-preacher {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-sermon-red);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.share-preview-title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.share-preview-scripture {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.share-section-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.share-social-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.share-platform-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-platform-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.share-platform-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.btn-share-whatsapp:hover {
+  background: #25D366;
+  border-color: #25D366;
+  color: #ffffff;
+}
+
+.btn-share-facebook:hover {
+  background: #1877F2;
+  border-color: #1877F2;
+  color: #ffffff;
+}
+
+.btn-share-x:hover {
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+.btn-share-native:hover {
+  background: var(--color-sermon-red);
+  border-color: var(--color-sermon-red);
+  color: #ffffff;
+}
+
+.share-story-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(225, 48, 108, 0.08), rgba(245, 158, 11, 0.08));
+  border: 1.5px solid rgba(225, 48, 108, 0.25);
+  color: #9d174d;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.share-story-btn:hover {
+  background: linear-gradient(135deg, #e1306c, #f59e0b);
+  border-color: transparent;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(225, 48, 108, 0.3);
+}
+
+.share-link-box {
+  display: flex;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 4px 4px 4px 12px;
+  align-items: center;
+}
+
+.share-link-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  color: #475569;
+  outline: none;
+}
+
+

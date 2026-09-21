@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://www.2minutesermon.org/</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 2-Minute Sermons Library -->
+  <url>
+    <loc>https://www.2minutesermon.org/#sermons</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Daily Verse & Reflections -->
+  <url>
+    <loc>https://www.2minutesermon.org/#daily-verse</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- The Conversation & 2-Minute PLUS -->
+  <url>
+    <loc>https://www.2minutesermon.org/#conversations</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Prayers & Intercession -->
+  <url>
+    <loc>https://www.2minutesermon.org/#prayers</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Liturgical Seasons Hub -->
+  <url>
+    <loc>https://www.2minutesermon.org/#seasons</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Topics & Pastoral Themes -->
+  <url>
+    <loc>https://www.2minutesermon.org/#topics</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Preachers Directory -->
+  <url>
+    <loc>https://www.2minutesermon.org/#preachers</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Ministry Events -->
+  <url>
+    <loc>https://www.2minutesermon.org/#events</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- About Us & Mission -->
+  <url>
+    <loc>https://www.2minutesermon.org/#about</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Contact & Ministry Inquiry -->
+  <url>
+    <loc>https://www.2minutesermon.org/#contact</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- HTML Sitemap -->
+  <url>
+    <loc>https://www.2minutesermon.org/sitemap</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Legal: Privacy Policy -->
+  <url>
+    <loc>https://www.2minutesermon.org/privacy</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Legal: Terms of Use -->
+  <url>
+    <loc>https://www.2minutesermon.org/terms</loc>
+    <lastmod>2026-09-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+</urlset>

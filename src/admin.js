@@ -9,6 +9,7 @@ import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, ups
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
 import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
+import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
@@ -26,12 +27,13 @@ let activePanel     = 'dashboard';
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  setupAuth();
   updateTopbarDate();
-  setupAuthForm();
   setupSidebarNav();
   setupQuickActions();
-  setupVerseScheduler();
-  setupSermonPublisher();
+  setupCropModal();
+  setupDailyVerseManager();
+  setupSermonsManager();
   setupPreachersManager();
   setupLeadershipManager();
   setupConversationsManager();
@@ -273,6 +275,7 @@ const PANEL_TITLES = {
   leadership:    'Leadership & Team',
   conversations: 'The Conversation',
   partners:      'Ministry Partners',
+  subscribers:   'Newsletter Subscribers',
   prayers:       'Prayer Inbox',
   settings:      'Ministry Settings',
   backup:        'Export & Backup'
@@ -337,31 +340,6 @@ function setupVerseScheduler() {
     renderVerseQueue();
     renderDashboardStats();
     toast(`📅 Verse scheduled for ${dateStr}`);
-  });
-
-  document.getElementById('autoGen30Btn')?.addEventListener('click', () => {
-    const pool = [
-      { text:"The Lord is my light and my salvation; whom shall I fear?",       book:"Psalm",       chapter:"27",verse:"1",  r:"Light dispels every shadow of doubt. Stand confident today." },
-      { text:"Trust in the Lord with all your heart.",                           book:"Proverbs",    chapter:"3", verse:"5",  r:"Surrendering control opens the door to divine wisdom." },
-      { text:"Cast all your anxiety on Him because He cares for you.",           book:"1 Peter",     chapter:"5", verse:"7",  r:"Your heavenly Father is attentive to your every burden." },
-      { text:"Peace I leave with you; my peace I give to you.",                  book:"John",        chapter:"14",verse:"27", r:"Christ offers a tranquility the world cannot manufacture." }
-    ];
-
-    const start = new Date();
-    let added = 0;
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(start); d.setDate(start.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
-      if (scheduledDailyVerses.some(v => v.publishDate === dateStr)) continue;
-      const s = pool[i % pool.length];
-      scheduledDailyVerses.push({ id:`dv-${dateStr}`, publishDate:dateStr, verseText:s.text, book:s.book, chapter:s.chapter, verse:s.verse, reflection:s.r, tags:['Auto-Queue'] });
-      added++;
-    }
-    scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
-    saveDailyVerses(scheduledDailyVerses);
-    renderVerseQueue();
-    renderDashboardStats();
-    toast(`⚡ ${added} verses auto-added to queue!`);
   });
 
   document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
@@ -1079,6 +1057,11 @@ function renderEventsList() {
 // ── LEADERSHIP & TEAM MANAGER ─────────────────────────────────────────────
 function setupLeadershipManager() {
   const form = document.getElementById('adminAddLeadershipForm');
+  const editIdInput = document.getElementById('editLeaderId');
+  const heading = document.getElementById('leaderFormHeading');
+  const submitBtn = document.getElementById('btnSubmitLeader');
+  const cancelBtn = document.getElementById('btnCancelLeaderEdit');
+  const importSelect = document.getElementById('leaderPreacherImportSelect');
   const nameInput = document.getElementById('newLeaderName');
   const roleInput = document.getElementById('newLeaderRole');
   const tierInput = document.getElementById('newLeaderTier');
@@ -1088,6 +1071,31 @@ function setupLeadershipManager() {
   const previewImg = document.getElementById('adminLeaderPhotoPreview');
   const btnTriggerUpload = document.getElementById('btnTriggerLeaderPhotoUpload');
   const btnDefaultAvatar = document.getElementById('btnDefaultLeaderAvatar');
+
+  // Populate Preachers quick-import dropdown
+  function populateLeaderPreacherImport() {
+    if (!importSelect) return;
+    const pList = getPreachers();
+    importSelect.innerHTML = '<option value="">-- Choose Preacher to Autofill --</option>' +
+      pList.map(p => `<option value="${p.id}">${p.name}${p.title ? ` (${p.title})` : ''}</option>`).join('');
+  }
+  populateLeaderPreacherImport();
+  window.addEventListener('2ms:preachers:updated', populateLeaderPreacherImport);
+
+  importSelect?.addEventListener('change', () => {
+    const selectedId = importSelect.value;
+    if (!selectedId) return;
+    const p = getPreachers().find(x => x.id === selectedId);
+    if (p) {
+      if (nameInput) nameInput.value = p.name || '';
+      if (bioInput && p.bio) bioInput.value = p.bio;
+      if (p.photoUrl) {
+        if (photoUrlInput) photoUrlInput.value = p.photoUrl;
+        if (previewImg) previewImg.src = p.photoUrl;
+      }
+      toast(`✨ Autofilled photo & details from "${p.name}"!`);
+    }
+  });
 
   function updateLeaderAvatarPreview() {
     const customUrl = photoUrlInput?.value.trim();
@@ -1103,6 +1111,20 @@ function setupLeadershipManager() {
       }
     }
   }
+
+  function resetLeaderForm() {
+    form.reset();
+    if (editIdInput) editIdInput.value = '';
+    if (heading) heading.textContent = 'Add Leadership Member';
+    if (submitBtn) submitBtn.textContent = '➕ Add to Who is Who (Team)';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (importSelect) importSelect.value = '';
+    updateLeaderAvatarPreview();
+  }
+
+  cancelBtn?.addEventListener('click', resetLeaderForm);
+
+  btnTriggerUpload?.addEventListener('click', () => photoFileInput?.click());
 
   nameInput?.addEventListener('input', () => {
     if (!photoUrlInput?.value) updateLeaderAvatarPreview();
@@ -1132,6 +1154,7 @@ function setupLeadershipManager() {
 
   form?.addEventListener('submit', e => {
     e.preventDefault();
+    const editId   = editIdInput?.value;
     const name     = nameInput?.value.trim() || '';
     const role     = roleInput?.value.trim() || '';
     const tier     = tierInput?.value || 'Executive Board';
@@ -1146,8 +1169,8 @@ function setupLeadershipManager() {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
     }
 
-    const newLeader = {
-      id: `lead-${Date.now()}`,
+    const leaderItem = {
+      id: editId || `lead-${Date.now()}`,
       name,
       role,
       tier,
@@ -1157,11 +1180,10 @@ function setupLeadershipManager() {
       email: ''
     };
 
-    upsertLeader(newLeader);
+    upsertLeader(leaderItem);
     renderLeadershipList();
-    form.reset();
-    updateLeaderAvatarPreview();
-    toast(`👥 "${name}" added to Who is Who (Team)!`);
+    resetLeaderForm();
+    toast(`👥 "${name}" saved to Who is Who (Team)!`);
   });
 
   renderLeadershipList();
@@ -1191,11 +1213,49 @@ function renderLeadershipList() {
         </div>
         <span style="font-size:0.78rem;color:var(--admin-muted);">${m.role}</span>
       </div>
-      <button class="admin-btn admin-btn-sm admin-btn-danger" data-id="${m.id}" title="Remove from leadership">✕</button>
+      <div style="display:flex;gap:6px;">
+        <button class="admin-btn admin-btn-sm admin-btn-outline edit-leader-btn" data-id="${m.id}" title="Edit leader details">✏️</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger del-leader-btn" data-id="${m.id}" title="Remove from leadership">✕</button>
+      </div>
     </div>
   `).join('');
 
-  c.querySelectorAll('.admin-btn-danger').forEach(btn => {
+  // Hook Edit buttons
+  c.querySelectorAll('.edit-leader-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getLeadershipTeam().find(x => x.id === id);
+      if (!target) return;
+
+      const editIdInput = document.getElementById('editLeaderId');
+      const nameInput   = document.getElementById('newLeaderName');
+      const roleInput   = document.getElementById('newLeaderRole');
+      const tierInput   = document.getElementById('newLeaderTier');
+      const photoUrlInput = document.getElementById('newLeaderPhoto');
+      const bioInput    = document.getElementById('newLeaderBio');
+      const previewImg  = document.getElementById('adminLeaderPhotoPreview');
+      const heading     = document.getElementById('leaderFormHeading');
+      const submitBtn   = document.getElementById('btnSubmitLeader');
+      const cancelBtn   = document.getElementById('btnCancelLeaderEdit');
+
+      if (editIdInput) editIdInput.value = target.id;
+      if (nameInput) nameInput.value = target.name || '';
+      if (roleInput) roleInput.value = target.role || '';
+      if (tierInput) tierInput.value = target.tier || 'Executive Board';
+      if (photoUrlInput) photoUrlInput.value = target.photoUrl || '';
+      if (previewImg) previewImg.src = target.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(target.name)}&background=C62828&color=fff&size=160`;
+      if (bioInput) bioInput.value = target.bio || '';
+
+      if (heading) heading.textContent = `Edit: "${target.name}"`;
+      if (submitBtn) submitBtn.textContent = '💾 Update Team Member';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+      document.getElementById('adminAddLeadershipForm')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // Hook Delete buttons
+  c.querySelectorAll('.del-leader-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
       const target = getLeadershipTeam().find(x => x.id === id);
@@ -1223,6 +1283,7 @@ function setupConversationsManager() {
   cancelBtn?.addEventListener('click', () => {
     form.reset();
     document.getElementById('editConvId').value = '';
+    if (document.getElementById('newConvFormat')) document.getElementById('newConvFormat').value = 'conversation';
     if (heading) heading.textContent = 'Publish Conversation Episode';
     if (submitBtn) submitBtn.textContent = '➕ Publish Conversation';
     cancelBtn.style.display = 'none';
@@ -1234,6 +1295,7 @@ function setupConversationsManager() {
     const editId = document.getElementById('editConvId').value;
     const title = document.getElementById('newConvTitle').value.trim();
     const rawUrl = document.getElementById('newConvYoutubeUrl').value.trim();
+    const format = document.getElementById('newConvFormat')?.value || 'conversation';
     const category = document.getElementById('newConvCategory').value;
     const duration = document.getElementById('newConvDuration').value.trim() || '25:00';
     const panelists = document.getElementById('newConvPanelists').value.trim();
@@ -1251,6 +1313,7 @@ function setupConversationsManager() {
       id: editId || `conv-${Date.now()}`,
       title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      format,
       youtubeUrl: finalUrl,
       youtubeEmbedId: embedId,
       thumbnailUrl,
@@ -1269,6 +1332,7 @@ function setupConversationsManager() {
     renderConversationsList();
     form.reset();
     document.getElementById('editConvId').value = '';
+    if (document.getElementById('newConvFormat')) document.getElementById('newConvFormat').value = 'conversation';
     if (heading) heading.textContent = 'Publish Conversation Episode';
     if (submitBtn) submitBtn.textContent = '➕ Publish Conversation';
     cancelBtn.style.display = 'none';
@@ -1302,16 +1366,18 @@ function renderConversationsList() {
         </span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
-          <strong style="color:#fff;font-size:0.92rem;">${item.title}</strong>
-          <span class="admin-tag" style="font-size:0.66rem;">${item.category}</span>
-          ${item.featured ? '<span class="admin-tag" style="font-size:0.66rem;background:rgba(217,119,6,0.2);color:#FBBF24;">⭐ Featured</span>' : ''}
-          <span class="admin-tag" style="font-size:0.66rem;background:${item.status === 'Published' ? 'rgba(46,125,50,0.2)' : 'rgba(217,119,6,0.2)'};color:${item.status === 'Published' ? '#4CAF50' : '#FBBF24'};">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+          ${item.format === 'plus' ? '<span class="admin-tag admin-tag-gold" style="font-size:0.68rem;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid rgba(217,119,6,0.4);">2-MIN PLUS</span>' : ''}
+          <span class="admin-tag" style="font-size:0.7rem;">${item.category}</span>
+          <span class="admin-tag ${item.status === 'Published' ? 'admin-tag-green' : 'admin-tag-blue'}" style="font-size:0.7rem;">
             ${item.status}
           </span>
+          ${item.featured ? '<span class="admin-tag admin-tag-gold" style="font-size:0.7rem;">★ Featured</span>' : ''}
+          <span style="font-size:0.75rem;color:var(--admin-muted);">${item.publishDate}</span>
         </div>
-        <div style="font-size:0.78rem;color:var(--admin-muted);margin-bottom:4px;">
-          <strong>Panelists:</strong> ${item.panelists}
+        <strong style="color:var(--admin-text);display:block;font-size:0.95rem;margin-bottom:4px;">${item.title}</strong>
+        <div style="font-size:0.8rem;color:var(--admin-muted);margin-bottom:8px;">
+          👥 ${item.panelists}
         </div>
         ${item.scriptures ? `<div style="font-size:0.75rem;color:var(--admin-red);margin-bottom:4px;">📖 ${item.scriptures}</div>` : ''}
         <p style="font-size:0.8rem;color:var(--admin-muted);margin:0 0 8px 0;line-height:1.4;">${item.summary.substring(0, 95)}...</p>
@@ -1334,6 +1400,9 @@ function renderConversationsList() {
       document.getElementById('editConvId').value = item.id;
       document.getElementById('newConvTitle').value = item.title;
       document.getElementById('newConvYoutubeUrl').value = item.youtubeUrl || item.youtubeEmbedId;
+      if (document.getElementById('newConvFormat')) {
+        document.getElementById('newConvFormat').value = item.format || (item.title?.toLowerCase().includes('plus') ? 'plus' : 'conversation');
+      }
       document.getElementById('newConvCategory').value = item.category || 'Biblical Leadership';
       document.getElementById('newConvDuration').value = item.duration || '25:00';
       document.getElementById('newConvPanelists').value = item.panelists || '';
@@ -1631,6 +1700,8 @@ const DEFAULT_FORMSPREE_ENDPOINT = 'https://formspree.io/f/xkjnbzgw';
 const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
 const DEFAULT_FB_PAGE    = 'https://www.facebook.com/2minutesermon';
 const DEFAULT_IG_PAGE    = 'https://www.instagram.com/2_minutesermon/';
+const DEFAULT_TIKTOK     = 'https://www.tiktok.com/@2minutesermon';
+const DEFAULT_PROMO_URL  = 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
 
 export function normalizeUrl(url) {
   if (!url) return '';
@@ -1666,6 +1737,15 @@ export function getSettings() {
       if (!parsed.instagramUrl || parsed.instagramUrl === 'https://instagram.com' || parsed.instagramUrl === 'https://instagram.com/') {
         parsed.instagramUrl = DEFAULT_IG_PAGE;
       }
+      if (!parsed.tiktokUrl) {
+        parsed.tiktokUrl = DEFAULT_TIKTOK;
+      }
+      if (!parsed.promoVideoUrl) {
+        parsed.promoVideoUrl = DEFAULT_PROMO_URL;
+      }
+      if (!parsed.timezone) {
+        parsed.timezone = 'EST';
+      }
       return parsed;
     }
   } catch (_) {}
@@ -1676,6 +1756,9 @@ export function getSettings() {
     youtubeUrl: DEFAULT_YT_CHANNEL,
     facebookUrl: DEFAULT_FB_PAGE,
     instagramUrl: DEFAULT_IG_PAGE,
+    tiktokUrl: DEFAULT_TIKTOK,
+    promoVideoUrl: DEFAULT_PROMO_URL,
+    timezone: 'EST',
     twitterUrl: '',
     spotifyUrl: ''
   };
@@ -1694,6 +1777,9 @@ export function saveSettings(s) {
     }
     s.facebookUrl = normalizeUrl(s.facebookUrl) || DEFAULT_FB_PAGE;
     s.instagramUrl = normalizeUrl(s.instagramUrl) || DEFAULT_IG_PAGE;
+    s.tiktokUrl = normalizeUrl(s.tiktokUrl) || DEFAULT_TIKTOK;
+    s.promoVideoUrl = s.promoVideoUrl?.trim() || DEFAULT_PROMO_URL;
+    s.timezone = s.timezone || 'EST';
     if (s.endpointUrl) s.endpointUrl = normalizeUrl(s.endpointUrl);
 
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
@@ -1712,6 +1798,9 @@ function setupSettingsPanel() {
   const ytInput         = document.getElementById('settingYoutubeUrl');
   const fbInput         = document.getElementById('settingFacebookUrl');
   const igInput         = document.getElementById('settingInstagramUrl');
+  const tiktokInput     = document.getElementById('settingTiktokUrl');
+  const timezoneSelect  = document.getElementById('settingTimezone');
+  const promoInput      = document.getElementById('settingPromoVideoUrl');
   const form            = document.getElementById('adminSettingsForm');
 
   const current = getSettings();
@@ -1721,6 +1810,9 @@ function setupSettingsPanel() {
   if (ytInput)         ytInput.value         = current.youtubeUrl || DEFAULT_YT_CHANNEL;
   if (fbInput)         fbInput.value         = current.facebookUrl || DEFAULT_FB_PAGE;
   if (igInput)         igInput.value         = current.instagramUrl || DEFAULT_IG_PAGE;
+  if (tiktokInput)     tiktokInput.value     = current.tiktokUrl || DEFAULT_TIKTOK;
+  if (timezoneSelect)  timezoneSelect.value  = current.timezone || 'EST';
+  if (promoInput)      promoInput.value      = current.promoVideoUrl || DEFAULT_PROMO_URL;
 
   form?.addEventListener('submit', e => {
     e.preventDefault();
@@ -1731,12 +1823,73 @@ function setupSettingsPanel() {
       youtubeUrl: normalizeUrl(ytInput?.value) || DEFAULT_YT_CHANNEL,
       facebookUrl: normalizeUrl(fbInput?.value) || DEFAULT_FB_PAGE,
       instagramUrl: normalizeUrl(igInput?.value) || DEFAULT_IG_PAGE,
+      tiktokUrl: normalizeUrl(tiktokInput?.value) || DEFAULT_TIKTOK,
+      timezone: timezoneSelect?.value || 'EST',
+      promoVideoUrl: promoInput?.value.trim() || DEFAULT_PROMO_URL,
       twitterUrl: '',
       spotifyUrl: ''
     };
     saveSettings(updated);
-    toast('💾 Ministry settings & social channel links saved!');
+    toast('💾 Ministry settings & public channel links saved!');
   });
+}
+
+// ── NEWSLETTER SUBSCRIBERS MANAGER ────────────────────────────────────────
+function setupSubscribersManager() {
+  const c = document.getElementById('adminSubscribersList');
+  const countEl = document.getElementById('subscribersCount');
+  const exportBtn = document.getElementById('btnExportSubscribersCsv');
+
+  const render = () => {
+    const list = getSubscribers();
+    if (countEl) countEl.textContent = list.length;
+    if (!c) return;
+
+    if (!list.length) {
+      c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No subscribers recorded yet.</p>';
+      return;
+    }
+
+    c.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="text-align:left;border-bottom:1px solid var(--admin-border);color:var(--admin-muted);">
+            <th style="padding:8px 6px;">Email</th>
+            <th style="padding:8px 6px;">Subscribed</th>
+            <th style="padding:8px 6px;">Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(s => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+              <td style="padding:8px 6px;color:#fff;font-weight:600;">${s.email}</td>
+              <td style="padding:8px 6px;color:var(--admin-muted);font-size:0.78rem;">${s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : 'Active'}</td>
+              <td style="padding:8px 6px;"><span class="admin-tag" style="font-size:0.68rem;">${s.source || 'Website'}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  };
+
+  exportBtn?.addEventListener('click', () => {
+    const csvContent = exportSubscribersToCsv();
+    if (!csvContent) {
+      toast('⚠️ No subscribers to export yet.');
+      return;
+    }
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `2ms_newsletter_subscribers_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('📥 Subscriber CSV exported successfully!');
+  });
+
+  render();
+  window.addEventListener('2ms:subscribers:updated', render);
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────
