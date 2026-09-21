@@ -5,11 +5,12 @@ import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durati
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
-import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse } from './data/dailyVerse.js';
+import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse, getLocalDateStr } from './data/dailyVerse.js';
 import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
 import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
 import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
 import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
+import { getAllReflections, deleteReflection, saveReflections } from './data/reflections.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupConversationsManager();
   setupPartnersManager();
   setupEventsManager();
+  setupReflectionsManager();
   setupSettingsPanel();
   setupBackupPanel();
   populateSelects();
@@ -59,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPartnersList();
     renderEventsList();
     renderPrayerInbox();
+    renderReflectionsList();
   };
 
   window.addEventListener('storage', refreshAdminView);
@@ -68,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:verses:updated', refreshAdminView);
   window.addEventListener('2ms:events:updated', refreshAdminView);
   window.addEventListener('2ms:leadership:updated', refreshAdminView);
+  window.addEventListener('2ms:reflections:updated', refreshAdminView);
 });
 
 // ── Topbar date ──────────────────────────────────────────────────────────
@@ -91,6 +95,7 @@ function checkExistingSession() {
       renderPreachersList();
       renderEventsList();
       renderPrayerInbox();
+      renderReflectionsList();
     }
   }
 }
@@ -269,6 +274,7 @@ function setupQuickActions() {
 const PANEL_TITLES = {
   dashboard:     'Dashboard',
   'daily-verse': 'Daily Verse Queue',
+  reflections:   'Community Reflections Moderation',
   sermons:       'Sermon Publisher',
   preachers:     'Preachers Manager',
   events:        'Events Manager',
@@ -299,6 +305,10 @@ function renderDashboardStats() {
   set('statPreachers', preachers.length);
   set('statEvents',    getEvents().length);
   set('statPrayers',   pendingPrayers.length);
+  const allReflections = getAllReflections();
+  set('statReflections', allReflections.length);
+  const refBadge = document.getElementById('reflectionsBadge');
+  if (refBadge) refBadge.textContent = allReflections.length;
   updatePrayerBadge();
 }
 
@@ -310,7 +320,7 @@ function updatePrayerBadge() {
 // ── DAILY VERSE SCHEDULER ─────────────────────────────────────────────────
 function setupVerseScheduler() {
   const dateInput = document.getElementById('adminDvDate');
-  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  if (dateInput) dateInput.value = getLocalDateStr();
 
   document.getElementById('adminScheduleVerseForm')?.addEventListener('submit', e => {
     e.preventDefault();
@@ -336,7 +346,7 @@ function setupVerseScheduler() {
     upsertDailyVerse(entry);
 
     e.target.reset();
-    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    if (dateInput) dateInput.value = getLocalDateStr();
     renderVerseQueue();
     renderDashboardStats();
     toast(`📅 Verse scheduled for ${dateStr}`);
@@ -361,7 +371,7 @@ function renderVerseQueue() {
   // Update live status banner
   const statusEl = document.getElementById('adminTodayVerseStatus');
   if (statusEl) {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const todayVerse = getVerseForDate(todayStr);
     if (!todayVerse.isFallback) {
       statusEl.className = 'admin-verse-status-banner is-scheduled';
@@ -760,6 +770,30 @@ function compressImageFile(file, maxDim = 400, quality = 0.82) {
   });
 }
 
+export function countWords(str) {
+  if (!str) return 0;
+  return str.trim().split(/\s+/).filter(Boolean).length;
+}
+
+export function updateBioWordCounter(textareaEl, counterEl, maxWords = 150) {
+  if (!counterEl) return;
+  const count = countWords(textareaEl?.value || '');
+  if (count <= 130) {
+    counterEl.textContent = `${count} / ${maxWords} words`;
+    counterEl.style.color = 'var(--admin-text-muted, #9ca3af)';
+    counterEl.style.fontWeight = '600';
+  } else if (count <= maxWords) {
+    counterEl.textContent = `${count} / ${maxWords} words`;
+    counterEl.style.color = '#f59e0b';
+    counterEl.style.fontWeight = '700';
+  } else {
+    const over = count - maxWords;
+    counterEl.textContent = `⚠️ ${count} / ${maxWords} words (${over} over limit)`;
+    counterEl.style.color = 'var(--admin-red, #ef4444)';
+    counterEl.style.fontWeight = '800';
+  }
+}
+
 // ── PREACHERS MANAGER ─────────────────────────────────────────────────────
 function setupPreachersManager() {
   const form = document.getElementById('adminAddPreacherForm');
@@ -772,6 +806,12 @@ function setupPreachersManager() {
   const previewImg = document.getElementById('adminPreacherPhotoPreview');
   const btnTriggerUpload = document.getElementById('btnTriggerPhotoUpload');
   const btnDefaultAvatar = document.getElementById('btnDefaultAvatar');
+  const bioCounterEl = document.getElementById('preacherBioWordCounter');
+
+  const refreshPreacherBioCount = () => updateBioWordCounter(bioInput, bioCounterEl, 150);
+  bioInput?.addEventListener('input', refreshPreacherBioCount);
+  bioInput?.addEventListener('paste', () => setTimeout(refreshPreacherBioCount, 50));
+  refreshPreacherBioCount();
 
   function convertToDirectImageUrl(url) {
     // Auto-convert Google Drive share links to a direct embeddable image URL.
@@ -849,6 +889,7 @@ function setupPreachersManager() {
     if (submitBtn) submitBtn.textContent = '➕ Add Preacher to Directory';
     if (cancelBtn) cancelBtn.style.display = 'none';
     updateAvatarPreview();
+    refreshPreacherBioCount();
   }
 
   cancelBtn?.addEventListener('click', () => {
@@ -864,6 +905,13 @@ function setupPreachersManager() {
     const country      = countryInput?.value.trim() || '';
     let photoUrl       = photoUrlInput?.value.trim();
     const bio          = bioInput?.value.trim() || '';
+
+    const bioWords = countWords(bio);
+    if (bioWords > 150) {
+      toast(`⚠️ Preacher bio cannot exceed 150 words (currently ${bioWords} words). Please shorten it.`);
+      bioInput?.focus();
+      return;
+    }
 
     if (!photoUrl) {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
@@ -954,7 +1002,10 @@ function renderPreachersList() {
       if (nameInput) nameInput.value = p.name || '';
       if (denomInput) denomInput.value = p.denomination || '';
       if (countryInput) countryInput.value = p.country || '';
-      if (bioInput) bioInput.value = p.bio || '';
+      if (bioInput) {
+        bioInput.value = p.bio || '';
+        updateBioWordCounter(bioInput, document.getElementById('preacherBioWordCounter'), 150);
+      }
       if (photoUrlInput) photoUrlInput.value = p.photoUrl || '';
       if (previewImg && p.photoUrl) previewImg.src = p.photoUrl;
 
@@ -1071,6 +1122,12 @@ function setupLeadershipManager() {
   const previewImg = document.getElementById('adminLeaderPhotoPreview');
   const btnTriggerUpload = document.getElementById('btnTriggerLeaderPhotoUpload');
   const btnDefaultAvatar = document.getElementById('btnDefaultLeaderAvatar');
+  const leaderBioCounterEl = document.getElementById('leaderBioWordCounter');
+
+  const refreshLeaderBioCount = () => updateBioWordCounter(bioInput, leaderBioCounterEl, 150);
+  bioInput?.addEventListener('input', refreshLeaderBioCount);
+  bioInput?.addEventListener('paste', () => setTimeout(refreshLeaderBioCount, 50));
+  refreshLeaderBioCount();
 
   // Populate Preachers quick-import dropdown
   function populateLeaderPreacherImport() {
@@ -1088,7 +1145,10 @@ function setupLeadershipManager() {
     const p = getPreachers().find(x => x.id === selectedId);
     if (p) {
       if (nameInput) nameInput.value = p.name || '';
-      if (bioInput && p.bio) bioInput.value = p.bio;
+      if (bioInput && p.bio) {
+        bioInput.value = p.bio;
+        refreshLeaderBioCount();
+      }
       if (p.photoUrl) {
         if (photoUrlInput) photoUrlInput.value = p.photoUrl;
         if (previewImg) previewImg.src = p.photoUrl;
@@ -1120,6 +1180,7 @@ function setupLeadershipManager() {
     if (cancelBtn) cancelBtn.style.display = 'none';
     if (importSelect) importSelect.value = '';
     updateLeaderAvatarPreview();
+    refreshLeaderBioCount();
   }
 
   cancelBtn?.addEventListener('click', resetLeaderForm);
@@ -1160,6 +1221,13 @@ function setupLeadershipManager() {
     const tier     = tierInput?.value || 'Executive Board';
     let photoUrl   = photoUrlInput?.value.trim();
     const bio      = bioInput?.value.trim() || '';
+
+    const bioWords = countWords(bio);
+    if (bioWords > 150) {
+      toast(`⚠️ Leader bio cannot exceed 150 words (currently ${bioWords} words). Please shorten it.`);
+      bioInput?.focus();
+      return;
+    }
 
     let tierOrder = 1;
     if (tier === 'Department Coordinators' || tier.includes('Department')) tierOrder = 2;
@@ -1244,7 +1312,10 @@ function renderLeadershipList() {
       if (tierInput) tierInput.value = target.tier || 'Executive Board';
       if (photoUrlInput) photoUrlInput.value = target.photoUrl || '';
       if (previewImg) previewImg.src = target.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(target.name)}&background=C62828&color=fff&size=160`;
-      if (bioInput) bioInput.value = target.bio || '';
+      if (bioInput) {
+        bioInput.value = target.bio || '';
+        updateBioWordCounter(bioInput, document.getElementById('leaderBioWordCounter'), 150);
+      }
 
       if (heading) heading.textContent = `Edit: "${target.name}"`;
       if (submitBtn) submitBtn.textContent = '💾 Update Team Member';
@@ -1581,6 +1652,119 @@ window.markPrayed = idx => {
   toast('✓ Prayer marked as prayed for!');
 };
 
+// ── COMMUNITY REFLECTIONS MODERATION ─────────────────────────────────────────
+function setupReflectionsManager() {
+  const searchInput = document.getElementById('adminReflectionsSearch');
+  const dateFilter = document.getElementById('adminReflectionsDateFilter');
+
+  searchInput?.addEventListener('input', () => renderReflectionsList());
+  dateFilter?.addEventListener('change', () => renderReflectionsList());
+}
+
+function renderReflectionsList() {
+  const container = document.getElementById('adminReflectionsList');
+  const countEl = document.getElementById('adminReflectionsCount');
+  if (!container) return;
+
+  const all = getAllReflections();
+  if (countEl) countEl.textContent = all.length;
+
+  // Update date filter options dynamically
+  const dateFilter = document.getElementById('adminReflectionsDateFilter');
+  if (dateFilter) {
+    const dates = [...new Set(all.map(r => r.verseDate).filter(Boolean))].sort().reverse();
+    dates.forEach(d => {
+      if (!Array.from(dateFilter.options).some(o => o.value === d)) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = `Date: ${d}`;
+        dateFilter.appendChild(opt);
+      }
+    });
+  }
+
+  const selectedDate = dateFilter?.value || 'ALL';
+  const searchTerm = (document.getElementById('adminReflectionsSearch')?.value || '').toLowerCase().trim();
+  const todayStr = getLocalDateStr();
+
+  let filtered = all.filter(r => {
+    if (selectedDate === 'TODAY' && r.verseDate !== todayStr) return false;
+    if (selectedDate !== 'ALL' && selectedDate !== 'TODAY' && r.verseDate !== selectedDate) return false;
+    if (searchTerm) {
+      const author = (r.author || '').toLowerCase();
+      const content = (r.content || '').toLowerCase();
+      if (!author.includes(searchTerm) && !content.includes(searchTerm)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
+        <p style="font-size:1.1rem;margin-bottom:6px;">💬 No reflections found</p>
+        <p style="font-size:0.85rem;">${all.length ? 'Try changing your search term or date filter.' : 'No community comments have been posted yet.'}</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(r => {
+    const authorEscaped = escapeAdminHtml(r.author || 'Fellow Believer');
+    const contentEscaped = escapeAdminHtml(r.content || '');
+    const dateBadge = r.verseDate ? `<span class="admin-badge" style="background:rgba(245,158,11,0.15);color:#d97706;border:1px solid rgba(245,158,11,0.3);">📅 Verse: ${r.verseDate}</span>` : '';
+    const likesBadge = `<span style="font-size:0.8rem;color:#f43f5e;font-weight:600;display:inline-flex;align-items:center;gap:4px;">❤️ ${r.likes || 0}</span>`;
+    const timeFormatted = r.timestamp ? new Date(r.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+    return `
+      <div class="admin-reflection-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c62828,#b71c1c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;">
+              ${(r.author || 'B')[0].toUpperCase()}
+            </div>
+            <div>
+              <strong style="color:#fff;font-size:0.95rem;">${authorEscaped}</strong>
+              ${timeFormatted ? `<span style="font-size:0.75rem;color:var(--admin-text-muted);margin-left:8px;">${timeFormatted}</span>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            ${dateBadge}
+            ${likesBadge}
+          </div>
+        </div>
+        <p style="font-size:0.9rem;line-height:1.6;color:rgba(255,255,255,0.85);white-space:pre-wrap;margin:4px 0 8px;">${contentEscaped}</p>
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="button" class="admin-btn admin-btn-danger admin-btn-sm" onclick="window.deleteReflectionAdmin('${r.id}')" style="gap:5px;font-size:0.78rem;padding:6px 12px;">
+            🗑️ Delete Reflection
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeAdminHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+window.deleteReflectionAdmin = (id) => {
+  const all = getAllReflections();
+  const target = all.find(r => r.id === id);
+  if (!confirm(`Are you sure you want to delete reflection by "${target?.author || 'this user'}"? This action cannot be undone.`)) {
+    return;
+  }
+  deleteReflection(id);
+  renderReflectionsList();
+  renderDashboardStats();
+  toast('🗑️ Reflection removed from community wall.');
+};
+
 // ── BACKUP & RESTORE ──────────────────────────────────────────────────────
 function setupBackupPanel() {
   // Export
@@ -1593,7 +1777,8 @@ function setupBackupPanel() {
         sermons: getSermons(),
         preachers,
         events: getEvents(),
-        pendingPrayers
+        pendingPrayers,
+        reflections: getAllReflections()
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url  = URL.createObjectURL(blob);
@@ -1660,6 +1845,11 @@ function setupBackupPanel() {
         if (Array.isArray(parsed.pendingPrayers)) {
           pendingPrayers.length = 0;
           pendingPrayers.push(...parsed.pendingPrayers);
+        }
+
+        if (Array.isArray(parsed.reflections) && parsed.reflections.length) {
+          saveReflections(parsed.reflections);
+          restoredItems.push(`${parsed.reflections.length} reflections`);
         }
 
         if (!restoredItems.length) {

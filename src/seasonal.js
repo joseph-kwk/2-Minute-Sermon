@@ -142,7 +142,7 @@ class SeasonalManager {
   initParticles() {
     this.particles = [];
     const isMobile = this.width < 768;
-    const count = isMobile ? 30 : 60; // Parallax multi-layer count
+    const count = isMobile ? 12 : 22; // Low, serene particle count — never overwhelms the screen
 
     for (let i = 0; i < count; i++) {
       this.particles.push(this.createParticle());
@@ -151,42 +151,42 @@ class SeasonalManager {
 
   createParticle() {
     const isMobile = this.width < 768;
-    const speedMult = isMobile ? 0.4 : 0.7;
+    const speedMult = isMobile ? 0.35 : 0.55;
 
     if (this.activeSeason === 'christmas') {
-      // 3 Parallax Layers: 0 = foreground (large/soft), 1 = midground (classic), 2 = background (glitter)
+      // 3 Parallax Layers: 0 = foreground (soft), 1 = midground, 2 = background (gentle frost)
       const layer = Math.random() < 0.2 ? 0 : Math.random() < 0.6 ? 1 : 2;
       return {
         layer,
         x: Math.random() * this.width,
         y: Math.random() * this.height,
-        radius: layer === 0 ? Math.random() * 2.5 + 3.0 : layer === 1 ? Math.random() * 1.8 + 1.2 : Math.random() * 1.0 + 0.5,
-        speedY: (layer === 0 ? 1.2 : layer === 1 ? 0.7 : 0.4) * speedMult,
-        speedX: (Math.random() - 0.5) * 0.4,
-        opacity: layer === 0 ? Math.random() * 0.35 + 0.15 : layer === 1 ? Math.random() * 0.6 + 0.3 : Math.random() * 0.8 + 0.2,
-        twinkle: Math.random() * 0.05
+        radius: layer === 0 ? Math.random() * 1.8 + 1.2 : layer === 1 ? Math.random() * 1.2 + 0.8 : Math.random() * 0.8 + 0.3,
+        speedY: (layer === 0 ? 0.7 : layer === 1 ? 0.45 : 0.25) * speedMult,
+        speedX: (Math.random() - 0.5) * 0.25,
+        opacity: layer === 0 ? Math.random() * 0.25 + 0.10 : layer === 1 ? Math.random() * 0.45 + 0.15 : Math.random() * 0.55 + 0.15,
+        twinkle: Math.random() * 0.04
       };
     } else if (this.activeSeason === 'newyear') {
-      // Champagne Stardust & Rising Sparkles
+      // Champagne Stardust & Gentle Rising Sparkles
       return {
         x: Math.random() * this.width,
         y: Math.random() * this.height,
-        radius: Math.random() * 2.2 + 0.8,
-        speedY: -(Math.random() * 0.8 + 0.3) * speedMult,
-        speedX: (Math.random() - 0.5) * 0.4,
-        opacity: Math.random() * 0.8 + 0.2,
+        radius: Math.random() * 1.3 + 0.6,
+        speedY: -(Math.random() * 0.45 + 0.2) * speedMult,
+        speedX: (Math.random() - 0.5) * 0.25,
+        opacity: Math.random() * 0.55 + 0.15,
         color: Math.random() > 0.35 ? '#F59E0B' : '#FFFFFF',
-        pulse: Math.random() * 0.04
+        pulse: Math.random() * 0.03
       };
     } else if (this.activeSeason === 'easter') {
-      // Sunrise Grace Rays & Floating Petal Bokeh
+      // Sunrise Grace Rays & Delicate Petal Bokeh
       return {
         x: Math.random() * this.width,
         y: Math.random() * this.height,
-        radius: Math.random() * 7.0 + 3.5,
-        speedY: (Math.random() - 0.5) * 0.25,
-        speedX: (Math.random() - 0.5) * 0.25,
-        opacity: Math.random() * 0.3 + 0.1,
+        radius: Math.random() * 4.0 + 2.0,
+        speedY: (Math.random() - 0.5) * 0.15,
+        speedX: (Math.random() - 0.5) * 0.15,
+        opacity: Math.random() * 0.16 + 0.06,
         color: Math.random() > 0.5 ? '#F59E0B' : '#7C3AED'
       };
     }
@@ -315,8 +315,8 @@ class SeasonalManager {
       }
     }
 
-    // Spawn subtle fireworks burst occasionally (every 4s)
-    if (now - this.lastFireworkTime > 4000) {
+    // Spawn subtle fireworks burst occasionally (every 7.5s, calm and serene)
+    if (now - this.lastFireworkTime > 7500) {
       this.lastFireworkTime = now;
       this.spawnFirework();
     }
@@ -332,8 +332,8 @@ class SeasonalManager {
 
         spark.x += spark.vx;
         spark.y += spark.vy;
-        spark.vy += 0.03; // slight gravity
-        spark.life -= 0.015;
+        spark.vy += 0.025; // gentle gravity
+        spark.life -= 0.018;
       }
       if (fw.sparks[0]?.life <= 0) {
         this.fireworks.splice(i, 1);
@@ -343,23 +343,24 @@ class SeasonalManager {
 
   spawnFirework() {
     const fwX = Math.random() * (this.width * 0.7) + (this.width * 0.15);
-    const fwY = Math.random() * (this.height * 0.3) + 80;
+    const fwY = Math.random() * (this.height * 0.28) + 70;
     const sparks = [];
     const colorType = Math.random();
+    const SPARK_COUNT = 12;
 
-    for (let i = 0; i < 24; i++) {
-      const angle = (Math.PI * 2 / 24) * i;
-      const speed = Math.random() * 2.0 + 1.0;
+    for (let i = 0; i < SPARK_COUNT; i++) {
+      const angle = (Math.PI * 2 / SPARK_COUNT) * i;
+      const speed = Math.random() * 1.3 + 0.7;
       sparks.push({
         x: fwX,
         y: fwY,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: Math.random() * 1.5 + 1.0,
+        radius: Math.random() * 1.1 + 0.6,
         r: colorType > 0.5 ? 245 : 255,
         g: colorType > 0.5 ? 158 : 223,
         b: colorType > 0.5 ? 11 : 0,
-        life: 1.0
+        life: 0.9
       });
     }
     this.fireworks.push({ sparks });

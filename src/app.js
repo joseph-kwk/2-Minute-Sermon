@@ -38,8 +38,11 @@ const svgShare  = `<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke=
 const svgClock  = `<svg class="icon-svg icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
 const svgBook   = `<svg class="icon-svg icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
 
-function getTodayDateStr() {
-  return new Date().toISOString().split('T')[0];
+export function getTodayDateStr(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function formatVerseDate(dateStr) {
@@ -53,6 +56,28 @@ function formatVerseDate(dateStr) {
   } catch (_) {}
   return dateStr;
 }
+
+export function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[tag] || tag));
+}
+window.escapeHtml = escapeHtml;
+
+window.toggleBioExpand = function(btn, e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  const wrap = btn.closest('.card-bio-wrap');
+  if (!wrap) return;
+  const isExpanded = wrap.classList.toggle('is-expanded');
+  wrap.classList.toggle('is-clamped', !isExpanded);
+  btn.textContent = isExpanded ? 'Show less' : 'Read full bio';
+  btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -275,7 +300,7 @@ const VIEW_TITLES = {
   topics: 'Topics & Pastoral Themes | 2-Minute Sermon',
   preachers: 'Preachers Directory | 2-Minute Sermon',
   conversations: 'The Conversation | 2-Minute Sermon',
-  'daily-verse': "Today's Daily Verse | 2-Minute Sermon",
+  'daily-verse': "Today's Verse | 2-Minute Sermon",
   prayers: 'Prayer Requests & Community Wall | 2-Minute Sermon',
   events: 'Upcoming Ministry Events | 2-Minute Sermon',
   about: 'About Our Ministry | 2-Minute Sermon',
@@ -288,7 +313,7 @@ export function switchView(viewId) {
   document.body.setAttribute('data-active-view', viewId);
   const newsletterSec = document.querySelector('.newsletter-section');
   if (newsletterSec) {
-    newsletterSec.style.display = viewId === 'daily-verse' ? 'none' : '';
+    newsletterSec.style.display = (viewId === 'daily-verse' || viewId === 'contact') ? 'none' : '';
   }
   document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(`view-${viewId}`);
@@ -305,6 +330,9 @@ export function switchView(viewId) {
 
     // Always guarantee hero elements are 100% visible and correctly positioned when home is shown
     if (viewId === 'home') {
+      if (typeof window.refreshHeroParticlesCanvas === 'function') {
+        window.refreshHeroParticlesCanvas();
+      }
       const heroContainer = target.querySelector('.hero-container');
       if (heroContainer) {
         heroContainer.style.opacity = '1';
@@ -590,7 +618,7 @@ function setupHeroAmbientEffects() {
   setupHeroParallax(heroSection, null);
 }
 
-// ─── GOLDEN SUN-MOTE CANVAS PARTICLES ─────────────────────────────────────────
+// ─── GOLDEN SUN-MOTE & LANTERN CANVAS PARTICLES ──────────────────────────────
 function setupHeroParticles(heroSection, sectionObserver) {
   const canvas = document.createElement('canvas');
   canvas.className = 'hero-particles-canvas';
@@ -599,28 +627,40 @@ function setupHeroParticles(heroSection, sectionObserver) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  let width = (canvas.width = heroSection.offsetWidth);
-  let height = (canvas.height = heroSection.offsetHeight);
+  let width = (canvas.width = heroSection.offsetWidth || window.innerWidth);
+  let height = (canvas.height = heroSection.offsetHeight || 600);
 
-  window.addEventListener('resize', () => {
-    width = canvas.width = heroSection.offsetWidth;
-    height = canvas.height = heroSection.offsetHeight;
-  }, { passive: true });
-
-  const PARTICLE_COUNT = 16;
+  // Refined count and sizes: exactly 18 particles, 1.5px-2.7px size
+  const PARTICLE_COUNT = 18;
   const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    radius: Math.random() * 2.6 + 1.2,
-    baseAlpha: Math.random() * 0.35 + 0.20,
-    alphaSpeed: Math.random() * 0.015 + 0.008,
+    x: Math.random() * (width || window.innerWidth),
+    y: Math.random() * (height || 600),
+    radius: Math.random() * 1.2 + 1.5, // 1.5px - 2.7px
+    baseAlpha: Math.random() * 0.28 + 0.16, // soft, calm transparency
+    alphaSpeed: Math.random() * 0.012 + 0.006,
     alphaOffset: Math.random() * Math.PI * 2,
-    vx: (Math.random() - 0.45) * 0.25,
-    vy: -(Math.random() * 0.35 + 0.15), // gentle calm upward drift
-    wobbleSpeed: Math.random() * 0.015 + 0.005,
-    wobbleAmp: Math.random() * 1.0 + 0.3,
-    color: Math.random() > 0.45 ? '251, 191, 36' : '245, 158, 11' // Amber & Gold
+    vx: (Math.random() - 0.45) * 0.20,
+    vy: -(Math.random() * 0.25 + 0.12), // gentle calm upward drift
+    wobbleSpeed: Math.random() * 0.012 + 0.004,
+    wobbleAmp: Math.random() * 0.8 + 0.3,
+    color: Math.random() > 0.4 ? '251, 191, 36' : '245, 158, 11' // Amber & Gold
   }));
+
+  const updateSize = () => {
+    const w = heroSection.offsetWidth || window.innerWidth;
+    const h = heroSection.offsetHeight || 600;
+    if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h || width === 0)) {
+      width = canvas.width = w;
+      height = canvas.height = h;
+      particles.forEach(p => {
+        if (p.x <= 0 || p.x > width) p.x = Math.random() * width;
+        if (p.y <= 0 || p.y > height) p.y = Math.random() * height;
+      });
+    }
+  };
+
+  window.addEventListener('resize', updateSize, { passive: true });
+  window.refreshHeroParticlesCanvas = updateSize;
 
   let animFrameId = null;
   let isRunning = true;
@@ -628,29 +668,32 @@ function setupHeroParticles(heroSection, sectionObserver) {
 
   function render() {
     if (!isRunning) return;
-    time += 0.02;
+    if (width <= 0 || height <= 0 || canvas.width === 0) {
+      updateSize();
+    }
+    time += 0.016;
     ctx.clearRect(0, 0, width, height);
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const p = particles[i];
       p.y += p.vy;
-      p.x += p.vx + Math.sin(time * p.wobbleSpeed + p.alphaOffset) * 0.25;
+      p.x += p.vx + Math.sin(time * p.wobbleSpeed + p.alphaOffset) * 0.20;
 
       // Wrap around edges seamlessly
       if (p.y < -10) { p.y = height + 10; p.x = Math.random() * width; }
       if (p.x < -10) p.x = width + 10;
       if (p.x > width + 10) p.x = -10;
 
-      const currentAlpha = p.baseAlpha + Math.sin(time * p.alphaSpeed * 60 + p.alphaOffset) * 0.2;
-      const safeAlpha = Math.max(0.08, Math.min(0.85, currentAlpha));
+      const currentAlpha = p.baseAlpha + Math.sin(time * p.alphaSpeed * 60 + p.alphaOffset) * 0.15;
+      const safeAlpha = Math.max(0.08, Math.min(0.55, currentAlpha));
 
-      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2);
+      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 1.8);
       gradient.addColorStop(0, `rgba(${p.color}, ${safeAlpha})`);
-      gradient.addColorStop(0.5, `rgba(${p.color}, ${safeAlpha * 0.5})`);
+      gradient.addColorStop(0.5, `rgba(${p.color}, ${safeAlpha * 0.45})`);
       gradient.addColorStop(1, `rgba(${p.color}, 0)`);
 
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.radius * 1.8, 0, Math.PI * 2);
       ctx.fillStyle = gradient;
       ctx.fill();
     }
@@ -664,6 +707,7 @@ function setupHeroParticles(heroSection, sectionObserver) {
       if (entry.isIntersecting) {
         if (!isRunning) {
           isRunning = true;
+          updateSize();
           animFrameId = requestAnimationFrame(render);
         }
       } else {
@@ -2722,7 +2766,7 @@ export function renderDailyVerse() {
         <div class="verse-header">
           <span class="verse-label">
             <svg class="icon-svg icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-            ${verse.isFallback ? "Today's Daily Verse" : "Today's Scripture"}
+            ${verse.isFallback ? "Today's Verse" : "Today's Scripture"}
           </span>
           <span class="verse-date">${displayDate}</span>
         </div>
@@ -2962,7 +3006,9 @@ function updateFooterSocialLinks() {
     youtube: normalizeUrl(s.youtubeUrl) || DEFAULT_YT_CHANNEL,
     facebook: normalizeUrl(s.facebookUrl) || DEFAULT_FB_PAGE,
     instagram: normalizeUrl(s.instagramUrl) || DEFAULT_IG_PAGE,
-    tiktok: normalizeUrl(s.tiktokUrl) || DEFAULT_TIKTOK_PAGE
+    tiktok: normalizeUrl(s.tiktokUrl) || DEFAULT_TIKTOK_PAGE,
+    email: `mailto:${s.contactEmail || DEFAULT_MINISTRY_EMAIL}`,
+    gmail: `mailto:${s.contactEmail || DEFAULT_MINISTRY_EMAIL}`
   };
 
   const socialIcons = document.querySelectorAll('.social-icon');
@@ -3045,6 +3091,22 @@ function setupGeneralContactForm() {
 window.openPrayerFromSermon = () => {
   document.getElementById('sermonModal').hidden = true;
   switchView('prayers');
+};
+
+window.handleDonateClick = function() {
+  const notice = document.getElementById('supportStatusNotice');
+  if (notice) {
+    notice.style.display = 'block';
+  }
+  const subSelect = document.getElementById('contactSubject');
+  if (subSelect) {
+    subSelect.value = 'Ministry Partnership';
+  }
+  const contactForm = document.getElementById('generalContactForm');
+  if (contactForm) {
+    contactForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  showToast('🕊️ Online donation gateway is in setup. Please reach out via Ministry Partnership above!');
 };
 
 // ─── ADMIN AUTH GATE ──────────────────────────────────────────────────────────
@@ -3175,6 +3237,18 @@ function setupAdminPortal() {
   });
 
   // ── Add Preacher ──
+  const clientPreacherBio = document.getElementById('newPreacherBio');
+  const clientBioCounter = document.getElementById('clientPreacherBioWordCounter');
+  if (clientPreacherBio && clientBioCounter) {
+    const updateClientBio = () => {
+      const words = clientPreacherBio.value.trim().split(/\s+/).filter(Boolean).length;
+      clientBioCounter.textContent = `${words} / 150 words`;
+      clientBioCounter.style.color = words > 150 ? 'var(--color-sermon-red)' : 'var(--color-mediumgray)';
+    };
+    clientPreacherBio.addEventListener('input', updateClientBio);
+    clientPreacherBio.addEventListener('paste', () => setTimeout(updateClientBio, 50));
+  }
+
   document.getElementById('adminAddPreacherForm')?.addEventListener('submit', e => {
     e.preventDefault();
     const name         = document.getElementById('newPreacherName').value;
@@ -3182,6 +3256,13 @@ function setupAdminPortal() {
     const country      = document.getElementById('newPreacherCountry').value;
     const photoUrl     = document.getElementById('newPreacherPhoto').value;
     const bio          = document.getElementById('newPreacherBio').value;
+
+    const bioWords = bio.trim().split(/\s+/).filter(Boolean).length;
+    if (bioWords > 150) {
+      showToast(`⚠️ Preacher bio cannot exceed 150 words (currently ${bioWords} words). Please shorten it.`);
+      document.getElementById('newPreacherBio')?.focus();
+      return;
+    }
 
     const newPreacher = {
       id: `p-${Date.now()}`, name, denomination, country, photoUrl, bio
@@ -3193,6 +3274,7 @@ function setupAdminPortal() {
     renderAdminPreachersList();
     populateDropdownFilterOptions();
     e.target.reset();
+    if (clientBioCounter) clientBioCounter.textContent = '0 / 150 words';
 
     // Update stat counter in hero
     const counter = document.getElementById('homePreachersCount');
@@ -3334,19 +3416,30 @@ window.filterByTopicName = name => {
 function renderPreachersHub() {
   const c = document.getElementById('preachersHubGrid');
   if (!c) return;
-  c.innerHTML = preachers().map(p => `
-    <div class="hub-card preacher-hub-card text-center">
-      <img src="${p.photoUrl}" alt="${p.name}" class="preacher-card-img"
-           onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=84'">
-      <h3 class="preacher-card-name">${p.name}</h3>
-      <div class="preacher-card-meta">${p.denomination} &bull; ${p.country}</div>
-      <p class="preacher-card-bio">${p.bio}</p>
-      <div class="preacher-card-footer">
-        <button class="btn btn-outline btn-sm btn-full" onclick="window.filterByPreacherName('${p.name}')">
-          View Sermons
-        </button>
+  c.innerHTML = preachers().map(p => {
+    const bio = p.bio || '';
+    const isLong = bio.length > 140;
+    const bioHtml = bio ? (isLong ? `
+      <div class="card-bio-wrap is-clamped">
+        <p class="preacher-card-bio">${escapeHtml(bio)}</p>
+        <button type="button" class="bio-expand-btn" aria-expanded="false" onclick="window.toggleBioExpand(this, event)">Read full bio</button>
       </div>
-    </div>`).join('');
+    ` : `<p class="preacher-card-bio">${escapeHtml(bio)}</p>`) : '';
+
+    return `
+      <div class="hub-card preacher-hub-card text-center">
+        <img src="${p.photoUrl}" alt="${p.name}" class="preacher-card-img"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=84'">
+        <h3 class="preacher-card-name">${p.name}</h3>
+        <div class="preacher-card-meta">${p.denomination} &bull; ${p.country}</div>
+        ${bioHtml}
+        <div class="preacher-card-footer">
+          <button class="btn btn-outline btn-sm btn-full" onclick="window.filterByPreacherName('${p.name}')">
+            View Sermons
+          </button>
+        </div>
+      </div>`;
+  }).join('');
   observeNewCards(c);
 }
 window.filterByPreacherName = name => {
@@ -3474,6 +3567,15 @@ export function renderAboutTeamRoster(filter = 'all') {
 
   container.innerHTML = filtered.map(m => {
     const isExec = m.tier === 'Executive Board' || m.tierOrder === 1;
+    const bio = m.bio || '';
+    const isLong = bio.length > 150;
+    const bioHtml = bio ? (isLong ? `
+      <div class="card-bio-wrap is-clamped">
+        <p class="team-bio">${escapeHtml(bio)}</p>
+        <button type="button" class="bio-expand-btn" aria-expanded="false" onclick="window.toggleBioExpand(this, event)">Read full bio</button>
+      </div>
+    ` : `<p class="team-bio">${escapeHtml(bio)}</p>`) : '';
+
     return `
       <div class="team-member-card ${isExec ? 'executive' : ''}">
         <img src="${m.photoUrl}" alt="${m.name}" class="team-avatar"
@@ -3481,7 +3583,7 @@ export function renderAboutTeamRoster(filter = 'all') {
         <span class="team-tier-tag">${m.tier || 'Ministry Team'}</span>
         <h3 class="team-name">${m.name}</h3>
         <div class="team-role">${m.role}</div>
-        ${m.bio ? `<p class="team-bio">${m.bio}</p>` : ''}
+        ${bioHtml}
       </div>
     `;
   }).join('');
@@ -3678,16 +3780,7 @@ export function renderConversationsHub(filter = 'all') {
 window.renderConversationsHub = renderConversationsHub;
 
 // ─── COMMUNITY REFLECTIONS & FELLOWSHIP ───────────────────────────────────────
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>'"]/g, tag => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    "'": '&#39;',
-    '"': '&quot;'
-  }[tag] || tag));
-}
+
 
 function formatTimeAgo(dateStr) {
   if (!dateStr) return 'Recently';
@@ -3706,6 +3799,80 @@ export function setupCommunityReflections() {
   const authorInput = document.getElementById('reflectionAuthorInput');
   const contentInput = document.getElementById('reflectionContentInput');
   const charCountEl = document.getElementById('reflectionCharCount');
+
+  // First-time confirmation modal elements
+  const confirmModal = document.getElementById('reflectionConfirmModal');
+  const confirmPreview = document.getElementById('reflectionConfirmPreview');
+  const btnCancel = document.getElementById('btnCancelReflectionPost');
+  const btnConfirm = document.getElementById('btnConfirmReflectionPost');
+  const btnClose = document.getElementById('btnCloseReflectionConfirmModal');
+
+  let pendingSubmission = null;
+
+  const executePost = (author, content) => {
+    const verse = getVerseForDate(getTodayDateStr());
+    const verseDate = verse?.publishDate || getTodayDateStr();
+
+    addReflection({ verseDate, author, content });
+    if (form) form.reset();
+    if (charCountEl) charCountEl.textContent = '0 / 500 characters';
+    renderCommunityReflections();
+    showToast('🕊️ Thank you! Your reflection was shared with fellowship.');
+  };
+
+  const closeConfirmModal = (focusContent = false) => {
+    if (confirmModal && !confirmModal.hidden) {
+      confirmModal.hidden = true;
+      unlockPageScroll();
+      if (focusContent && contentInput) {
+        contentInput.focus();
+      }
+    }
+    pendingSubmission = null;
+  };
+
+  const openConfirmModal = (author, content) => {
+    pendingSubmission = { author, content };
+    if (confirmPreview) {
+      confirmPreview.innerHTML = `<strong>${escapeHtml(author)}:</strong> &ldquo;${escapeHtml(content)}&rdquo;`;
+    }
+    if (confirmModal) {
+      lockPageScroll();
+      confirmModal.hidden = false;
+    }
+  };
+
+  btnCancel?.addEventListener('click', () => {
+    closeConfirmModal(true);
+  });
+
+  btnClose?.addEventListener('click', () => {
+    closeConfirmModal(true);
+  });
+
+  confirmModal?.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      closeConfirmModal(true);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && confirmModal && !confirmModal.hidden) {
+      closeConfirmModal(true);
+    }
+  });
+
+  btnConfirm?.addEventListener('click', () => {
+    if (!pendingSubmission) return;
+    try {
+      localStorage.setItem('2ms_reflection_policy_acknowledged', '1');
+    } catch {
+      // ignore storage quota issues
+    }
+    const { author, content } = pendingSubmission;
+    closeConfirmModal(false);
+    executePost(author, content);
+  });
 
   contentInput?.addEventListener('input', () => {
     const len = contentInput.value.length;
@@ -3727,14 +3894,19 @@ export function setupCommunityReflections() {
       return;
     }
     const author = authorInput?.value.trim() || 'Fellow Believer';
-    const verse = getVerseForDate(getTodayDateStr());
-    const verseDate = verse?.publishDate || getTodayDateStr();
 
-    addReflection({ verseDate, author, content });
-    form.reset();
-    if (charCountEl) charCountEl.textContent = '0 / 500 characters';
-    renderCommunityReflections();
-    showToast('🕊️ Thank you! Your reflection was shared with fellowship.');
+    let hasAcknowledged = false;
+    try {
+      hasAcknowledged = localStorage.getItem('2ms_reflection_policy_acknowledged') === '1';
+    } catch {
+      hasAcknowledged = false;
+    }
+
+    if (!hasAcknowledged) {
+      openConfirmModal(author, content);
+    } else {
+      executePost(author, content);
+    }
   });
 
   window.addEventListener('2ms:reflections:updated', renderCommunityReflections);

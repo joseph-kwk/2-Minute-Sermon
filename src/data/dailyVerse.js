@@ -378,13 +378,20 @@ export function deleteDailyVerse(id) {
   return all;
 }
 
+export function getLocalDateStr(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 /**
  * Returns an evergreen rotating verse for any given date string (YYYY-MM-DD).
  * Each calendar day reliably maps to a specific scripture so all visitors
  * see the same daily verse even without manual admin scheduling.
  */
 export function getEvergreenVerseForDate(dateStr) {
-  const targetDate = dateStr || new Date().toISOString().split('T')[0];
+  const targetDate = dateStr || getLocalDateStr();
   let dayNumber = 1;
   try {
     const parts = targetDate.split('-').map(Number);
@@ -412,7 +419,7 @@ export function getEvergreenVerseForDate(dateStr) {
  * with this date. Never returns null/undefined or an outdated past date.
  */
 export function getVerseForDate(dateStr) {
-  const targetDate = dateStr || new Date().toISOString().split('T')[0];
+  const targetDate = dateStr || getLocalDateStr();
   const all = getDailyVerses();
   const scheduled = all.find(v => v.publishDate === targetDate);
   if (scheduled) {
@@ -423,7 +430,7 @@ export function getVerseForDate(dateStr) {
 
 /** Checks whether a custom verse is scheduled for the specified date */
 export function hasCustomVerseForDate(dateStr) {
-  const targetDate = dateStr || new Date().toISOString().split('T')[0];
+  const targetDate = dateStr || getLocalDateStr();
   return getDailyVerses().some(v => v.publishDate === targetDate);
 }
 

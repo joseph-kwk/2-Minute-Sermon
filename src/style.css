@@ -464,7 +464,7 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   will-change: transform;
 }
@@ -482,7 +482,7 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   animation: pulseGlow 5s ease-in-out infinite alternate;
   pointer-events: none;
 }
-.hero-container { position: relative; z-index: 2; max-width: 860px; }
+.hero-container { position: relative; z-index: 3; max-width: 860px; }
 
 .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
@@ -1653,15 +1653,74 @@ textarea.text-input { resize: vertical; }
   font-size: 0.86rem;
   color: #555e6d;
   line-height: 1.55;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   flex-grow: 1;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+/* Expandable Bio Layout for Preachers and Leadership Cards */
+.card-bio-wrap {
+  width: 100%;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  position: relative;
+}
+
+.card-bio-wrap.is-clamped .preacher-card-bio,
+.card-bio-wrap.is-clamped .team-bio {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 4.6em;
-  text-align: center;
+  margin-bottom: 4px;
+}
+
+.card-bio-wrap.is-expanded .preacher-card-bio,
+.card-bio-wrap.is-expanded .team-bio {
+  display: block;
+  overflow: visible;
+  margin-bottom: 8px;
+  animation: bioFadeIn 0.22s ease-out;
+}
+
+@keyframes bioFadeIn {
+  from { opacity: 0.7; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bio-expand-btn {
+  background: rgba(198, 40, 40, 0.05);
+  border: 1px solid rgba(198, 40, 40, 0.22);
+  color: var(--color-sermon-red);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 3px 12px;
+  margin-top: 4px;
+  border-radius: 999px;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1.35;
+}
+
+.bio-expand-btn:hover {
+  background: var(--color-sermon-red);
+  color: #fff;
+  border-color: var(--color-sermon-red);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(198, 40, 40, 0.22);
+}
+
+.team-member-card.executive .bio-expand-btn {
+  border-color: rgba(198, 40, 40, 0.35);
 }
 .preacher-card-footer {
   margin-top: auto;
@@ -2012,6 +2071,8 @@ textarea.text-input { resize: vertical; }
   font-size: 0.88rem;
   color: var(--color-mediumgray);
   line-height: 1.6;
+  text-align: center;
+  margin: 0;
 }
 
 /* ── Ministry Partners ── */
@@ -2729,6 +2790,13 @@ textarea.text-input { resize: vertical; }
   box-shadow: 0 6px 20px rgba(37, 244, 238, 0.5), 0 0 14px rgba(254, 44, 85, 0.5);
   color: #ffffff;
 }
+.social-icon[data-social="email"]:hover,
+.social-icon[data-social="gmail"]:hover {
+  background: #EA4335;
+  border-color: #EA4335;
+  box-shadow: 0 6px 20px rgba(234, 67, 53, 0.55);
+  color: #ffffff;
+}
 .footer-heading { font-size: 1rem; color: var(--color-white); margin-bottom: 16px; font-weight: 600; letter-spacing: 0.3px; }
 .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .footer-links a { color: rgba(255,255,255,0.68); font-size: 0.9rem; transition: all var(--transition-fast); display: inline-block; }
@@ -3384,38 +3452,34 @@ body.modal-open {
   -webkit-overflow-scrolling: touch;
 }
 .card-generator-wrap {
-  padding: 32px;
+  padding: 24px 28px;
 }
 .card-generator-header {
-  text-align: center;
-  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+  padding-right: 48px;
 }
-.card-generator-title {
-  font-size: 1.8rem;
-  color: #fff;
-  margin: 10px 0 6px;
-}
+.card-generator-title,
 .card-generator-subtitle {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.68);
-  max-width: 540px;
-  margin: 0 auto;
+  display: none;
 }
 .card-generator-body {
   display: grid;
   grid-template-columns: 1fr 1.15fr;
-  gap: 32px;
-  align-items: start;
+  gap: 28px;
+  align-items: center;
 }
 .card-preview-viewport {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 20px;
+  border-radius: 18px;
+  padding: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 420px;
+  min-height: 440px;
 }
 .card-preview-stage {
   display: flex;
@@ -3425,7 +3489,7 @@ body.modal-open {
 }
 .scripture-canvas {
   max-width: 100%;
-  max-height: 400px;
+  max-height: 440px;
   height: auto;
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -3436,7 +3500,7 @@ body.modal-open {
 .card-controls-panel {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 .control-group {
   display: flex;
@@ -3886,8 +3950,9 @@ body.modal-open {
   font-size: 0.92rem;
 }
 
-/* Dynamically hide newsletter specifically on the daily verse view */
-body[data-active-view="daily-verse"] .newsletter-section {
+/* Dynamically hide newsletter specifically on the daily verse view and contact view */
+body[data-active-view="daily-verse"] .newsletter-section,
+body[data-active-view="contact"] .newsletter-section {
   display: none !important;
 }
 
@@ -4132,5 +4197,562 @@ body[data-active-view="daily-verse"] .newsletter-section {
   color: #475569;
   outline: none;
 }
+
+/* ==========================================================================
+   DAILY VERSE: "READ REFLECTION & FELLOWSHIP" ANIMATED PULSE (WARM GOLD)
+   ========================================================================== */
+.btn-reflection-pulse {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.22) 100%) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.75) !important;
+  color: #f59e0b !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+  animation: warmGlowPulse 2.6s ease-in-out infinite;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.btn-reflection-pulse:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.55) !important;
+  animation: none;
+}
+
+@keyframes warmGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.2), 0 0 0 0 rgba(245, 158, 11, 0.35);
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.55), 0 0 0 4px rgba(245, 158, 11, 0.18);
+    border-color: #fbbf24;
+    color: #fbbf24 !important;
+    transform: scale(1.02);
+  }
+}
+
+[data-theme="light"] .btn-reflection-pulse {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.16) 100%) !important;
+  border: 1.5px solid #d97706 !important;
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .btn-reflection-pulse:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+  border-color: #b45309 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(217, 119, 6, 0.45) !important;
+}
+
+/* ==========================================================================
+   SUPPORT & DONATE TO THE MINISTRY CARD (CONTACT PAGE)
+   ========================================================================== */
+.support-ministry-card {
+  position: relative;
+  border-radius: 20px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  padding: 32px 28px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.support-ministry-card:hover {
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.support-card-glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0) 70%);
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.support-card-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.support-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #d97706;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+
+.support-card-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-primary, #1e293b);
+}
+
+.support-card-desc {
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 22px;
+  max-width: 640px;
+}
+
+.support-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-support-donate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-support-donate:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  box-shadow: 0 6px 22px rgba(217, 119, 6, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-support-donate:active {
+  transform: translateY(0);
+}
+
+.support-status-notice {
+  margin-top: 20px;
+  animation: fadeInNotice 0.3s ease-in-out;
+}
+
+@keyframes fadeInNotice {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.support-notice-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+}
+
+.support-notice-content .icon-notice {
+  color: #d97706;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+}
+
+.support-notice-text strong {
+  display: block;
+  font-size: 0.94rem;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 4px;
+}
+
+.support-notice-text p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+}
+
+.btn-support-donate.btn-disabled,
+.btn-support-donate:disabled {
+  opacity: 0.65;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  background: #94a3b8 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.btn-outline-gmail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #ea4335;
+  color: #ea4335;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: rgba(234, 67, 53, 0.06);
+}
+
+.btn-outline-gmail:hover {
+  background: #ea4335;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(234, 67, 53, 0.4);
+  transform: translateY(-1px);
+}
+
+.support-mail-link {
+  color: #ea4335;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ==========================================================================
+   COMMUNITY REFLECTIONS & FIRST-TIME CONFIRMATION MODAL (RESPONSIVE)
+   ========================================================================== */
+
+/* Devotional container spacing — ensures scripture card has breathing space from subheader */
+.devotional-container {
+  padding-top: 36px !important;
+  padding-bottom: 60px;
+}
+
+/* Card container */
+.community-reflections-card {
+  background: var(--color-white, #ffffff);
+  border-radius: var(--radius-lg, 16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  padding: 32px;
+  margin-top: 28px;
+  transition: box-shadow 0.2s ease;
+}
+
+.community-reflections-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.community-reflections-title {
+  font-family: var(--font-heading, inherit);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--color-dark, #0f172a);
+  margin: 0 0 6px;
+  line-height: 1.25;
+}
+
+.community-reflections-desc {
+  color: var(--color-mediumgray, #64748b);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 640px;
+}
+
+/* Reflection Form */
+.reflection-form {
+  margin-bottom: 28px;
+  background: #fdfdfd;
+  border: 1px solid #f1f5f9;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.reflection-form-group {
+  margin-bottom: 14px;
+}
+
+.reflection-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-dark, #1e293b);
+  margin-bottom: 6px;
+}
+
+.reflection-input,
+.reflection-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 1rem; /* 16px prevents iOS Safari auto-zoom */
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.reflection-input:focus,
+.reflection-textarea:focus {
+  outline: none;
+  border-color: var(--color-sermon-red, #c62828);
+  box-shadow: 0 0 0 3.5px rgba(198, 40, 40, 0.12);
+}
+
+.reflection-textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+
+.reflection-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.reflection-hint {
+  font-size: 0.78rem;
+  color: var(--color-mediumgray, #64748b);
+}
+
+.reflection-char-count {
+  font-size: 0.8rem;
+  color: var(--color-mediumgray, #64748b);
+  font-weight: 600;
+}
+
+.btn-submit-reflection {
+  padding: 11px 24px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Feed items */
+.community-reflection-item {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Confirmation Modal Dialog */
+.reflection-confirm-dialog {
+  max-width: 480px;
+  width: calc(100% - 32px);
+  margin: 16px auto;
+  text-align: left;
+  padding: 28px;
+  background: #ffffff;
+  color: #1e293b;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.reflection-confirm-dialog .modal-close-btn {
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+}
+
+.reflection-confirm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-right: 36px;
+}
+
+.reflection-confirm-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.reflection-confirm-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 2px;
+  display: block;
+}
+
+.reflection-confirm-desc {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: #334155;
+  margin-bottom: 16px;
+}
+
+.reflection-confirm-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3.5px solid #f59e0b;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 22px;
+  font-size: 0.88rem;
+  color: #475569;
+  font-style: italic;
+  line-height: 1.5;
+  max-height: 130px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.reflection-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reflection-modal-btn-cancel {
+  font-size: 0.9rem;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reflection-modal-btn-post {
+  font-size: 0.9rem;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* Phone View Optimizations (<= 640px and <= 480px) */
+@media (max-width: 640px) {
+  .devotional-container {
+    padding-top: 22px !important;
+    padding-bottom: 40px;
+  }
+
+  .community-reflections-card {
+    padding: 18px 14px;
+    margin-top: 20px;
+    border-radius: 14px;
+  }
+
+  .community-reflections-title {
+    font-size: 1.25rem;
+  }
+
+  .community-reflections-desc {
+    font-size: 0.86rem;
+  }
+
+  .reflection-form {
+    padding: 14px 12px;
+    margin-bottom: 20px;
+  }
+
+  .reflection-input,
+  .reflection-textarea {
+    font-size: 1rem;
+    padding: 11px 12px;
+  }
+
+  .btn-submit-reflection {
+    width: 100%;
+    min-height: 46px;
+    font-size: 0.95rem;
+    justify-content: center;
+  }
+
+  /* Modal on Phone */
+  .reflection-confirm-dialog {
+    padding: 22px 16px 18px;
+    width: calc(100% - 24px);
+    margin: 12px auto;
+    border-radius: 16px;
+    max-height: 90vh;
+  }
+
+  .reflection-confirm-dialog .modal-close-btn {
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .reflection-confirm-header {
+    margin-bottom: 12px;
+    padding-right: 32px; /* avoid close btn overlap */
+  }
+
+  .reflection-confirm-title {
+    font-size: 1.15rem;
+  }
+
+  .reflection-confirm-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .reflection-confirm-preview {
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    max-height: 110px;
+    margin-bottom: 16px;
+  }
+
+  .reflection-confirm-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .reflection-modal-btn-cancel,
+  .reflection-modal-btn-post {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px;
+    font-size: 0.92rem;
+  }
+}
+
+
 
 
