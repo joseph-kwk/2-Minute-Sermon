@@ -15,7 +15,7 @@
   height: 100vh;
   pointer-events: none !important;
   z-index: 4;
-  opacity: 0.55;
+  opacity: 0.80;
   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -42,7 +42,7 @@ body[data-season="christmas"] .hero-section {
 /* --------------------------------------------------------------------------
    Atmospheric Ambient Background Glows
    -------------------------------------------------------------------------- */
-/* Christmas: Warm Hearth & Northern Sky Ambient Glow */
+/* Christmas: Warm Hearth, Spruce Green, Advent Purple & Northern Sky Ambient Glow */
 body[data-season="christmas"]::before {
   content: "";
   position: fixed;
@@ -50,7 +50,7 @@ body[data-season="christmas"]::before {
   left: 0;
   width: 100vw;
   height: 520px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(198, 40, 40, 0.05) 0%, rgba(217, 119, 6, 0.03) 45%, transparent 80%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(198, 40, 40, 0.08) 0%, rgba(27, 67, 50, 0.06) 35%, rgba(124, 58, 237, 0.04) 55%, rgba(245, 158, 11, 0.04) 75%, transparent 100%);
   pointer-events: none;
   z-index: 0;
   animation: ambientBreathe 10s ease-in-out infinite alternate;
@@ -82,6 +82,20 @@ body[data-season="easter"]::before {
   pointer-events: none;
   z-index: 0;
   animation: ambientBreathe 10s ease-in-out infinite alternate;
+}
+
+/* Holy Week & Passion: Twilight Shadow, Solemn Violet & Wounded Crimson Ember Glow */
+body[data-season="passion"]::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 540px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(30, 16, 40, 0.16) 0%, rgba(74, 13, 20, 0.10) 38%, rgba(18, 21, 28, 0.06) 65%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientBreathe 12s ease-in-out infinite alternate;
 }
 
 @keyframes ambientBreathe {
@@ -126,6 +140,12 @@ body[data-season="easter"] .seasonal-scripture-banner {
   color: #5B21B6;
 }
 
+body[data-season="passion"] .seasonal-scripture-banner {
+  background: rgba(30, 16, 40, 0.12);
+  border-bottom: 1px solid rgba(127, 29, 29, 0.28);
+  color: #581C87;
+}
+
 body[data-season="off"] .seasonal-scripture-banner {
   display: none !important;
 }
@@ -133,11 +153,11 @@ body[data-season="off"] .seasonal-scripture-banner {
 /* --------------------------------------------------------------------------
    Seasonal Navigation & Header Accents
    -------------------------------------------------------------------------- */
-/* Christmas Navbar Touch */
+/* Christmas Navbar Touch: Evergreen, Crimson, Gold & Advent Purple */
 body[data-season="christmas"] .navbar {
   box-shadow: 0 4px 25px rgba(198, 40, 40, 0.14);
   border-bottom: 2px solid transparent;
-  border-image: linear-gradient(90deg, rgba(198,40,40,0.8), rgba(217,119,6,0.9), rgba(255,255,255,0.7), rgba(217,119,6,0.9), rgba(30,58,43,0.8)) 1;
+  border-image: linear-gradient(90deg, #1B4332 0%, #C62828 28%, #F59E0B 50%, #7C3AED 72%, #1B4332 100%) 1;
 }
 
 /* New Year Navbar Touch */
@@ -152,6 +172,13 @@ body[data-season="easter"] .navbar {
   box-shadow: 0 4px 25px rgba(124, 58, 237, 0.15);
   border-bottom: 2px solid transparent;
   border-image: linear-gradient(90deg, rgba(124,58,237,0.7), rgba(245,158,11,0.85), rgba(255,255,255,0.8), rgba(5,150,105,0.7)) 1;
+}
+
+/* Holy Week & Passion Navbar Touch: Solemn Violet to Wounded Crimson */
+body[data-season="passion"] .navbar {
+  box-shadow: 0 4px 25px rgba(30, 16, 40, 0.25);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, #1E1028 0%, #4C1D95 25%, #7F1D1D 50%, #4C1D95 75%, #1E1028 100%) 1;
 }
 
 /* --------------------------------------------------------------------------
@@ -205,6 +232,22 @@ body[data-season="easter"] .hero-card-featured::before {
   animation: borderGlint 7s linear infinite;
 }
 
+/* Holy Week & Passion Solemn Silhouette & Wounded Crimson Glint */
+body[data-season="passion"] .hero-card-featured {
+  position: relative;
+  box-shadow: 0 16px 48px rgba(30, 16, 40, 0.38);
+}
+body[data-season="passion"] .hero-card-featured::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: var(--radius-lg, 14px);
+  background: linear-gradient(135deg, rgba(76, 29, 149, 0.5), rgba(127, 29, 29, 0.65), rgba(30, 16, 40, 0.8));
+  z-index: -1;
+  pointer-events: none;
+  animation: borderGlint 8s linear infinite;
+}
+
 @keyframes borderGlint {
   0% { filter: hue-rotate(0deg) brightness(1); }
   50% { filter: hue-rotate(15deg) brightness(1.2); }
@@ -227,6 +270,11 @@ body[data-season="newyear"] .audio-player-mini {
 body[data-season="easter"] .audio-player-card,
 body[data-season="easter"] .audio-player-mini {
   box-shadow: 0 8px 32px rgba(124, 58, 237, 0.18), 0 0 16px rgba(245, 158, 11, 0.12);
+}
+
+body[data-season="passion"] .audio-player-card,
+body[data-season="passion"] .audio-player-mini {
+  box-shadow: 0 8px 32px rgba(30, 16, 40, 0.35), 0 0 16px rgba(127, 29, 29, 0.2);
 }
 
 /* --------------------------------------------------------------------------
@@ -268,6 +316,12 @@ body[data-season="easter"] .seasonal-badge {
   border: 1px solid rgba(124, 58, 237, 0.3);
 }
 
+body[data-season="passion"] .seasonal-badge {
+  background: rgba(127, 29, 29, 0.18);
+  color: #DC2626;
+  border: 1px solid rgba(127, 29, 29, 0.38);
+}
+
 body[data-season="off"] .seasonal-badge {
   display: none !important;
 }
@@ -278,43 +332,108 @@ body[data-season="off"] .seasonal-badge {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Season Control Switcher
+   Seasonal Footer Showcase Vignette (Full Atmospheric Holiday Display)
    -------------------------------------------------------------------------- */
-.seasonal-footer-control {
+.seasonal-footer-showcase {
+  position: relative;
+  width: 100%;
+  margin-bottom: 28px;
+  padding: 24px 20px;
+  border-radius: var(--radius-lg, 12px);
+  text-align: center;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  transition: all 0.4s ease;
+}
+
+body[data-season="christmas"] .seasonal-footer-showcase {
+  background: linear-gradient(135deg, rgba(27, 67, 50, 0.45) 0%, rgba(198, 40, 40, 0.35) 50%, rgba(88, 28, 135, 0.3) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+body[data-season="newyear"] .seasonal-footer-showcase {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.35) 0%, rgba(20, 20, 24, 0.8) 50%, rgba(245, 158, 11, 0.3) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+body[data-season="easter"] .seasonal-footer-showcase {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(245, 158, 11, 0.25) 50%, rgba(5, 150, 105, 0.25) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+body[data-season="passion"] .seasonal-footer-showcase {
+  background: linear-gradient(180deg, rgba(16, 18, 26, 0.95) 0%, rgba(30, 16, 40, 0.92) 55%, rgba(69, 10, 10, 0.88) 100%);
+  border: 1px solid rgba(127, 29, 29, 0.45);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body[data-season="passion"] footer {
+  background: linear-gradient(180deg, #0e1017 0%, #170d1e 40%, #15090f 100%) !important;
+  border-top: 1px solid rgba(127, 29, 29, 0.35) !important;
+}
+
+body[data-season="off"] .seasonal-footer-showcase,
+body.seasonal-disabled .seasonal-footer-showcase {
+  display: none !important;
+}
+
+.calvary-crosses-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.calvary-crosses-svg {
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.7));
+}
+
+.seasonal-showcase-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm, 6px);
-  font-size: 0.8rem;
-  color: #A3A3A3;
-  margin-top: 12px;
-  backdrop-filter: blur(8px);
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 4px 14px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #FCD34D;
+  margin-bottom: 12px;
 }
 
-.seasonal-footer-control label {
-  font-weight: 500;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+body[data-season="passion"] .seasonal-showcase-pill {
+  background: rgba(127, 29, 29, 0.4);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #FCA5A5;
 }
 
-.seasonal-footer-control select {
-  background: rgba(0, 0, 0, 0.5);
-  color: #FAFAFA;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
+.seasonal-showcase-title {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
-.seasonal-footer-control select:hover {
-  border-color: rgba(255, 255, 255, 0.5);
+.seasonal-showcase-quote {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  font-size: 1.02rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 660px;
+  margin: 0 auto 6px;
+  line-height: 1.55;
+}
+
+.seasonal-showcase-ref {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.70);
+  letter-spacing: 0.5px;
 }

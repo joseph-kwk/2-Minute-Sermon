@@ -842,6 +842,23 @@
                   <label class="admin-form-label" for="settingInstagramUrl">Instagram Profile URL</label>
                   <input type="url" id="settingInstagramUrl" class="admin-input" placeholder="https://www.instagram.com/2_minutesermon/">
                 </div>
+            <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--admin-border);">
+              <h3 style="font-size:1.1rem;margin-bottom:6px;font-family:var(--admin-font);display:flex;align-items:center;gap:8px;">
+                <span>✨ Seasonal Ambiance &amp; Holiday Atmosphere</span>
+              </h3>
+              <p class="admin-card-sub" style="margin-bottom:16px;">Control global holiday animations (Christmas snow, New Year gala, Easter dawn) across the entire public site.</p>
+
+              <div class="admin-form-group">
+                <label class="admin-form-label" for="settingSeasonalMode">Global Seasonal Atmosphere</label>
+                <select id="settingSeasonalMode" class="admin-input">
+                  <option value="auto">Auto (~10 Days Before Each Holiday — Default)</option>
+                  <option value="christmas">Force Christmas Season (Snow &amp; Nativity Atmosphere) 🎄</option>
+                  <option value="newyear">Force New Year Celebration (Champagne Sparks) ✨</option>
+                  <option value="passion">Force Holy Week &amp; Good Friday (The Passion &amp; Sacrifice) ✝️</option>
+                  <option value="easter">Force Easter Season (Sunrise Dawn &amp; Lilies) 🌅</option>
+                  <option value="off">Force Disabled (No Holiday Effects Worldwide) 🚫</option>
+                </select>
+                <span class="admin-form-hint">When set to "Auto", Christmas activates ~Dec 15–27, New Year ~Dec 22–Jan 3, Holy Week (Palm Sunday–Holy Saturday), and Easter on Easter Sunday. Selecting a force option overrides the dates immediately for all visitors worldwide.</span>
               </div>
             </div>
 

@@ -1936,6 +1936,9 @@ export function getSettings() {
       if (!parsed.timezone) {
         parsed.timezone = 'EST';
       }
+      if (!parsed.seasonalMode) {
+        parsed.seasonalMode = 'auto';
+      }
       return parsed;
     }
   } catch (_) {}
@@ -1949,6 +1952,7 @@ export function getSettings() {
     tiktokUrl: DEFAULT_TIKTOK,
     promoVideoUrl: DEFAULT_PROMO_URL,
     timezone: 'EST',
+    seasonalMode: 'auto',
     twitterUrl: '',
     spotifyUrl: ''
   };
@@ -1970,9 +1974,11 @@ export function saveSettings(s) {
     s.tiktokUrl = normalizeUrl(s.tiktokUrl) || DEFAULT_TIKTOK;
     s.promoVideoUrl = s.promoVideoUrl?.trim() || DEFAULT_PROMO_URL;
     s.timezone = s.timezone || 'EST';
+    s.seasonalMode = s.seasonalMode || 'auto';
     if (s.endpointUrl) s.endpointUrl = normalizeUrl(s.endpointUrl);
 
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    localStorage.setItem('sermon_seasonal_global', s.seasonalMode);
     window.dispatchEvent(new Event('storage'));
     window.dispatchEvent(new CustomEvent('2ms:settings:updated', { detail: s }));
   } catch (_) {}
@@ -1991,6 +1997,7 @@ function setupSettingsPanel() {
   const tiktokInput     = document.getElementById('settingTiktokUrl');
   const timezoneSelect  = document.getElementById('settingTimezone');
   const promoInput      = document.getElementById('settingPromoVideoUrl');
+  const seasonalSelect  = document.getElementById('settingSeasonalMode');
   const form            = document.getElementById('adminSettingsForm');
 
   const current = getSettings();
@@ -2003,6 +2010,7 @@ function setupSettingsPanel() {
   if (tiktokInput)     tiktokInput.value     = current.tiktokUrl || DEFAULT_TIKTOK;
   if (timezoneSelect)  timezoneSelect.value  = current.timezone || 'EST';
   if (promoInput)      promoInput.value      = current.promoVideoUrl || DEFAULT_PROMO_URL;
+  if (seasonalSelect)  seasonalSelect.value  = current.seasonalMode || 'auto';
 
   form?.addEventListener('submit', e => {
     e.preventDefault();
@@ -2016,11 +2024,12 @@ function setupSettingsPanel() {
       tiktokUrl: normalizeUrl(tiktokInput?.value) || DEFAULT_TIKTOK,
       timezone: timezoneSelect?.value || 'EST',
       promoVideoUrl: promoInput?.value.trim() || DEFAULT_PROMO_URL,
+      seasonalMode: seasonalSelect?.value || 'auto',
       twitterUrl: '',
       spotifyUrl: ''
     };
     saveSettings(updated);
-    toast('💾 Ministry settings & public channel links saved!');
+    toast('💾 Ministry settings & seasonal ambiance saved!');
   });
 }
 

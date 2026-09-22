@@ -19,14 +19,18 @@ class SeasonalManager {
   }
 
   init() {
-    // Determine active season
+    // Clean up any legacy public footer switcher element
+    const oldControl = document.getElementById('seasonalFooterControl');
+    if (oldControl) oldControl.remove();
+
+    // Determine active season (Admin Panel setting or Automatic liturgical date calculation)
     this.activeSeason = this.determineSeason();
     document.body.setAttribute('data-season', this.activeSeason);
 
     if (this.activeSeason === 'off') {
       this.cleanup();
       this.updateHeaderBadge();
-      this.initFooterControl();
+      this.updateFooterShowcase();
       return;
     }
 
@@ -40,35 +44,48 @@ class SeasonalManager {
       this.animate();
     }
 
-    // Header badge, seasonal logo, favicon, scripture banner & footer controls
+    // Header badge, seasonal logo, favicon, scripture banner, and footer showcase
     this.updateSeasonalLogos();
     this.updateSeasonalFavicon();
     this.updateSeasonalScriptureBanner();
     this.updateHeaderBadge();
-    this.initFooterControl();
+    this.updateFooterShowcase();
 
     // Resize listener
     window.addEventListener('resize', () => this.handleResize());
   }
 
   /**
-   * Calculates season dates (starts ~10 days before the holiday)
+   * Calculates season dates: Admin global control takes priority, then automatic calendar (~10 days before holiday)
    */
   determineSeason() {
-    // 1. Check URL override ?season=christmas|newyear|easter|off
+    // 1. Check URL override ?season=christmas|newyear|easter|passion|off (for quick preview/testing)
     const urlParams = new URLSearchParams(window.location.search);
-    const seasonParam = urlParams.get('season')?.toLowerCase();
-    if (['christmas', 'newyear', 'easter', 'off'].includes(seasonParam)) {
+    let seasonParam = urlParams.get('season')?.toLowerCase();
+    if (seasonParam === 'lent') seasonParam = 'passion';
+    if (['christmas', 'newyear', 'easter', 'passion', 'off'].includes(seasonParam)) {
       return seasonParam;
     }
 
-    // 2. Check user preference stored in localStorage
-    const stored = localStorage.getItem('sermon_seasonal_preference');
-    if (stored && ['christmas', 'newyear', 'easter', 'off'].includes(stored)) {
-      return stored;
-    }
+    // 2. Check Admin Panel Global Setting (controlled exclusively by ministry administrators)
+    try {
+      let globalSetting = localStorage.getItem('sermon_seasonal_global');
+      if (globalSetting === 'lent') globalSetting = 'passion';
+      if (globalSetting && ['christmas', 'newyear', 'easter', 'passion', 'off'].includes(globalSetting)) {
+        return globalSetting;
+      }
+      const rawSettings = localStorage.getItem('2ms_settings');
+      if (rawSettings) {
+        const parsed = JSON.parse(rawSettings);
+        let sMode = parsed.seasonalMode;
+        if (sMode === 'lent') sMode = 'passion';
+        if (sMode && ['christmas', 'newyear', 'easter', 'passion', 'off'].includes(sMode)) {
+          return sMode;
+        }
+      }
+    } catch (_) {}
 
-    // 3. Automatic date calculation (~10 days before holiday)
+    // 3. Automatic date calculation (Auto mode)
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 1 - 12
@@ -84,15 +101,31 @@ class SeasonalManager {
       return 'newyear';
     }
 
-    // Easter Window: 10 days before Easter Sunday through Easter Tuesday
+    // Easter & Passion Holy Week Window
     const easterSunday = this.getEasterSunday(year);
-    const tenDaysBeforeEaster = new Date(easterSunday);
-    tenDaysBeforeEaster.setDate(easterSunday.getDate() - 10);
-    
+
+    // Holy Week & Passion: Palm Sunday (7 days before Easter) through Holy Saturday (1 day before)
+    const sevenDaysBeforeEaster = new Date(easterSunday);
+    sevenDaysBeforeEaster.setDate(easterSunday.getDate() - 7);
+    sevenDaysBeforeEaster.setHours(0, 0, 0, 0);
+
+    const oneDayBeforeEaster = new Date(easterSunday);
+    oneDayBeforeEaster.setDate(easterSunday.getDate() - 1);
+    oneDayBeforeEaster.setHours(23, 59, 59, 999);
+
+    if (now >= sevenDaysBeforeEaster && now <= oneDayBeforeEaster) {
+      return 'passion';
+    }
+
+    // Easter Sunday Window: Easter Sunday through Easter Tuesday (+3 days)
+    const easterStart = new Date(easterSunday);
+    easterStart.setHours(0, 0, 0, 0);
+
     const threeDaysAfterEaster = new Date(easterSunday);
     threeDaysAfterEaster.setDate(easterSunday.getDate() + 3);
+    threeDaysAfterEaster.setHours(23, 59, 59, 999);
 
-    if (now >= tenDaysBeforeEaster && now <= threeDaysAfterEaster) {
+    if (now >= easterStart && now <= threeDaysAfterEaster) {
       return 'easter';
     }
 
@@ -142,7 +175,7 @@ class SeasonalManager {
   initParticles() {
     this.particles = [];
     const isMobile = this.width < 768;
-    const count = isMobile ? 12 : 22; // Low, serene particle count — never overwhelms the screen
+    const count = isMobile ? 16 : 28; // Serene holiday snowfall — visible, beautiful, non-intrusive
 
     for (let i = 0; i < count; i++) {
       this.particles.push(this.createParticle());
@@ -151,20 +184,20 @@ class SeasonalManager {
 
   createParticle() {
     const isMobile = this.width < 768;
-    const speedMult = isMobile ? 0.35 : 0.55;
+    const speedMult = isMobile ? 0.40 : 0.60;
 
     if (this.activeSeason === 'christmas') {
-      // 3 Parallax Layers: 0 = foreground (soft), 1 = midground, 2 = background (gentle frost)
-      const layer = Math.random() < 0.2 ? 0 : Math.random() < 0.6 ? 1 : 2;
+      // 3 Parallax Layers: 0 = foreground (soft halo), 1 = midground (crisp snowflake), 2 = background (golden frost)
+      const layer = Math.random() < 0.25 ? 0 : Math.random() < 0.65 ? 1 : 2;
       return {
         layer,
         x: Math.random() * this.width,
         y: Math.random() * this.height,
-        radius: layer === 0 ? Math.random() * 1.8 + 1.2 : layer === 1 ? Math.random() * 1.2 + 0.8 : Math.random() * 0.8 + 0.3,
-        speedY: (layer === 0 ? 0.7 : layer === 1 ? 0.45 : 0.25) * speedMult,
-        speedX: (Math.random() - 0.5) * 0.25,
-        opacity: layer === 0 ? Math.random() * 0.25 + 0.10 : layer === 1 ? Math.random() * 0.45 + 0.15 : Math.random() * 0.55 + 0.15,
-        twinkle: Math.random() * 0.04
+        radius: layer === 0 ? Math.random() * 2.2 + 1.8 : layer === 1 ? Math.random() * 1.5 + 1.0 : Math.random() * 1.0 + 0.5,
+        speedY: (layer === 0 ? 0.75 : layer === 1 ? 0.50 : 0.30) * speedMult,
+        speedX: (Math.random() - 0.5) * 0.3,
+        opacity: layer === 0 ? Math.random() * 0.35 + 0.45 : layer === 1 ? Math.random() * 0.30 + 0.65 : Math.random() * 0.30 + 0.60,
+        twinkle: Math.random() * 0.05
       };
     } else if (this.activeSeason === 'newyear') {
       // Champagne Stardust & Gentle Rising Sparkles
@@ -189,6 +222,18 @@ class SeasonalManager {
         opacity: Math.random() * 0.16 + 0.06,
         color: Math.random() > 0.5 ? '#F59E0B' : '#7C3AED'
       };
+    } else if (this.activeSeason === 'passion') {
+      // Holy Week & Passion: Faint, solemn twilight embers / Calvary ash motes
+      return {
+        x: Math.random() * this.width,
+        y: Math.random() * this.height,
+        radius: Math.random() * 1.5 + 0.8,
+        speedY: -(Math.random() * 0.25 + 0.12) * speedMult,
+        speedX: (Math.random() - 0.5) * 0.2,
+        opacity: Math.random() * 0.28 + 0.12,
+        color: Math.random() > 0.45 ? '#DC2626' : '#A8A29E', // Wounded crimson & Calvary ash
+        pulse: Math.random() * 0.03
+      };
     }
     return {};
   }
@@ -206,9 +251,30 @@ class SeasonalManager {
     } else if (this.activeSeason === 'easter') {
       this.drawSunriseGodRays();
       this.renderEasterBokeh();
+    } else if (this.activeSeason === 'passion') {
+      this.renderPassionShadows();
     }
 
     this.animationFrame = requestAnimationFrame(() => this.animate());
+  }
+
+  renderPassionShadows() {
+    for (let p of this.particles) {
+      this.ctx.beginPath();
+      this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      this.ctx.fillStyle = p.color === '#DC2626'
+        ? `rgba(185, 28, 28, ${p.opacity})`
+        : `rgba(168, 162, 158, ${p.opacity})`;
+      this.ctx.fill();
+
+      p.y += p.speedY;
+      p.x += p.speedX;
+
+      if (p.y < -10) {
+        p.y = this.height + 10;
+        p.x = Math.random() * this.width;
+      }
+    }
   }
 
   /**
@@ -418,46 +484,94 @@ class SeasonalManager {
         badge.innerHTML = '✨ Grace in the New Year';
       } else if (this.activeSeason === 'easter') {
         badge.innerHTML = '✝️ He is Risen';
+      } else if (this.activeSeason === 'passion') {
+        badge.innerHTML = '✝️ Holy Week • The Passion';
       } else {
         badge.remove();
       }
     }
   }
 
-  initFooterControl() {
-    const footerContainer = document.querySelector('.footer-bottom .container') || document.querySelector('footer .container');
-    if (!footerContainer || document.getElementById('seasonalFooterControl')) return;
+  /**
+   * Renders a rich festive display in the footer showcase during active holidays
+   */
+  updateFooterShowcase() {
+    const container = document.getElementById('seasonalFooterShowcase');
+    if (!container) return;
 
-    const controlWrapper = document.createElement('div');
-    controlWrapper.id = 'seasonalFooterControl';
-    controlWrapper.className = 'seasonal-footer-control';
-    controlWrapper.innerHTML = `
-      <label for="seasonalSelect">✨ Ambiance:</label>
-      <select id="seasonalSelect">
-        <option value="auto">Auto (~10 Days Before)</option>
-        <option value="christmas">🎄 Christmas</option>
-        <option value="newyear">✨ New Year</option>
-        <option value="easter">✝️ Easter</option>
-        <option value="off">Off</option>
-      </select>
-    `;
-
-    footerContainer.appendChild(controlWrapper);
-
-    const select = controlWrapper.querySelector('#seasonalSelect');
-    const stored = localStorage.getItem('sermon_seasonal_preference') || 'auto';
-    select.value = stored;
-
-    select.addEventListener('change', (e) => {
-      const val = e.target.value;
-      if (val === 'auto') {
-        localStorage.removeItem('sermon_seasonal_preference');
-      } else {
-        localStorage.setItem('sermon_seasonal_preference', val);
-      }
-      this.cleanup();
-      this.init();
-    });
+    if (this.activeSeason === 'christmas') {
+      container.hidden = false;
+      container.innerHTML = `
+        <div class="seasonal-showcase-pill">⭐ Christmas Season of Grace</div>
+        <h3 class="seasonal-showcase-title">Joy to the World — Celebrating the Nativity</h3>
+        <blockquote class="seasonal-showcase-quote">
+          “For unto us a Child is born, unto us a Son is given; and the government will be upon His shoulder. And His name will be called Wonderful, Counselor, Mighty God, Everlasting Father, Prince of Peace.”
+        </blockquote>
+        <span class="seasonal-showcase-ref">— Isaiah 9:6</span>
+      `;
+    } else if (this.activeSeason === 'newyear') {
+      container.hidden = false;
+      container.innerHTML = `
+        <div class="seasonal-showcase-pill">✨ Grace in the New Year</div>
+        <h3 class="seasonal-showcase-title">Walking in Faith &amp; New Beginnings</h3>
+        <blockquote class="seasonal-showcase-quote">
+          “Behold, I make all things new... I will give of the fountain of the water of life freely to him who thirsts.”
+        </blockquote>
+        <span class="seasonal-showcase-ref">— Revelation 21:5–6</span>
+      `;
+    } else if (this.activeSeason === 'passion') {
+      container.hidden = false;
+      container.innerHTML = `
+        <div class="calvary-crosses-wrap">
+          <svg class="calvary-crosses-svg" viewBox="0 0 320 90" width="280" height="80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Three Crosses on Calvary Hill">
+            <defs>
+              <radialGradient id="crossAura" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#DC2626" stop-opacity="0.65" />
+                <stop offset="55%" stop-color="#6B21A8" stop-opacity="0.30" />
+                <stop offset="100%" stop-color="#000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="160" cy="38" r="28" fill="url(#crossAura)" />
+            <path d="M0 90 Q80 62 160 60 Q240 62 320 90 L320 90 L0 90 Z" fill="#0C0D14" />
+            <!-- Left Cross -->
+            <g transform="translate(100, 36) rotate(-2 0 0)">
+              <rect x="-2" y="0" width="4" height="42" rx="1.5" fill="#1C1924" />
+              <rect x="-11" y="9" width="22" height="3.5" rx="1.5" fill="#1C1924" />
+            </g>
+            <!-- Right Cross -->
+            <g transform="translate(220, 36) rotate(2 0 0)">
+              <rect x="-2" y="0" width="4" height="42" rx="1.5" fill="#1C1924" />
+              <rect x="-11" y="9" width="22" height="3.5" rx="1.5" fill="#1C1924" />
+            </g>
+            <!-- Center Cross of Christ -->
+            <g transform="translate(160, 16)">
+              <rect x="-3" y="0" width="6" height="64" rx="2" fill="#090A0F" />
+              <rect x="-5" y="2" width="10" height="3.5" rx="1" fill="#1C1924" />
+              <rect x="-18" y="14" width="36" height="5" rx="2" fill="#090A0F" />
+            </g>
+          </svg>
+        </div>
+        <div class="seasonal-showcase-pill">✝️ Holy Week • The Passion &amp; Sacrifice</div>
+        <h3 class="seasonal-showcase-title">It Is Finished — The Sacred Lamb of God</h3>
+        <blockquote class="seasonal-showcase-quote">
+          “He was pierced for our transgressions, He was crushed for our iniquities; the punishment that brought us peace was on Him, and by His wounds we are healed.”
+        </blockquote>
+        <span class="seasonal-showcase-ref">— Isaiah 53:5</span>
+      `;
+    } else if (this.activeSeason === 'easter') {
+      container.hidden = false;
+      container.innerHTML = `
+        <div class="seasonal-showcase-pill">✝️ Holy Easter Resurrection</div>
+        <h3 class="seasonal-showcase-title">He is Risen — Victory Over the Grave</h3>
+        <blockquote class="seasonal-showcase-quote">
+          “I am the resurrection and the life. He who believes in Me, though he may die, he shall live.”
+        </blockquote>
+        <span class="seasonal-showcase-ref">— John 11:25</span>
+      `;
+    } else {
+      container.hidden = true;
+      container.innerHTML = '';
+    }
   }
 
   updateSeasonalLogos() {
@@ -518,6 +632,8 @@ class SeasonalManager {
         banner.innerHTML = '✨ <em>"For unto us a Child is born, unto us a Son is given..."</em> — Isaiah 9:6';
       } else if (this.activeSeason === 'newyear') {
         banner.innerHTML = '✨ <em>"See, I am doing a new thing! Now it springs up; do you not perceive it?"</em> — Isaiah 43:19';
+      } else if (this.activeSeason === 'passion') {
+        banner.innerHTML = '✝️ <em>"He was pierced for our transgressions, He was crushed for our iniquities..."</em> — Isaiah 53:5';
       } else if (this.activeSeason === 'easter') {
         banner.innerHTML = '✝️ <em>"He is not here; He has risen, just as He said!"</em> — Matthew 28:6';
       } else {
@@ -555,6 +671,11 @@ class SeasonalManager {
     const banner = document.getElementById('seasonalScriptureBanner');
     if (banner) {
       banner.remove();
+    }
+    const showcase = document.getElementById('seasonalFooterShowcase');
+    if (showcase) {
+      showcase.hidden = true;
+      showcase.innerHTML = '';
     }
     document.body.removeAttribute('data-season');
   }

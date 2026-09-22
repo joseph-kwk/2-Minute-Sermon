@@ -2440,6 +2440,20 @@ function setupSermonFilters() {
     filterAndRenderSermons();
   });
 
+  // Mobile filter drawer toggle
+  const toggleFiltersBtn = document.getElementById('btnToggleFilters');
+  const advancedFiltersRow = document.getElementById('advancedFiltersRow');
+  const mobileResetBtn = document.getElementById('mobileResetFiltersBtn');
+
+  toggleFiltersBtn?.addEventListener('click', () => {
+    const isOpen = advancedFiltersRow?.classList.toggle('is-open');
+    toggleFiltersBtn.setAttribute('aria-expanded', String(!!isOpen));
+  });
+
+  mobileResetBtn?.addEventListener('click', () => {
+    document.getElementById('resetFiltersBtn')?.click();
+  });
+
   // View Mode Switcher (Grid vs Audio List)
   const gridBtn = document.getElementById('viewModeGridBtn');
   const listBtn = document.getElementById('viewModeListBtn');
@@ -2536,6 +2550,30 @@ function filterAndRenderSermons() {
   const preacher   = document.getElementById('filterPreacher')?.value || 'all';
   const scripture  = document.getElementById('filterScripture')?.value || 'all';
   const sort       = document.getElementById('filterSort')?.value || 'newest';
+
+  // Update mobile active filters count badge & reset button
+  let activeAdvCount = 0;
+  if (topic !== 'all') activeAdvCount++;
+  if (preacher !== 'all') activeAdvCount++;
+  if (scripture !== 'all') activeAdvCount++;
+  if (sort !== 'newest') activeAdvCount++;
+
+  const mobileCountBadge = document.getElementById('mobileFilterCountBadge');
+  const toggleBtn = document.getElementById('btnToggleFilters');
+  const mobileResetBtn = document.getElementById('mobileResetFiltersBtn');
+
+  if (mobileCountBadge) {
+    if (activeAdvCount > 0) {
+      mobileCountBadge.textContent = activeAdvCount;
+      mobileCountBadge.hidden = false;
+      toggleBtn?.classList.add('has-active');
+      if (mobileResetBtn) mobileResetBtn.hidden = false;
+    } else {
+      mobileCountBadge.hidden = true;
+      toggleBtn?.classList.remove('has-active');
+      if (mobileResetBtn) mobileResetBtn.hidden = true;
+    }
+  }
 
   let results = sermons().filter(s => {
     // Season filter (supports slugs, aliases, Xmas/Christmas, Easter/Passover, etc.)
