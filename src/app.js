@@ -273,6 +273,14 @@ function setupNavigation() {
       return;
     }
 
+    if (rawHash.startsWith('sermon-')) {
+      switchView('sermons');
+      setTimeout(() => {
+        openSermonModal(rawHash);
+      }, 120);
+      return;
+    }
+
     if (rawHash === 'about-structure' || rawHash === 'about/structure') {
       switchView('about');
       switchAboutTab('structure');
@@ -2350,7 +2358,7 @@ function createSermonCardHtml(s, showFavorite = true) {
           <button class="btn btn-outline btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen in background while you browse">
             🎧 Listen
           </button>
-          <button class="btn btn-outline btn-sm" onclick="window.shareSermon('${s.title}', '${s.id}')">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.shareSermon('${s.id}')">
             ${svgShare} Share
           </button>
         </div>
@@ -2390,6 +2398,9 @@ function createSermonListRowHtml(s) {
         </button>
         <button class="btn btn-primary btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')">
           🎧 Listen
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.shareSermon('${s.id}')" title="Share Sermon">
+          ${svgShare} Share
         </button>
       </div>
     </div>
@@ -2660,7 +2671,15 @@ function filterAndRenderSermons() {
 
 // ─── SERMON MODAL — YouTube redirect (no iframe, keeps site fast) ─────────────
 export function openSermonModal(sermonId) {
-  const s = sermons().find(x => x.id === sermonId);
+  const list = sermons() || [];
+  const targetId = String(sermonId || '').trim();
+  const s = list.find(x => 
+    String(x.id) === targetId ||
+    String(x.id) === `sermon-${targetId}` ||
+    `sermon-${x.id}` === targetId ||
+    x.slug === targetId ||
+    x.title.toLowerCase() === targetId.toLowerCase()
+  );
   if (!s) return;
   const modal     = document.getElementById('sermonModal');
   const modalBody = document.getElementById('sermonModalBody');
@@ -2713,7 +2732,7 @@ export function openSermonModal(sermonId) {
         <button class="btn btn-secondary" onclick="window.playSermonInMiniPlayer('${s.id}'); window.closeSermonModal();">
           🎧 Listen While You Browse
         </button>
-        <button class="btn btn-outline" onclick="window.shareSermon('${s.title}','${s.id}')">
+        <button class="btn btn-outline" onclick="window.shareSermon('${s.id}')">
           ${svgShare} Share
         </button>
         <button class="btn btn-outline" onclick="window.openPrayerFromSermon()">
@@ -4012,11 +4031,16 @@ export function shareDailyVerse() {
 window.shareDailyVerse = shareDailyVerse;
 
 export function shareConversation(titleEnc, id) {
-  const title = decodeURIComponent(titleEnc);
+  const targetId = (id !== undefined && id !== null && id !== '') ? id : titleEnc;
+  const title = titleEnc ? decodeURIComponent(titleEnc) : '';
   const convList = conversations() || [];
-  const c = convList.find(item => String(item.id) === String(id) || item.title === title) || {
-    id,
-    title,
+  const c = convList.find(item => 
+    String(item.id) === String(targetId) || 
+    (title && item.title === title) || 
+    item.title === targetId
+  ) || {
+    id: targetId,
+    title: title || 'Theological Dialogue',
     panelists: 'Pastoral Panel',
     youtubeId: 'SJFqqNvTeh8',
     duration: '25:00',
@@ -4195,17 +4219,32 @@ export function openVideoShareModal(video) {
 }
 window.openVideoShareModal = openVideoShareModal;
 
-export function shareSermon(title, id) {
-  openSermonShareModal(id);
+export function shareSermon(arg1, arg2) {
+  // Support both shareSermon(id) and legacy shareSermon(title, id)
+  const targetId = (arg2 !== undefined && arg2 !== null && arg2 !== '') ? arg2 : arg1;
+  openSermonShareModal(targetId);
 }
 window.shareSermon = shareSermon;
 
 export function openSermonShareModal(sermonId) {
   const sermonList = sermons() || [];
-  const s = sermonList.find(item => String(item.id) === String(sermonId)) || sermonList[0];
+  if (!sermonList.length) return;
+
+  const targetStr = String(sermonId || '').trim();
+  const s = sermonList.find(item => 
+    String(item.id) === targetStr ||
+    String(item.id).toLowerCase() === targetStr.toLowerCase() ||
+    String(item.id) === `sermon-${targetStr}` ||
+    `sermon-${item.id}` === targetStr ||
+    item.slug === targetStr ||
+    item.title === targetStr ||
+    item.title.toLowerCase() === targetStr.toLowerCase()
+  ) || sermonList[0];
+
   if (!s) return;
 
-  const url = `${window.location.origin}/#sermon-${s.id}`;
+  const cleanId = String(s.id).startsWith('sermon-') ? s.id : `sermon-${s.id}`;
+  const url = `${window.location.origin}/#${cleanId}`;
   const ytDirectUrl = s.youtubeId ? `https://youtu.be/${s.youtubeId}` : (s.youtubeUrl || url);
   const thumb = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
 
