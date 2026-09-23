@@ -295,6 +295,12 @@ function switchPanel(panelId) {
 
   const titleEl = document.getElementById('adminTopbarTitle');
   if (titleEl) titleEl.textContent = PANEL_TITLES[panelId] || panelId;
+
+  if (panelId === 'reflections') {
+    renderReflectionsList();
+  } else if (panelId === 'dashboard') {
+    renderDashboardStats();
+  }
 }
 
 // ── DASHBOARD STATS ───────────────────────────────────────────────────────
@@ -1659,6 +1665,7 @@ function setupReflectionsManager() {
 
   searchInput?.addEventListener('input', () => renderReflectionsList());
   dateFilter?.addEventListener('change', () => renderReflectionsList());
+  renderReflectionsList();
 }
 
 function renderReflectionsList() {
@@ -1667,7 +1674,6 @@ function renderReflectionsList() {
   if (!container) return;
 
   const all = getAllReflections();
-  if (countEl) countEl.textContent = all.length;
 
   // Update date filter options dynamically
   const dateFilter = document.getElementById('adminReflectionsDateFilter');
@@ -1698,13 +1704,29 @@ function renderReflectionsList() {
     return true;
   });
 
+  if (countEl) {
+    countEl.textContent = (filtered.length === all.length) ? all.length : `${filtered.length} of ${all.length}`;
+  }
+
   if (!filtered.length) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
-        <p style="font-size:1.1rem;margin-bottom:6px;">💬 No reflections found</p>
-        <p style="font-size:0.85rem;">${all.length ? 'Try changing your search term or date filter.' : 'No community comments have been posted yet.'}</p>
-      </div>
-    `;
+    if (selectedDate === 'TODAY' && all.length > 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
+          <p style="font-size:1.1rem;margin-bottom:6px;color:#fff;">💬 No reflections posted yet for today (${todayStr})</p>
+          <p style="font-size:0.88rem;margin-bottom:16px;">There are ${all.length} community reflections from other dates in the database.</p>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" onclick="const f = document.getElementById('adminReflectionsDateFilter'); if (f) { f.value='ALL'; } window.renderReflectionsList();">
+            View All ${all.length} Reflections
+          </button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
+          <p style="font-size:1.1rem;margin-bottom:6px;color:#fff;">💬 No reflections found</p>
+          <p style="font-size:0.85rem;">${all.length ? 'Try changing your search term or date filter.' : 'No community comments have been posted yet.'}</p>
+        </div>
+      `;
+    }
     return;
   }
 
@@ -1742,6 +1764,7 @@ function renderReflectionsList() {
     `;
   }).join('');
 }
+window.renderReflectionsList = renderReflectionsList;
 
 function escapeAdminHtml(str) {
   if (!str) return '';
