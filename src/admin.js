@@ -1675,10 +1675,18 @@ function renderReflectionsList() {
 
   const all = getAllReflections();
 
-  // Update date filter options dynamically
+  // Update date filter options dynamically (preserve fixed options)
   const dateFilter = document.getElementById('adminReflectionsDateFilter');
   if (dateFilter) {
-    const dates = [...new Set(all.map(r => r.verseDate).filter(Boolean))].sort().reverse();
+    const currentVal = dateFilter.value;
+    const fixedValues = ['ALL', 'TODAY', 'LAST_3_DAYS', 'LAST_7_DAYS'];
+    Array.from(dateFilter.options).forEach(opt => {
+      if (!fixedValues.includes(opt.value)) {
+        opt.remove();
+      }
+    });
+
+    const dates = [...new Set(all.map(r => r.verseDate || (r.timestamp ? r.timestamp.split('T')[0] : '')).filter(Boolean))].sort().reverse();
     dates.forEach(d => {
       if (!Array.from(dateFilter.options).some(o => o.value === d)) {
         const opt = document.createElement('option');
@@ -1687,15 +1695,33 @@ function renderReflectionsList() {
         dateFilter.appendChild(opt);
       }
     });
+
+    if (currentVal && Array.from(dateFilter.options).some(o => o.value === currentVal)) {
+      dateFilter.value = currentVal;
+    }
   }
 
   const selectedDate = dateFilter?.value || 'ALL';
   const searchTerm = (document.getElementById('adminReflectionsSearch')?.value || '').toLowerCase().trim();
   const todayStr = getLocalDateStr();
 
+  const now = new Date();
+  const getDaysAgoStr = (days) => {
+    const d = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const threeDaysAgoStr = getDaysAgoStr(3);
+  const sevenDaysAgoStr = getDaysAgoStr(7);
+
   let filtered = all.filter(r => {
-    if (selectedDate === 'TODAY' && r.verseDate !== todayStr) return false;
-    if (selectedDate !== 'ALL' && selectedDate !== 'TODAY' && r.verseDate !== selectedDate) return false;
+    const rDate = r.verseDate || (r.timestamp ? r.timestamp.split('T')[0] : '');
+    if (selectedDate === 'TODAY' && rDate !== todayStr) return false;
+    if (selectedDate === 'LAST_3_DAYS' && rDate < threeDaysAgoStr) return false;
+    if (selectedDate === 'LAST_7_DAYS' && rDate < sevenDaysAgoStr) return false;
+    if (selectedDate !== 'ALL' && selectedDate !== 'TODAY' && selectedDate !== 'LAST_3_DAYS' && selectedDate !== 'LAST_7_DAYS' && rDate !== selectedDate) return false;
     if (searchTerm) {
       const author = (r.author || '').toLowerCase();
       const content = (r.content || '').toLowerCase();
@@ -1709,24 +1735,27 @@ function renderReflectionsList() {
   }
 
   if (!filtered.length) {
+    let emptyMsg = 'No community reflections found.';
+    let emptySub = all.length ? 'Try changing your search term or date filter above.' : 'No reflections have been posted yet.';
+    let actionBtn = '';
+
     if (selectedDate === 'TODAY' && all.length > 0) {
-      container.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
-          <p style="font-size:1.1rem;margin-bottom:6px;color:#fff;">💬 No reflections posted yet for today (${todayStr})</p>
-          <p style="font-size:0.88rem;margin-bottom:16px;">There are ${all.length} community reflections from other dates in the database.</p>
-          <button type="button" class="admin-btn admin-btn-sm admin-btn-primary" onclick="const f = document.getElementById('adminReflectionsDateFilter'); if (f) { f.value='ALL'; } window.renderReflectionsList();">
-            View All ${all.length} Reflections
-          </button>
-        </div>
-      `;
-    } else {
-      container.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
-          <p style="font-size:1.1rem;margin-bottom:6px;color:#fff;">💬 No reflections found</p>
-          <p style="font-size:0.85rem;">${all.length ? 'Try changing your search term or date filter.' : 'No community comments have been posted yet.'}</p>
-        </div>
-      `;
+      emptyMsg = `No reflections posted for today (${todayStr}) yet.`;
+      emptySub = `There are ${all.length} community reflections from other dates in the database.`;
+      actionBtn = `<button type="button" class="admin-btn admin-btn-sm admin-btn-primary" style="margin-top:14px;" onclick="const f = document.getElementById('adminReflectionsDateFilter'); if (f) { f.value='ALL'; } window.renderReflectionsList();">View All ${all.length} Reflections</button>`;
+    } else if (selectedDate === 'LAST_3_DAYS' && all.length > 0) {
+      emptyMsg = 'No reflections posted in the last 3 days.';
+      emptySub = `There are ${all.length} total reflections in the database.`;
+      actionBtn = `<button type="button" class="admin-btn admin-btn-sm admin-btn-primary" style="margin-top:14px;" onclick="const f = document.getElementById('adminReflectionsDateFilter'); if (f) { f.value='ALL'; } window.renderReflectionsList();">View All ${all.length} Reflections</button>`;
     }
+
+    container.innerHTML = `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;color:var(--admin-text-muted);">
+        <p style="font-size:1.15rem;margin-bottom:6px;color:#fff;font-weight:600;">💬 ${emptyMsg}</p>
+        <p style="font-size:0.88rem;max-width:440px;line-height:1.5;">${emptySub}</p>
+        ${actionBtn}
+      </div>
+    `;
     return;
   }
 
@@ -1738,7 +1767,7 @@ function renderReflectionsList() {
     const timeFormatted = r.timestamp ? new Date(r.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
 
     return `
-      <div class="admin-reflection-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;">
+      <div class="admin-reflection-card">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
           <div style="display:flex;align-items:center;gap:10px;">
             <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c62828,#b71c1c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;">
@@ -1756,7 +1785,7 @@ function renderReflectionsList() {
         </div>
         <p style="font-size:0.9rem;line-height:1.6;color:rgba(255,255,255,0.85);white-space:pre-wrap;margin:4px 0 8px;">${contentEscaped}</p>
         <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="admin-btn admin-btn-danger admin-btn-sm" onclick="window.deleteReflectionAdmin('${r.id}')" style="gap:5px;font-size:0.78rem;padding:6px 12px;">
+          <button type="button" class="admin-btn admin-btn-danger admin-btn-sm" onclick="window.deleteReflectionAdmin('${r.id}', this)" style="gap:5px;font-size:0.78rem;padding:6px 14px;transition:all 0.2s ease;">
             🗑️ Delete Reflection
           </button>
         </div>
@@ -1776,16 +1805,45 @@ function escapeAdminHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-window.deleteReflectionAdmin = (id) => {
+window.deleteReflectionAdmin = (id, btnElement) => {
   const all = getAllReflections();
   const target = all.find(r => r.id === id);
-  if (!confirm(`Are you sure you want to delete reflection by "${target?.author || 'this user'}"? This action cannot be undone.`)) {
+  if (!target) return;
+
+  // Safe inline two-step confirmation (immune to browser pop-up blockers)
+  if (btnElement && !btnElement.dataset.confirming) {
+    btnElement.dataset.confirming = 'true';
+    btnElement.innerHTML = `⚠️ Click to Confirm`;
+    btnElement.style.background = '#dc2626';
+    btnElement.style.color = '#fff';
+    btnElement.style.borderColor = '#ef4444';
+
+    const timer = setTimeout(() => {
+      if (btnElement) {
+        delete btnElement.dataset.confirming;
+        btnElement.innerHTML = `🗑️ Delete Reflection`;
+        btnElement.style.background = '';
+        btnElement.style.color = '';
+        btnElement.style.borderColor = '';
+      }
+    }, 4000);
+    btnElement._confirmTimer = timer;
     return;
   }
+
+  if (btnElement && btnElement._confirmTimer) {
+    clearTimeout(btnElement._confirmTimer);
+  }
+
+  // Fallback if called without element reference
+  if (!btnElement && !confirm(`Delete reflection by "${target.author || 'this user'}"?`)) {
+    return;
+  }
+
   deleteReflection(id);
   renderReflectionsList();
   renderDashboardStats();
-  toast('🗑️ Reflection removed from community wall.');
+  toast(`🗑️ Reflection by "${target.author || 'Believer'}" removed.`);
 };
 
 // ── BACKUP & RESTORE ──────────────────────────────────────────────────────

@@ -910,24 +910,32 @@
 
       <!-- ── Panel: Community Reflections Moderation ── -->
       <div class="admin-panel" id="panel-reflections">
-        <div class="admin-card" style="margin-bottom:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div class="admin-card" style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
             <div>
               <h2 class="admin-card-title" style="margin:0;">Community Reflections (<span id="adminReflectionsCount">0</span>)</h2>
-              <p class="admin-card-sub" style="margin:4px 0 0;">Review fellowship reflections posted by visitors on daily verses. Delete spam or inappropriate messages.</p>
+              <p class="admin-card-sub" style="margin:4px 0 0;">Review fellowship reflections posted on daily verses. Delete spam or inappropriate messages.</p>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-              <select id="adminReflectionsDateFilter" class="admin-input" style="width:auto;min-width:180px;">
-                <option value="ALL">All Dates</option>
-                <option value="TODAY">Today's Verse</option>
-              </select>
-              <input type="text" id="adminReflectionsSearch" class="admin-input" placeholder="Search author or text..." style="width:200px;">
+            <div class="admin-reflections-toolbar">
+              <div class="admin-filter-control-wrap">
+                <label for="adminReflectionsDateFilter" class="admin-filter-label">Date:</label>
+                <select id="adminReflectionsDateFilter" class="admin-select-styled">
+                  <option value="ALL" selected>All Dates</option>
+                  <option value="TODAY">Today's Verse</option>
+                  <option value="LAST_3_DAYS">Past 3 Days</option>
+                  <option value="LAST_7_DAYS">Past 7 Days</option>
+                </select>
+              </div>
+              <div class="admin-search-control-wrap">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="adminReflectionsSearch" class="admin-search-input" placeholder="Search author or text...">
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="admin-card">
-          <div class="admin-scroll-list" id="adminReflectionsList" style="max-height:600px;display:flex;flex-direction:column;gap:12px;"></div>
+        <div class="admin-card admin-reflections-container-card">
+          <div class="admin-reflections-fixed-viewport" id="adminReflectionsList"></div>
         </div>
       </div>
 
