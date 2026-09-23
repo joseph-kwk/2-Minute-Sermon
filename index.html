@@ -304,6 +304,14 @@
             <!-- Iframe Container (populated on click for zero initial load penalty) -->
             <div class="promo-player-wrap" id="promoPlayerWrap" hidden></div>
           </div>
+
+          <!-- Promo Video Share Action -->
+          <div class="promo-actions-bar" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:18px;">
+            <button type="button" class="btn btn-outline btn-sm btn-promo-share" id="btnSharePromoVideo" onclick="window.sharePromoVideo()" style="border-radius:9999px;padding:8px 20px;font-size:0.86rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:#fff;display:inline-flex;align-items:center;gap:8px;backdrop-filter:blur(8px);cursor:pointer;transition:all 0.25s ease;">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              <span>Share Welcome Video</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1474,9 +1482,9 @@
       
       <div class="share-modal-content">
         <div class="share-modal-header">
-          <span class="badge badge-season" style="font-size:0.75rem;"><span class="badge-dot dot-red"></span>Spiritual Blessing</span>
-          <h2 class="share-modal-title">Share Sermon</h2>
-          <p class="share-modal-sub">Spread this 2-minute message with friends, family, and fellowship groups.</p>
+          <span class="badge badge-season" id="shareModalBadge" style="font-size:0.75rem;"><span class="badge-dot dot-red"></span>Spiritual Blessing</span>
+          <h2 class="share-modal-title" id="shareModalHeading">Share Video</h2>
+          <p class="share-modal-sub" id="shareModalSub">Spread this message with friends, family, and fellowship groups.</p>
         </div>
 
         <!-- Live Visual Card Preview -->

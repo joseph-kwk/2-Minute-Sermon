@@ -739,6 +739,17 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   100% { transform: scale(1.5); opacity: 0; }
 }
 
+.btn-promo-share {
+  transition: all var(--transition-fast) !important;
+}
+.btn-promo-share:hover {
+  background: rgba(198, 40, 40, 0.25) !important;
+  border-color: rgba(198, 40, 40, 0.6) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(198, 40, 40, 0.35);
+}
+
 @media (max-width: 768px) {
   .promo-poster-overlay { padding: 18px 20px; }
   .promo-play-btn { width: 58px; height: 58px; }

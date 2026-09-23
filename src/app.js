@@ -4014,25 +4014,34 @@ window.shareDailyVerse = shareDailyVerse;
 export function shareConversation(titleEnc, id) {
   const title = decodeURIComponent(titleEnc);
   const convList = conversations() || [];
-  const c = convList.find(item => String(item.id) === String(id) || item.title === title);
+  const c = convList.find(item => String(item.id) === String(id) || item.title === title) || {
+    id,
+    title,
+    panelists: 'Pastoral Panel',
+    youtubeId: 'SJFqqNvTeh8',
+    duration: '25:00',
+    category: 'Theological Dialogue'
+  };
+
   const url = `${window.location.origin}/#conversations`;
+  const panelistsStr = Array.isArray(c.panelists) ? c.panelists.join(', ') : (c.panelists || 'Pastoral Panel');
+  const directYt = c.youtubeUrl || (c.youtubeId ? `https://youtu.be/${c.youtubeId}` : url);
+  const thumb = c.thumbnailUrl || (c.youtubeId ? `https://img.youtube.com/vi/${c.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
 
-  let shareText = `💬 The Conversation: "${title}" on 2-Minute Sermon`;
-  if (c) {
-    const panelistsStr = Array.isArray(c.panelists) ? c.panelists.join(', ') : (c.panelists || 'Pastoral Panel');
-    shareText = `💬 The Conversation: "${c.title}"\n👥 Panelists: ${panelistsStr}\n🕊️ Watch here:`;
-  }
-
-  if (navigator.share) {
-    navigator.share({
-      title: `The Conversation: ${title}`,
-      text: `${shareText}\n${url}`,
-      url: url
-    }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${shareText}\n${url}`);
-    showToast(`🔗 Link copied for "${title}"`);
-  }
+  openVideoShareModal({
+    badge: '💬 The Conversation',
+    heading: 'Share Episode',
+    sub: 'Share this theological dialogue with friends, study groups, and leaders.',
+    title: c.title,
+    speaker: `Panel: ${panelistsStr}`,
+    topic: c.category || 'Theological Dialogue',
+    duration: c.duration || '25:00',
+    thumbnailUrl: thumb,
+    youtubeId: c.youtubeId,
+    url: url,
+    directVideoUrl: directYt,
+    formattedMessage: `💬 The Conversation: "${c.title}"\n👥 Panelists: ${panelistsStr}\n🕊️ Watch here:\n${url}\n\n▶️ Direct Video:\n${directYt}`
+  });
 }
 window.shareConversation = shareConversation;
 
@@ -4051,43 +4060,45 @@ export function showToast(msg, duration = 4000) {
 }
 window.showToast = showToast;
 
-export function shareSermon(title, id) {
-  openSermonShareModal(id);
-}
-window.shareSermon = shareSermon;
-
-export function openSermonShareModal(sermonId) {
-  const sermonList = sermons() || [];
-  const s = sermonList.find(item => String(item.id) === String(sermonId)) || sermonList[0];
-  if (!s) return;
-
+export function openVideoShareModal(video) {
+  if (!video) return;
   const modal = document.getElementById('sermonShareModal');
   if (!modal) return;
 
-  const url = `${window.location.origin}/#sermon-${s.id}`;
-  const ytDirectUrl = s.youtubeId ? `https://youtu.be/${s.youtubeId}` : (s.youtubeUrl || url);
+  // Header dynamic labels
+  const badgeEl = document.getElementById('shareModalBadge');
+  if (badgeEl) {
+    badgeEl.innerHTML = `<span class="badge-dot dot-red"></span>${video.badge || 'Spiritual Blessing'}`;
+  }
+  const headingEl = document.getElementById('shareModalHeading');
+  if (headingEl) {
+    headingEl.textContent = video.heading || 'Share Video';
+  }
+  const subEl = document.getElementById('shareModalSub');
+  if (subEl) {
+    subEl.textContent = video.sub || 'Spread this message with friends, family, and fellowship groups.';
+  }
 
-  // Set card preview
+  // Card preview
   const thumbEl = document.getElementById('shareModalThumb');
   if (thumbEl) {
-    thumbEl.src = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
+    thumbEl.src = video.thumbnailUrl || (video.youtubeId ? `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
   }
   const durEl = document.getElementById('shareModalDuration');
-  if (durEl) durEl.textContent = s.duration || '2:00';
+  if (durEl) durEl.textContent = video.duration || '2:00';
   const preacherEl = document.getElementById('shareModalPreacher');
-  if (preacherEl) preacherEl.textContent = s.preacher || '2-Minute Sermon';
+  if (preacherEl) preacherEl.textContent = video.speaker || video.preacher || '2-Minute Sermon';
   const titleEl = document.getElementById('shareModalTitle');
-  if (titleEl) titleEl.textContent = s.title || 'Sermon';
+  if (titleEl) titleEl.textContent = video.title || 'Video Message';
   const scripEl = document.getElementById('shareModalScripture');
-  if (scripEl) scripEl.textContent = s.scripture ? `📖 ${s.scripture}` : 'Daily Encouragement';
+  if (scripEl) scripEl.textContent = video.topic || (video.scripture ? `📖 ${video.scripture}` : 'Daily Encouragement');
 
   const linkInput = document.getElementById('shareModalLinkInput');
-  if (linkInput) linkInput.value = url;
+  if (linkInput) linkInput.value = video.url || window.location.href;
 
-  // Formatted text for group chat
-  const formattedMsg = `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture || 'Daily Word'}\n🕊️ Watch on 2-Minute Sermon:\n${url}\n\n▶️ Direct Video:\n${ytDirectUrl}`;
+  const formattedMsg = video.formattedMessage || `🎙️ "${video.title}"\n🕊️ Watch on 2-Minute Sermon:\n${video.url}\n\n▶️ Direct Video:\n${video.directVideoUrl || video.url}`;
 
-  // WhatsApp Button
+  // WhatsApp
   const waBtn = document.getElementById('btnShareWhatsapp');
   if (waBtn) {
     waBtn.onclick = () => {
@@ -4095,20 +4106,21 @@ export function openSermonShareModal(sermonId) {
     };
   }
 
-  // Facebook Button
+  // Facebook
   const fbBtn = document.getElementById('btnShareFacebook');
   if (fbBtn) {
     fbBtn.onclick = () => {
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(ytDirectUrl)}`, '_blank');
+      const shareUrl = video.directVideoUrl || video.url;
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
     };
   }
 
-  // X Button
+  // X / Twitter
   const xBtn = document.getElementById('btnShareX');
   if (xBtn) {
     xBtn.onclick = () => {
-      const tweet = `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture || ''}\n\nWatch this 2-minute message:`;
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}&url=${encodeURIComponent(url)}`, '_blank');
+      const tweet = `🎙️ "${video.title}" — ${video.speaker || video.preacher || '2-Minute Sermon'}\n\nWatch this message:`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}&url=${encodeURIComponent(video.url)}`, '_blank');
     };
   }
 
@@ -4118,13 +4130,13 @@ export function openSermonShareModal(sermonId) {
     nativeBtn.onclick = () => {
       if (navigator.share) {
         navigator.share({
-          title: `"${s.title}" | 2-Minute Sermon`,
-          text: `🎙️ "${s.title}" — ${s.preacher}\n📖 Scripture: ${s.scripture || ''}`,
-          url: url
+          title: `"${video.title}" | 2-Minute Sermon`,
+          text: `🎙️ "${video.title}" — ${video.speaker || video.preacher || ''}`,
+          url: video.url
         }).catch(() => {});
       } else {
         navigator.clipboard.writeText(formattedMsg);
-        showToast('📋 Sermon details copied to clipboard!');
+        showToast('📋 Video details copied to clipboard!');
       }
     };
   }
@@ -4133,7 +4145,14 @@ export function openSermonShareModal(sermonId) {
   const storyBtn = document.getElementById('btnDownloadStoryCard');
   if (storyBtn) {
     storyBtn.onclick = () => {
-      generateSermonStoryCard(s);
+      generateSermonStoryCard({
+        title: video.title,
+        preacher: video.speaker || video.preacher,
+        scripture: video.topic || video.scripture,
+        duration: video.duration,
+        thumbnailUrl: video.thumbnailUrl,
+        youtubeId: video.youtubeId
+      });
     };
   }
 
@@ -4141,8 +4160,8 @@ export function openSermonShareModal(sermonId) {
   const copyLinkBtn = document.getElementById('btnCopyShareLink');
   if (copyLinkBtn) {
     copyLinkBtn.onclick = () => {
-      navigator.clipboard.writeText(url);
-      showToast('🔗 Sermon link copied to clipboard!');
+      navigator.clipboard.writeText(video.url);
+      showToast('🔗 Video link copied to clipboard!');
     };
   }
 
@@ -4151,7 +4170,7 @@ export function openSermonShareModal(sermonId) {
   if (copyMsgBtn) {
     copyMsgBtn.onclick = () => {
       navigator.clipboard.writeText(formattedMsg);
-      showToast('📋 Formatted sermon message copied for chat/SMS!');
+      showToast('📋 Formatted video message copied for chat/SMS!');
     };
   }
 
@@ -4165,7 +4184,63 @@ export function openSermonShareModal(sermonId) {
   modal.removeAttribute('hidden');
   document.body.style.overflow = 'hidden';
 }
+window.openVideoShareModal = openVideoShareModal;
+
+export function shareSermon(title, id) {
+  openSermonShareModal(id);
+}
+window.shareSermon = shareSermon;
+
+export function openSermonShareModal(sermonId) {
+  const sermonList = sermons() || [];
+  const s = sermonList.find(item => String(item.id) === String(sermonId)) || sermonList[0];
+  if (!s) return;
+
+  const url = `${window.location.origin}/#sermon-${s.id}`;
+  const ytDirectUrl = s.youtubeId ? `https://youtu.be/${s.youtubeId}` : (s.youtubeUrl || url);
+  const thumb = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
+
+  openVideoShareModal({
+    badge: 'Spiritual Blessing',
+    heading: 'Share Sermon',
+    sub: 'Spread this 2-minute message with friends, family, and fellowship groups.',
+    title: s.title,
+    speaker: s.preacher || s.preacherName || '2-Minute Sermon',
+    topic: s.scripture ? `📖 ${s.scripture}` : (s.primarySeason || 'Daily Encouragement'),
+    duration: s.duration || '2:00',
+    thumbnailUrl: thumb,
+    youtubeId: s.youtubeId || s.youtubeEmbedId,
+    url: url,
+    directVideoUrl: ytDirectUrl,
+    formattedMessage: `🎙️ "${s.title}" — ${s.preacher || s.preacherName || '2-Minute Sermon'}\n📖 Scripture: ${s.scripture || 'Daily Word'}\n🕊️ Watch on 2-Minute Sermon:\n${url}\n\n▶️ Direct Video:\n${ytDirectUrl}`
+  });
+}
 window.openSermonShareModal = openSermonShareModal;
+
+export function sharePromoVideo() {
+  const promoUrl = (typeof getSettings === 'function' ? getSettings()?.promoVideoUrl : '') || 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
+  let ytId = 'SJFqqNvTeh8';
+  const m = promoUrl.match(/(?:youtu\.be\/|v=|\/embed\/|\/watch\?v=|\/watch\?.+&v=)([\w-]{11})/i);
+  if (m) ytId = m[1];
+  const directYt = `https://youtu.be/${ytId}`;
+  const url = `${window.location.origin}/`;
+
+  openVideoShareModal({
+    badge: '✨ Official Overview',
+    heading: 'Share Welcome Video',
+    sub: 'Introduce others to 2-Minute Sermon — bite-sized, scripture-rooted encouragement.',
+    title: 'Welcome to 2-Minute Sermon',
+    speaker: 'Ministry Introduction & Vision',
+    topic: 'Scriptural Encouragement Worldwide',
+    duration: '2:00',
+    thumbnailUrl: `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`,
+    youtubeId: ytId,
+    url: url,
+    directVideoUrl: directYt,
+    formattedMessage: `🕊️ "Welcome to 2-Minute Sermon" — Short, scripture-rooted messages from ministers worldwide, designed for your busy daily rhythm.\n\n▶️ Watch the welcome video:\n${url}\n\n▶️ Direct Video:\n${directYt}`
+  });
+}
+window.sharePromoVideo = sharePromoVideo;
 
 export function closeSermonShareModal() {
   const modal = document.getElementById('sermonShareModal');
@@ -4268,12 +4343,13 @@ export function generateSermonStoryCard(s) {
     ctx.font = 'bold 22px sans-serif';
     ctx.fillText(s.duration || '2:00', thumbX + thumbW - 75, thumbY + thumbH - 30);
 
-    // Preacher Pill
+    // Preacher / Speaker Pill
     const pillY = thumbY + thumbH + 70;
     ctx.fillStyle = 'rgba(198, 40, 40, 0.2)';
     ctx.strokeStyle = 'rgba(198, 40, 40, 0.6)';
     ctx.lineWidth = 2;
-    const preacherText = `🎙️ ${s.preacher || 'Ministry Pastor'}`.toUpperCase();
+    const speakerRaw = s.preacher || s.speaker || '2-Minute Sermon';
+    const preacherText = `🎙️ ${speakerRaw}`.toUpperCase();
     ctx.font = 'bold 26px sans-serif';
     const pW = ctx.measureText(preacherText).width + 50;
     ctx.beginPath();
@@ -4304,11 +4380,12 @@ export function generateSermonStoryCard(s) {
     }
     ctx.fillText(line.trim(), W / 2, titleY);
 
-    // Scripture Citation
-    if (s.scripture) {
+    // Scripture / Topic Citation
+    const citation = s.scripture || s.topic;
+    if (citation) {
       ctx.fillStyle = '#f59e0b';
       ctx.font = 'italic 34px Georgia, serif';
-      ctx.fillText(`— ${s.scripture} —`, W / 2, titleY + 75);
+      ctx.fillText(`— ${citation} —`, W / 2, titleY + 75);
     }
 
     // Bottom Call to Action Card
