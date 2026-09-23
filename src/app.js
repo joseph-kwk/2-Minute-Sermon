@@ -251,9 +251,15 @@ function setupNavigation() {
       
       const aboutTab = btn.getAttribute('data-about-tab');
       const scrollToId = btn.getAttribute('data-scroll-to');
+      const convFilter = btn.getAttribute('data-conv-filter');
       switchView(targetView);
       if (targetView === 'about' && aboutTab) {
         switchAboutTab(aboutTab);
+      }
+      if (targetView === 'conversations' && convFilter) {
+        setTimeout(() => {
+          document.querySelector(`#conversationFilterBar [data-conv-filter="${convFilter}"]`)?.click();
+        }, 80);
       }
       if (scrollToId) {
         setTimeout(() => {
@@ -261,6 +267,19 @@ function setupNavigation() {
           if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 120);
       }
+
+      // Sync URL hash for browser history & back/forward buttons
+      if (targetView === 'home') {
+        if (window.location.hash && window.location.hash !== '#' && window.location.hash !== '#home') {
+          history.pushState(null, '', window.location.pathname);
+        }
+      } else {
+        const newHash = '#' + (targetView === 'about' && aboutTab ? `about-${aboutTab}` : targetView);
+        if (window.location.hash !== newHash) {
+          history.pushState(null, '', newHash);
+        }
+      }
+
       closeDropdown();
       closeMobileDrawer();
     });
@@ -298,6 +317,7 @@ function setupNavigation() {
   }
 
   window.addEventListener('hashchange', handleRouteHash);
+  window.addEventListener('popstate', handleRouteHash);
   if (window.location.hash) handleRouteHash();
 }
 
