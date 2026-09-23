@@ -1153,7 +1153,7 @@ function setupLeadershipManager() {
         if (photoUrlInput) photoUrlInput.value = p.photoUrl;
         if (previewImg) previewImg.src = p.photoUrl;
       }
-      toast(`✨ Autofilled photo & details from "${p.name}"!`);
+      toast(`Autofilled photo & details from "${p.name}"!`);
     }
   });
 

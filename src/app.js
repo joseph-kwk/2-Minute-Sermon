@@ -1431,7 +1431,7 @@ export function setupScriptureCardGenerator() {
       const url = `${window.location.origin}/#daily-verse`;
 
       const shareTitle = `Daily Verse: ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}`;
-      const shareText = `📖 Today's Verse — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n"${activeCardVerse.verseText}"\n\n🕊️ Reflection: ${activeCardVerse.reflection || ''}\n\n✨ 2-Minute Sermon: ${url}`;
+      const shareText = `📖 Today's Verse — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n"${activeCardVerse.verseText}"\n\n🕊️ Reflection: ${activeCardVerse.reflection || ''}\n\n2-Minute Sermon: ${url}`;
 
       let sharedNatively = false;
 
@@ -1448,7 +1448,7 @@ export function setupScriptureCardGenerator() {
                 files: [file]
               });
               sharedNatively = true;
-              showToast('✨ Verse card shared successfully!');
+              showToast('Verse card shared successfully!');
             }
           }
         } catch (err) {
@@ -1468,7 +1468,7 @@ export function setupScriptureCardGenerator() {
             url: url
           });
           sharedNatively = true;
-          showToast('✨ Verse shared successfully!');
+          showToast('Verse shared successfully!');
         } catch (err) {
           if (err.name === 'AbortError') {
             return;
@@ -4066,17 +4066,9 @@ export function openVideoShareModal(video) {
   if (!modal) return;
 
   // Header dynamic labels
-  const badgeEl = document.getElementById('shareModalBadge');
-  if (badgeEl) {
-    badgeEl.innerHTML = `<span class="badge-dot dot-red"></span>${video.badge || 'Spiritual Blessing'}`;
-  }
   const headingEl = document.getElementById('shareModalHeading');
   if (headingEl) {
     headingEl.textContent = video.heading || 'Share Video';
-  }
-  const subEl = document.getElementById('shareModalSub');
-  if (subEl) {
-    subEl.textContent = video.sub || 'Spread this message with friends, family, and fellowship groups.';
   }
 
   // Card preview
@@ -4090,8 +4082,20 @@ export function openVideoShareModal(video) {
   if (preacherEl) preacherEl.textContent = video.speaker || video.preacher || '2-Minute Sermon';
   const titleEl = document.getElementById('shareModalTitle');
   if (titleEl) titleEl.textContent = video.title || 'Video Message';
+  
   const scripEl = document.getElementById('shareModalScripture');
-  if (scripEl) scripEl.textContent = video.topic || (video.scripture ? `📖 ${video.scripture}` : 'Daily Encouragement');
+  const dotEl = document.getElementById('shareModalDot');
+  const rawMeta = video.topic || (video.scripture ? `📖 ${video.scripture}` : '');
+  if (scripEl) {
+    if (rawMeta) {
+      scripEl.textContent = rawMeta;
+      scripEl.style.display = '';
+      if (dotEl) dotEl.style.display = '';
+    } else {
+      scripEl.style.display = 'none';
+      if (dotEl) dotEl.style.display = 'none';
+    }
+  }
 
   const linkInput = document.getElementById('shareModalLinkInput');
   if (linkInput) linkInput.value = video.url || window.location.href;
@@ -4226,7 +4230,7 @@ export function sharePromoVideo() {
   const url = `${window.location.origin}/`;
 
   openVideoShareModal({
-    badge: '✨ Official Overview',
+    badge: 'Official Overview',
     heading: 'Share Welcome Video',
     sub: 'Introduce others to 2-Minute Sermon — bite-sized, scripture-rooted encouragement.',
     title: 'Welcome to 2-Minute Sermon',

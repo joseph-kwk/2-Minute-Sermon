@@ -306,8 +306,8 @@
           </div>
 
           <!-- Promo Video Share Action -->
-          <div class="promo-actions-bar" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:18px;">
-            <button type="button" class="btn btn-outline btn-sm btn-promo-share" id="btnSharePromoVideo" onclick="window.sharePromoVideo()" style="border-radius:9999px;padding:8px 20px;font-size:0.86rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:#fff;display:inline-flex;align-items:center;gap:8px;backdrop-filter:blur(8px);cursor:pointer;transition:all 0.25s ease;">
+          <div class="promo-actions-bar">
+            <button type="button" class="btn-promo-share" id="btnSharePromoVideo" onclick="window.sharePromoVideo()">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
               <span>Share Welcome Video</span>
             </button>
@@ -1482,61 +1482,62 @@
       
       <div class="share-modal-content">
         <div class="share-modal-header">
-          <span class="badge badge-season" id="shareModalBadge" style="font-size:0.75rem;"><span class="badge-dot dot-red"></span>Spiritual Blessing</span>
           <h2 class="share-modal-title" id="shareModalHeading">Share Video</h2>
-          <p class="share-modal-sub" id="shareModalSub">Spread this message with friends, family, and fellowship groups.</p>
         </div>
 
-        <!-- Live Visual Card Preview -->
+        <!-- Simple, Elegant Media Card -->
         <div class="share-preview-card" id="sharePreviewCard">
           <div class="share-preview-thumb-wrap">
-            <img id="shareModalThumb" src="" alt="Sermon Thumbnail" class="share-preview-thumb">
+            <img id="shareModalThumb" src="" alt="Video Thumbnail" class="share-preview-thumb">
             <span class="share-preview-duration" id="shareModalDuration">2:00</span>
           </div>
           <div class="share-preview-info">
-            <div class="share-preview-preacher" id="shareModalPreacher">Pastor Name</div>
             <h3 class="share-preview-title" id="shareModalTitle">Sermon Title</h3>
-            <div class="share-preview-scripture" id="shareModalScripture">📖 Scripture</div>
+            <div class="share-preview-meta">
+              <span class="share-preview-speaker" id="shareModalPreacher">Pastor Name</span>
+              <span class="share-preview-dot" id="shareModalDot">•</span>
+              <span class="share-preview-topic" id="shareModalScripture">Scripture</span>
+            </div>
           </div>
         </div>
 
-        <!-- Action Row 1: Direct Social & Messaging Apps -->
-        <div class="share-section-label">Share to Messaging &amp; Social</div>
+        <!-- Social Share App Row -->
         <div class="share-social-grid">
-          <button class="share-platform-btn btn-share-whatsapp" id="btnShareWhatsapp">
+          <button type="button" class="share-platform-btn btn-share-whatsapp" id="btnShareWhatsapp" title="Share via WhatsApp">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.47c-.16 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.17 1.77 2.7 4.28 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.11-.23-.17-.48-.3z"/></svg>
-            WhatsApp
+            <span>WhatsApp</span>
           </button>
-          <button class="share-platform-btn btn-share-facebook" id="btnShareFacebook">
+          <button type="button" class="share-platform-btn btn-share-facebook" id="btnShareFacebook" title="Share on Facebook">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            Facebook
+            <span>Facebook</span>
           </button>
-          <button class="share-platform-btn btn-share-x" id="btnShareX">
+          <button type="button" class="share-platform-btn btn-share-x" id="btnShareX" title="Post on X">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            X
+            <span>X</span>
           </button>
-          <button class="share-platform-btn btn-share-native" id="btnShareNative" title="Open device share options">
+          <button type="button" class="share-platform-btn btn-share-native" id="btnShareNative" title="Device Share Options">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-            More
+            <span>More</span>
           </button>
         </div>
 
-        <!-- Action Row 2: Visual Story Graphic -->
-        <div class="share-section-label" style="margin-top:16px;">Story Graphic (Instagram / TikTok / Status)</div>
-        <button class="btn btn-outline btn-full share-story-btn" id="btnDownloadStoryCard">
-          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-          📸 Download Story Graphic (9:16)
-        </button>
-
-        <!-- Action Row 3: Direct Link & Copy -->
-        <div class="share-section-label" style="margin-top:16px;">Direct Link &amp; Text</div>
+        <!-- 1-Click Link Copy -->
         <div class="share-link-box">
-          <input type="text" id="shareModalLinkInput" class="share-link-input" readonly>
-          <button class="btn btn-primary btn-sm" id="btnCopyShareLink">Copy Link</button>
+          <input type="text" id="shareModalLinkInput" class="share-link-input" readonly spellcheck="false">
+          <button type="button" class="btn btn-primary btn-sm btn-copy-link" id="btnCopyShareLink">Copy Link</button>
         </div>
-        <button class="btn btn-outline btn-sm btn-full" id="btnCopyFormattedMsg" style="margin-top:8px;">
-          📋 Copy Formatted Text for SMS / Group Chat
-        </button>
+
+        <!-- Secondary Actions (Side by Side) -->
+        <div class="share-actions-row">
+          <button type="button" class="share-action-pill" id="btnDownloadStoryCard" title="Generate Instagram/Facebook Story graphic">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>Story Card (9:16)</span>
+          </button>
+          <button type="button" class="share-action-pill" id="btnCopyFormattedMsg" title="Copy text with emoji & link for chat">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy Message</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
