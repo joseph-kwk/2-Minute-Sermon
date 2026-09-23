@@ -4119,12 +4119,17 @@ export function openVideoShareModal(video) {
     };
   }
 
-  // X / Twitter
-  const xBtn = document.getElementById('btnShareX');
-  if (xBtn) {
-    xBtn.onclick = () => {
-      const tweet = `🎙️ "${video.title}" — ${video.speaker || video.preacher || '2-Minute Sermon'}\n\nWatch this message:`;
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}&url=${encodeURIComponent(video.url)}`, '_blank');
+  // Instagram
+  const igBtn = document.getElementById('btnShareInstagram');
+  if (igBtn) {
+    igBtn.onclick = () => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(formattedMsg);
+      }
+      showToast('📸 Link & caption copied! Opening Instagram…');
+      setTimeout(() => {
+        window.open('https://www.instagram.com/', '_blank');
+      }, 350);
     };
   }
 
