@@ -1468,7 +1468,7 @@ export function setupScriptureCardGenerator() {
       const url = `${window.location.origin}/#daily-verse`;
 
       const shareTitle = `Daily Verse: ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}`;
-      const shareText = `📖 Today's Verse — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n"${activeCardVerse.verseText}"\n\n🕊️ Reflection: ${activeCardVerse.reflection || ''}\n\n2-Minute Sermon: ${url}`;
+      const shareText = `📖 Today's Verse — ${activeCardVerse.book} ${activeCardVerse.chapter}:${activeCardVerse.verse}\n\n"${activeCardVerse.verseText}"\n\nReflection: ${activeCardVerse.reflection || ''}\n\n2-Minute Sermon: ${url}`;
 
       let sharedNatively = false;
 
@@ -3192,7 +3192,7 @@ window.handleDonateClick = function() {
   if (contactForm) {
     contactForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  showToast('🕊️ Online donation gateway is in setup. Please reach out via Ministry Partnership above!');
+  showToast('Online donation gateway is in setup. Please reach out via Ministry Partnership above!');
 };
 
 // ─── ADMIN AUTH GATE ──────────────────────────────────────────────────────────
@@ -3995,28 +3995,102 @@ export function setupCommunityReflections() {
     }
   });
 
+  const filterSelect = document.getElementById('publicReflectionsFilter');
+  filterSelect?.addEventListener('change', () => {
+    renderCommunityReflections();
+  });
+
   window.addEventListener('2ms:reflections:updated', renderCommunityReflections);
 }
 
 export function renderCommunityReflections() {
   const container = document.getElementById('reflectionsFeedContainer');
   const countBadge = document.getElementById('reflectionsCountBadge');
+  const filterSubText = document.getElementById('reflectionsFilterSubText');
   if (!container) return;
 
-  const verse = getVerseForDate(getTodayDateStr());
-  const verseDate = verse?.publishDate || getTodayDateStr();
-  const list = getReflectionsForDate(verseDate);
+  const filterSelect = document.getElementById('publicReflectionsFilter');
+  const filterVal = filterSelect ? filterSelect.value : 'TODAY';
 
+  const todayStr = getTodayDateStr();
+  const now = new Date();
+  const getDaysAgoStr = (days) => {
+    const d = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const yesterdayStr = getDaysAgoStr(1);
+  const threeDaysAgoStr = getDaysAgoStr(3);
+
+  const all = getAllReflections();
+
+  let list = [];
+  let subText = 'Meditations shared on daily scriptures';
+
+  if (filterVal === 'TODAY') {
+    list = all.filter(r => (r.verseDate || r.timestamp?.split('T')[0]) === todayStr);
+    subText = `Meditations on today's scripture (${todayStr})`;
+  } else if (filterVal === 'YESTERDAY') {
+    list = all.filter(r => (r.verseDate || r.timestamp?.split('T')[0]) === yesterdayStr);
+    subText = `Meditations on yesterday's scripture (${yesterdayStr})`;
+  } else if (filterVal === 'LAST_3_DAYS') {
+    list = all.filter(r => {
+      const d = r.verseDate || r.timestamp?.split('T')[0] || '';
+      return d >= threeDaysAgoStr;
+    });
+    subText = 'Meditations shared across the past 3 days';
+  } else {
+    list = [...all];
+    subText = 'All recent fellowship meditations';
+  }
+
+  // Sort newest first
+  list.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+  if (filterSubText) filterSubText.textContent = subText;
   if (countBadge) {
     countBadge.textContent = `💬 ${list.length} Reflection${list.length === 1 ? '' : 's'}`;
   }
 
   if (!list.length) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:32px 20px;color:var(--color-mediumgray);font-size:0.92rem;border-radius:12px;background:var(--color-offwhite);border:1px dashed rgba(0,0,0,0.1);">
-        Be the first to share a devotional reflection or prayer on today's scripture!
-      </div>
-    `;
+    let emptyHtml = '';
+    if (filterVal === 'TODAY') {
+      const yesterdayCount = all.filter(r => (r.verseDate || r.timestamp?.split('T')[0]) === yesterdayStr).length;
+      emptyHtml = `
+        <div style="text-align:center;padding:32px 20px;color:var(--color-mediumgray);font-size:0.92rem;border-radius:12px;background:var(--color-offwhite);border:1px dashed rgba(0,0,0,0.12);">
+          <p style="margin:0 0 6px;font-weight:600;color:var(--color-dark);font-size:1rem;">No reflections posted for today yet</p>
+          <p style="margin:0 0 16px;">Be the first believer to share how today's scripture touched your heart!</p>
+          ${yesterdayCount > 0 ? `
+            <button type="button" class="btn btn-sm btn-outline" onclick="const f = document.getElementById('publicReflectionsFilter'); if (f) { f.value='YESTERDAY'; renderCommunityReflections(); }" style="font-size:0.82rem;gap:6px;">
+              View Yesterday's Reflections (${yesterdayCount}) →
+            </button>
+          ` : (all.length > 0 ? `
+            <button type="button" class="btn btn-sm btn-outline" onclick="const f = document.getElementById('publicReflectionsFilter'); if (f) { f.value='ALL'; renderCommunityReflections(); }" style="font-size:0.82rem;gap:6px;">
+              Browse Recent Community Thoughts (${all.length}) →
+            </button>
+          ` : '')}
+        </div>
+      `;
+    } else if (filterVal === 'YESTERDAY') {
+      emptyHtml = `
+        <div style="text-align:center;padding:32px 20px;color:var(--color-mediumgray);font-size:0.92rem;border-radius:12px;background:var(--color-offwhite);border:1px dashed rgba(0,0,0,0.12);">
+          <p style="margin:0 0 6px;font-weight:600;color:var(--color-dark);font-size:1rem;">No reflections recorded for yesterday (${yesterdayStr})</p>
+          <button type="button" class="btn btn-sm btn-outline" onclick="const f = document.getElementById('publicReflectionsFilter'); if (f) { f.value='ALL'; renderCommunityReflections(); }" style="font-size:0.82rem;margin-top:8px;">
+            Browse All Reflections →
+          </button>
+        </div>
+      `;
+    } else {
+      emptyHtml = `
+        <div style="text-align:center;padding:32px 20px;color:var(--color-mediumgray);font-size:0.92rem;border-radius:12px;background:var(--color-offwhite);border:1px dashed rgba(0,0,0,0.12);">
+          No reflections found for this selection.
+        </div>
+      `;
+    }
+
+    container.innerHTML = emptyHtml;
     return;
   }
 
@@ -4024,19 +4098,27 @@ export function renderCommunityReflections() {
     const timeAgo = formatTimeAgo(r.timestamp);
     const likedKey = `2ms_liked_${r.id}`;
     const isLiked = localStorage.getItem(likedKey) === '1';
+    const rDate = r.verseDate || (r.timestamp ? r.timestamp.split('T')[0] : '');
+
+    let dateBadge = '';
+    if (filterVal !== 'TODAY') {
+      const badgeText = rDate === todayStr ? 'Today' : (rDate === yesterdayStr ? 'Yesterday' : rDate);
+      dateBadge = `<span class="reflection-verse-badge">📖 ${badgeText}</span>`;
+    }
 
     return `
-      <div class="community-reflection-item" style="padding:16px;background:var(--color-offwhite);border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="community-reflection-item" style="padding:18px;background:var(--color-offwhite);border-radius:12px;border:1px solid rgba(0,0,0,0.06);transition:box-shadow 0.2s ease;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:30px;height:30px;border-radius:50%;background:var(--color-sermon-red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c62828,#b71c1c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;">
               ${(r.author || 'B')[0].toUpperCase()}
             </div>
-            <strong style="font-size:0.9rem;color:#222;">${escapeHtml(r.author || 'Fellow Believer')}</strong>
+            <strong style="font-size:0.92rem;color:#1e293b;">${escapeHtml(r.author || 'Fellow Believer')}</strong>
+            ${dateBadge}
           </div>
           <span style="font-size:0.78rem;color:var(--color-mediumgray);">${timeAgo}</span>
         </div>
-        <p style="margin:0 0 10px;font-size:0.92rem;color:#333;line-height:1.55;white-space:pre-wrap;">${escapeHtml(r.content)}</p>
+        <p style="margin:0 0 10px;font-size:0.93rem;color:#334155;line-height:1.6;white-space:pre-wrap;">${escapeHtml(r.content)}</p>
         <div style="display:flex;justify-content:flex-end;">
           <button class="btn btn-sm btn-outline" onclick="window.toggleLikeReflectionAction('${r.id}')" style="font-size:0.8rem;padding:5px 12px;gap:5px;border-radius:20px;font-weight:600;${isLiked ? 'color:var(--color-sermon-red);border-color:var(--color-sermon-red);background:rgba(198,40,40,0.06);' : ''}">
             ${isLiked ? '❤️ Liked' : '🤍 Like'} ${r.likes ? `(${r.likes})` : ''}
@@ -4093,7 +4175,7 @@ export function shareConversation(titleEnc, id) {
     youtubeId: c.youtubeId,
     url: url,
     directVideoUrl: directYt,
-    formattedMessage: `💬 The Conversation: "${c.title}"\n👥 Panelists: ${panelistsStr}\n🕊️ Watch here:\n${url}\n\n▶️ Direct Video:\n${directYt}`
+    formattedMessage: `💬 The Conversation: "${c.title}"\n👥 Panelists: ${panelistsStr}\n▶️ Watch here:\n${url}\n\n▶️ Direct Video:\n${directYt}`
   });
 }
 window.shareConversation = shareConversation;
@@ -4153,7 +4235,7 @@ export function openVideoShareModal(video) {
   const linkInput = document.getElementById('shareModalLinkInput');
   if (linkInput) linkInput.value = video.url || window.location.href;
 
-  const formattedMsg = video.formattedMessage || `🎙️ "${video.title}"\n🕊️ Watch on 2-Minute Sermon:\n${video.url}\n\n▶️ Direct Video:\n${video.directVideoUrl || video.url}`;
+  const formattedMsg = video.formattedMessage || `🎙️ "${video.title}"\n▶️ Watch on 2-Minute Sermon:\n${video.url}\n\n▶️ Direct Video:\n${video.directVideoUrl || video.url}`;
 
   // WhatsApp
   const waBtn = document.getElementById('btnShareWhatsapp');
@@ -4289,7 +4371,7 @@ export function openSermonShareModal(sermonId) {
     youtubeId: s.youtubeId || s.youtubeEmbedId,
     url: url,
     directVideoUrl: ytDirectUrl,
-    formattedMessage: `🎙️ "${s.title}" — ${s.preacher || s.preacherName || '2-Minute Sermon'}\n📖 Scripture: ${s.scripture || 'Daily Word'}\n🕊️ Watch on 2-Minute Sermon:\n${url}\n\n▶️ Direct Video:\n${ytDirectUrl}`
+    formattedMessage: `🎙️ "${s.title}" — ${s.preacher || s.preacherName || '2-Minute Sermon'}\n📖 Scripture: ${s.scripture || 'Daily Word'}\n▶️ Watch on 2-Minute Sermon:\n${url}\n\n▶️ Direct Video:\n${ytDirectUrl}`
   });
 }
 window.openSermonShareModal = openSermonShareModal;
@@ -4314,7 +4396,7 @@ export function sharePromoVideo() {
     youtubeId: ytId,
     url: url,
     directVideoUrl: directYt,
-    formattedMessage: `🕊️ "Welcome to 2-Minute Sermon" — Short, scripture-rooted messages from ministers worldwide, designed for your busy daily rhythm.\n\n▶️ Watch the welcome video:\n${url}\n\n▶️ Direct Video:\n${directYt}`
+    formattedMessage: `"Welcome to 2-Minute Sermon" — Short, scripture-rooted messages from ministers worldwide, designed for your busy daily rhythm.\n\n▶️ Watch the welcome video:\n${url}\n\n▶️ Direct Video:\n${directYt}`
   });
 }
 window.sharePromoVideo = sharePromoVideo;

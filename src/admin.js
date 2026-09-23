@@ -1679,7 +1679,7 @@ function renderReflectionsList() {
   const dateFilter = document.getElementById('adminReflectionsDateFilter');
   if (dateFilter) {
     const currentVal = dateFilter.value;
-    const fixedValues = ['ALL', 'TODAY', 'LAST_3_DAYS', 'LAST_7_DAYS'];
+    const fixedValues = ['ALL', 'TODAY', 'YESTERDAY', 'LAST_3_DAYS', 'LAST_7_DAYS'];
     Array.from(dateFilter.options).forEach(opt => {
       if (!fixedValues.includes(opt.value)) {
         opt.remove();
@@ -1713,15 +1713,17 @@ function renderReflectionsList() {
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   };
+  const yesterdayStr = getDaysAgoStr(1);
   const threeDaysAgoStr = getDaysAgoStr(3);
   const sevenDaysAgoStr = getDaysAgoStr(7);
 
   let filtered = all.filter(r => {
     const rDate = r.verseDate || (r.timestamp ? r.timestamp.split('T')[0] : '');
     if (selectedDate === 'TODAY' && rDate !== todayStr) return false;
+    if (selectedDate === 'YESTERDAY' && rDate !== yesterdayStr) return false;
     if (selectedDate === 'LAST_3_DAYS' && rDate < threeDaysAgoStr) return false;
     if (selectedDate === 'LAST_7_DAYS' && rDate < sevenDaysAgoStr) return false;
-    if (selectedDate !== 'ALL' && selectedDate !== 'TODAY' && selectedDate !== 'LAST_3_DAYS' && selectedDate !== 'LAST_7_DAYS' && rDate !== selectedDate) return false;
+    if (selectedDate !== 'ALL' && selectedDate !== 'TODAY' && selectedDate !== 'YESTERDAY' && selectedDate !== 'LAST_3_DAYS' && selectedDate !== 'LAST_7_DAYS' && rDate !== selectedDate) return false;
     if (searchTerm) {
       const author = (r.author || '').toLowerCase();
       const content = (r.content || '').toLowerCase();
@@ -1742,6 +1744,10 @@ function renderReflectionsList() {
     if (selectedDate === 'TODAY' && all.length > 0) {
       emptyMsg = `No reflections posted for today (${todayStr}) yet.`;
       emptySub = `There are ${all.length} community reflections from other dates in the database.`;
+      actionBtn = `<button type="button" class="admin-btn admin-btn-sm admin-btn-primary" style="margin-top:14px;" onclick="const f = document.getElementById('adminReflectionsDateFilter'); if (f) { f.value='ALL'; } window.renderReflectionsList();">View All ${all.length} Reflections</button>`;
+    } else if (selectedDate === 'YESTERDAY' && all.length > 0) {
+      emptyMsg = `No reflections posted for yesterday (${yesterdayStr}).`;
+      emptySub = `There are ${all.length} total reflections in the database.`;
       actionBtn = `<button type="button" class="admin-btn admin-btn-sm admin-btn-primary" style="margin-top:14px;" onclick="const f = document.getElementById('adminReflectionsDateFilter'); if (f) { f.value='ALL'; } window.renderReflectionsList();">View All ${all.length} Reflections</button>`;
     } else if (selectedDate === 'LAST_3_DAYS' && all.length > 0) {
       emptyMsg = 'No reflections posted in the last 3 days.';

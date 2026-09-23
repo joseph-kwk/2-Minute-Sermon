@@ -705,6 +705,23 @@
             </button>
           </form>
 
+          <!-- Reflections Filter Bar -->
+          <div class="community-reflections-filter-bar">
+            <div class="reflections-filter-info">
+              <span class="reflections-filter-heading">Fellowship Thoughts</span>
+              <span class="reflections-filter-sub" id="reflectionsFilterSubText">Meditations shared on daily scriptures</span>
+            </div>
+            <div class="reflections-filter-control-wrap">
+              <label for="publicReflectionsFilter" class="reflections-filter-label">Showing:</label>
+              <select id="publicReflectionsFilter" class="reflection-select-styled">
+                <option value="TODAY" selected>Today's Scripture</option>
+                <option value="YESTERDAY">Yesterday</option>
+                <option value="LAST_3_DAYS">Past 3 Days</option>
+                <option value="ALL">All Recent</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Reflections Feed -->
           <div id="reflectionsFeedContainer" style="display:flex;flex-direction:column;gap:12px;"></div>
         </div>
