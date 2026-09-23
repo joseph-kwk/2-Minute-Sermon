@@ -260,7 +260,7 @@ function setupSidebarNav() {
 }
 
 function setupQuickActions() {
-  document.querySelectorAll('.admin-quick-btn').forEach(btn => {
+  document.querySelectorAll('.admin-quick-btn, .admin-stat-card[data-panel]').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.getAttribute('data-panel');
       if (panel) {

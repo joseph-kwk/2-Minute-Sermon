@@ -3903,7 +3903,7 @@ export function setupCommunityReflections() {
     if (form) form.reset();
     if (charCountEl) charCountEl.textContent = '0 / 500 characters';
     renderCommunityReflections();
-    showToast('🕊️ Thank you! Your reflection was shared with fellowship.');
+    showToast('Thank you! Your reflection was shared with fellowship.');
   };
 
   const closeConfirmModal = (focusContent = false) => {
@@ -4005,43 +4005,25 @@ export function renderCommunityReflections() {
 
   const verse = getVerseForDate(getTodayDateStr());
   const verseDate = verse?.publishDate || getTodayDateStr();
-  const todayList = getReflectionsForDate(verseDate);
-  const allReflections = getAllReflections();
-
-  // If reflections exist for today, show them.
-  // If none exist for today yet, display recent fellowship reflections so the community wall is always active and encouraging.
-  const isShowingToday = todayList.length > 0;
-  const list = isShowingToday ? todayList : allReflections;
+  const list = getReflectionsForDate(verseDate);
 
   if (countBadge) {
-    if (isShowingToday) {
-      countBadge.textContent = `💬 ${todayList.length} Today (${allReflections.length} Total)`;
-    } else {
-      countBadge.textContent = `💬 ${allReflections.length} Fellowship Reflection${allReflections.length === 1 ? '' : 's'}`;
-    }
+    countBadge.textContent = `💬 ${list.length} Reflection${list.length === 1 ? '' : 's'}`;
   }
 
   if (!list.length) {
     container.innerHTML = `
-      <div style="text-align:center;padding:24px;color:var(--color-mediumgray);font-size:0.9rem;border-radius:12px;background:var(--color-offwhite);">
+      <div style="text-align:center;padding:32px 20px;color:var(--color-mediumgray);font-size:0.92rem;border-radius:12px;background:var(--color-offwhite);border:1px dashed rgba(0,0,0,0.1);">
         Be the first to share a devotional reflection or prayer on today's scripture!
       </div>
     `;
     return;
   }
 
-  const bannerHtml = !isShowingToday && allReflections.length > 0 ? `
-    <div style="padding:12px 16px;background:rgba(198,40,40,0.04);border:1px solid rgba(198,40,40,0.15);border-radius:10px;font-size:0.86rem;color:var(--color-dark);display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <span style="font-size:1.1rem;">🕊️</span>
-      <span><strong>Be the first to reflect on today's verse above!</strong> Below are recent devotional reflections from our fellowship:</span>
-    </div>
-  ` : '';
-
-  container.innerHTML = bannerHtml + list.map(r => {
+  container.innerHTML = list.map(r => {
     const timeAgo = formatTimeAgo(r.timestamp);
     const likedKey = `2ms_liked_${r.id}`;
     const isLiked = localStorage.getItem(likedKey) === '1';
-    const isPastDate = r.verseDate && r.verseDate !== verseDate;
 
     return `
       <div class="community-reflection-item" style="padding:16px;background:var(--color-offwhite);border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
@@ -4051,7 +4033,6 @@ export function renderCommunityReflections() {
               ${(r.author || 'B')[0].toUpperCase()}
             </div>
             <strong style="font-size:0.9rem;color:#222;">${escapeHtml(r.author || 'Fellow Believer')}</strong>
-            ${isPastDate ? `<span style="font-size:0.72rem;padding:2px 8px;background:rgba(0,0,0,0.05);color:var(--color-mediumgray);border-radius:10px;font-weight:500;">📅 ${r.verseDate}</span>` : ''}
           </div>
           <span style="font-size:0.78rem;color:var(--color-mediumgray);">${timeAgo}</span>
         </div>
