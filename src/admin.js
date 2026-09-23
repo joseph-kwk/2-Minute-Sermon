@@ -32,9 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTopbarDate();
   setupSidebarNav();
   setupQuickActions();
-  setupCropModal();
-  setupDailyVerseManager();
-  setupSermonsManager();
+  setupVerseScheduler();
+  setupSermonPublisher();
   setupPreachersManager();
   setupLeadershipManager();
   setupConversationsManager();
@@ -43,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupReflectionsManager();
   setupSettingsPanel();
   setupBackupPanel();
+  setupSubscribersManager();
   populateSelects();
 
   // Restore authenticated session if active in current browser tab
@@ -101,7 +101,7 @@ function checkExistingSession() {
 }
 
 // ── AUTH ─────────────────────────────────────────────────────────────────
-function setupAuthForm() {
+function setupAuth() {
   const form      = document.getElementById('adminAuthForm');
   const overlay   = document.getElementById('adminAuthOverlay');
   const dash      = document.getElementById('adminDashboard');
