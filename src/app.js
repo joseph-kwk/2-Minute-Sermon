@@ -292,6 +292,11 @@ function setupNavigation() {
       return;
     }
 
+    if (rawHash === 'admin' || rawHash === 'the-steward' || rawHash === 'steward') {
+      window.location.href = '/admin.html';
+      return;
+    }
+
     if (rawHash.startsWith('sermon-')) {
       switchView('sermons');
       setTimeout(() => {
@@ -336,6 +341,10 @@ const VIEW_TITLES = {
 };
 
 export function switchView(viewId) {
+  if (viewId === 'admin' || viewId === 'the-steward' || viewId === 'steward') {
+    window.location.href = '/admin.html';
+    return;
+  }
   const prevView = activeView;
   activeView = viewId;
   document.body.setAttribute('data-active-view', viewId);

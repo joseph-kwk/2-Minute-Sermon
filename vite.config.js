@@ -6,9 +6,10 @@ function cleanUrlsPlugin() {
     name: 'clean-urls-dev',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        const url = req.url.split('?')[0];
-        if (url === '/sitemap' || url === '/privacy' || url === '/terms') {
-          req.url = `${url}.html`;
+        const rawUrl = req.url.split('?')[0];
+        const normalized = rawUrl.replace(/\/$/, '');
+        if (normalized === '/admin' || normalized === '/sitemap' || normalized === '/privacy' || normalized === '/terms') {
+          req.url = `${normalized}.html${req.url.includes('?') ? '?' + req.url.split('?')[1] : ''}`;
         }
         next();
       });
