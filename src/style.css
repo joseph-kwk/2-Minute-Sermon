@@ -650,8 +650,16 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   color: var(--color-white);
 }
 
+.promo-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 5;
+}
+
 .promo-badge-top {
-  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -662,6 +670,30 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   font-size: 0.82rem;
   font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.promo-poster-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.promo-poster-share-btn:hover {
+  background: var(--color-sermon-red);
+  border-color: var(--color-sermon-red);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(198, 40, 40, 0.4);
 }
 
 .promo-play-btn-wrap {
@@ -743,31 +775,43 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 22px;
 }
 
 .btn-promo-share {
   border-radius: 9999px;
-  padding: 8px 22px;
-  font-size: 0.86rem;
+  padding: 10px 24px;
+  font-size: 0.9rem;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #ffffff;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #1e293b;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
+}
+
+.btn-promo-share svg {
+  color: var(--color-sermon-red);
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .btn-promo-share:hover {
-  background: rgba(198, 40, 40, 0.28);
-  border-color: rgba(198, 40, 40, 0.65);
+  background: var(--color-sermon-red);
+  border-color: var(--color-sermon-red);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(198, 40, 40, 0.35);
+  box-shadow: 0 8px 24px rgba(198, 40, 40, 0.25);
+}
+
+.btn-promo-share:hover svg {
+  color: #ffffff;
+  transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
