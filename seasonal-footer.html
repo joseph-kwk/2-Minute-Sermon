@@ -917,7 +917,13 @@
               <stop offset="20%" stop-color="#1E293B" />
               <stop offset="100%" stop-color="#0B1120" />
             </linearGradient>
-          </defs>
+          <!-- Guiding Beam from Bethlehem Star -->
+          <linearGradient id="bethlehemBeamGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.35" />
+            <stop offset="60%" stop-color="#38BDF8" stop-opacity="0.12" />
+            <stop offset="100%" stop-color="#0284C7" stop-opacity="0" />
+          </linearGradient>
+        </defs>
 
           <!-- Star Clusters -->
           <g id="christmasStarfield" opacity="0.85">
@@ -935,101 +941,22 @@
             <circle cx="180" cy="190" r="1.0" fill="#BAE6FD" opacity="0.6" />
           </g>
 
+          <!-- BETHLEHEM GUIDING BEAM (Shining from the Star across the Hills) -->
+          <polygon id="bethlehemBeam" points="1340,120 400,690 1560,690 1340,120" fill="url(#bethlehemBeamGrad)" opacity="0.25" />
+
           <!-- BETHLEHEM STAR -->
           <g id="bethlehemStarGroup" transform="translate(1340, 120)">
-            <circle cx="0" cy="0" r="95" fill="url(#bethlehemAura)" class="bethlehem-glow" />
-            <polygon points="-2,-65 2,-65 0,65" fill="#FFFFFF" opacity="0.95" />
-            <polygon points="-1,-85 1,-85 0,85" fill="#E0F2FE" opacity="0.5" />
-            <polygon points="-65,-2 -65,2 65,0" fill="#FFFFFF" opacity="0.95" />
-            <polygon points="-32,-32 32,32 0,0" stroke="#BAE6FD" stroke-width="1.5" fill="none" opacity="0.75" />
-            <polygon points="32,-32 -32,32 0,0" stroke="#BAE6FD" stroke-width="1.5" fill="none" opacity="0.75" />
-            <polygon points="0,-14 12,0 0,14 -12,0" fill="#FFFFFF" />
-            <circle cx="0" cy="0" r="3.5" fill="#FFFFFF" />
+            <circle cx="0" cy="0" r="110" fill="url(#bethlehemAura)" class="bethlehem-glow" />
+            <polygon points="-2.5,-80 2.5,-80 0,80" fill="#FFFFFF" opacity="0.95" />
+            <polygon points="-1.5,-105 1.5,-105 0,105" fill="#E0F2FE" opacity="0.55" />
+            <polygon points="-80,-2.5 -80,2.5 80,0" fill="#FFFFFF" opacity="0.95" />
+            <polygon points="-40,-40 40,40 0,0" stroke="#BAE6FD" stroke-width="2" fill="none" opacity="0.8" />
+            <polygon points="40,-40 -40,40 0,0" stroke="#BAE6FD" stroke-width="2" fill="none" opacity="0.8" />
+            <polygon points="0,-18 16,0 0,18 -16,0" fill="#FFFFFF" />
+            <circle cx="0" cy="0" r="4.5" fill="#FFFFFF" />
           </g>
 
-          <!-- THREE WISE MEN (MAGI ON CAMELS) SILHOUETTE JOURNEYING TOWARD THE STAR -->
-          <g id="christmasWiseMenGroup" class="christmas-wisemen" transform="translate(140, 560) scale(0.65)" fill="#090E1A" opacity="0.85">
-            <!-- Camel 1 + King 1 -->
-            <g transform="translate(0, 0)">
-              <!-- Camel Body & Hump -->
-              <ellipse cx="40" cy="30" rx="25" ry="16" />
-              <circle cx="45" cy="14" r="12" /> <!-- Hump -->
-              <path d="M55 24 C68 14 74 2 70 -12 C66 -16 58 -10 62 4 C58 14 50 20 45 25 Z" /> <!-- Neck & Head -->
-              <ellipse cx="72" cy="-14" rx="7" ry="4" /> <!-- Head -->
-              <!-- King on Camel -->
-              <ellipse cx="32" cy="6" rx="6" ry="9" fill="#050811" />
-              <circle cx="33" cy="-4" r="4.5" fill="#050811" />
-              <path d="M30 -8 L36 -8 L33 -12 Z" fill="#D97706" /> <!-- Crown -->
-              <!-- Legs -->
-              <path d="M22 42 L16 75 M28 42 L24 74 M52 42 L56 75 M58 42 L66 74" stroke="#090E1A" stroke-width="4" stroke-linecap="round" />
-            </g>
-
-            <!-- Camel 2 + King 2 -->
-            <g transform="translate(90, 4) scale(0.92)">
-              <ellipse cx="40" cy="30" rx="25" ry="16" />
-              <circle cx="45" cy="14" r="12" />
-              <path d="M55 24 C68 14 74 2 70 -12 C66 -16 58 -10 62 4 C58 14 50 20 45 25 Z" />
-              <ellipse cx="72" cy="-14" rx="7" ry="4" />
-              <ellipse cx="32" cy="6" rx="6" ry="9" fill="#050811" />
-              <circle cx="33" cy="-4" r="4.5" fill="#050811" />
-              <path d="M30 -8 L36 -8 L33 -12 Z" fill="#D97706" />
-              <path d="M22 42 L16 75 M28 42 L24 74 M52 42 L56 75 M58 42 L66 74" stroke="#090E1A" stroke-width="4" stroke-linecap="round" />
-            </g>
-
-            <!-- Camel 3 + King 3 -->
-            <g transform="translate(175, 8) scale(0.86)">
-              <ellipse cx="40" cy="30" rx="25" ry="16" />
-              <circle cx="45" cy="14" r="12" />
-              <path d="M55 24 C68 14 74 2 70 -12 C66 -16 58 -10 62 4 C58 14 50 20 45 25 Z" />
-              <ellipse cx="72" cy="-14" rx="7" ry="4" />
-              <ellipse cx="32" cy="6" rx="6" ry="9" fill="#050811" />
-              <circle cx="33" cy="-4" r="4.5" fill="#050811" />
-              <path d="M30 -8 L36 -8 L33 -12 Z" fill="#D97706" />
-              <path d="M22 42 L16 75 M28 42 L24 74 M52 42 L56 75 M58 42 L66 74" stroke="#090E1A" stroke-width="4" stroke-linecap="round" />
-            </g>
-          </g>
-
-          <!-- SANTA'S SLEIGH & REINDEER -->
-          <g id="christmasSleighGroup" class="christmas-sleigh" transform="translate(-320, 210) scale(0.95)">
-            <path d="M-130 22 Q-65 16 0 24" stroke="#BAE6FD" stroke-width="2" stroke-dasharray="4 6" opacity="0.65" fill="none" />
-            
-            <!-- Sleigh -->
-            <g transform="translate(0, 0)">
-              <path d="M-45 15 C-42 2 -25 -2 -10 0 C-4 -12 18 -15 32 -4 C38 0 42 10 40 22 C36 28 20 30 -25 30 C-38 30 -47 24 -45 15 Z" fill="#991B1B" />
-              <path d="M-52 35 L38 35 C48 35 52 28 50 24" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none" />
-              <line x1="-30" y1="30" x2="-26" y2="35" stroke="#F59E0B" stroke-width="2" />
-              <line x1="18" y1="28" x2="22" y2="35" stroke="#F59E0B" stroke-width="2" />
-              <path d="M-22 2 C-20 -14 -6 -16 -4 2 Z" fill="#1E293B" />
-              <circle cx="2" cy="-6" r="7" fill="#DC2626" />
-              <circle cx="8" cy="-6" r="3" fill="#FFFFFF" />
-              <ellipse cx="-24" cy="5" rx="14" ry="12" fill="#B45309" />
-            </g>
-
-            <line x1="42" y1="18" x2="160" y2="8" stroke="#FDE68A" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.8" />
-            <line x1="42" y1="22" x2="260" y2="2" stroke="#FDE68A" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.7" />
-
-            <!-- Reindeer 1 -->
-            <g transform="translate(130, -5) scale(0.9)">
-              <ellipse cx="20" cy="18" rx="18" ry="9" fill="#1E293B" />
-              <path d="M30 14 C36 6 42 0 46 -2 C48 4 44 12 36 18 Z" fill="#1E293B" />
-              <ellipse cx="46" cy="-2" rx="6" ry="4" fill="#1E293B" />
-              <path d="M44 -6 L40 -18 M40 -14 L34 -16 M40 -12 L44 -14" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" fill="none" />
-              <path d="M10 24 L-4 36 M16 25 L8 38 M28 24 L42 32 M32 23 L48 28" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
-            </g>
-
-            <!-- Reindeer 2 (Rudolph) -->
-            <g transform="translate(230, -12) scale(0.92)">
-              <ellipse cx="20" cy="18" rx="18" ry="9" fill="#1E293B" />
-              <path d="M30 14 C36 6 42 0 46 -2 C48 4 44 12 36 18 Z" fill="#1E293B" />
-              <ellipse cx="46" cy="-2" rx="6" ry="4" fill="#1E293B" />
-              <path d="M44 -6 L40 -18 M40 -14 L34 -16 M40 -12 L44 -14" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" fill="none" />
-              <circle cx="51" cy="-1" r="3.5" fill="#EF4444" />
-              <circle cx="51" cy="-1" r="9" fill="#EF4444" opacity="0.5" />
-              <path d="M10 24 L-4 36 M16 25 L8 38 M28 24 L42 32 M32 23 L48 28" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
-            </g>
-          </g>
-
-          <!-- PARALLAX LAYER 1: Far Pine Trees -->
+          <!-- PARALLAX LAYER 1: Far Pine Trees & Distant Dunes -->
           <g id="christmasFarTrees" class="christmas-far-trees" fill="#0B132B" opacity="0.75">
             <polygon points="120,620 145,530 170,620" />
             <polygon points="150,625 175,545 200,625" />
@@ -1044,9 +971,10 @@
             <polygon points="1385,630 1410,550 1435,630" />
           </g>
 
-          <!-- PARALLAX LAYER 2: Near Pine Trees & Snow Hill -->
+          <!-- PARALLAX LAYER 2: Mid Hills -->
           <path d="M0 640 Q400 580 900 615 T1600 590 L1600 700 L0 700 Z" fill="url(#snowHillGrad1)" />
 
+          <!-- PARALLAX LAYER 3: Near Pine Trees -->
           <g id="christmasNearTrees" class="christmas-near-trees" fill="#060C1E">
             <polygon points="60,670 90,560 120,670" />
             <polygon points="210,675 245,540 280,675" />
@@ -1055,6 +983,71 @@
             <polygon points="980,675 1015,535 1050,675" />
             <polygon points="1260,680 1295,555 1330,680" />
             <polygon points="1490,670 1525,560 1560,670" />
+          </g>
+
+          <!-- THREE WISE MEN (MAGI) CARAVAN JOURNEYING ACROSS THE RIDGELINE TOWARD THE STAR -->
+          <g id="christmasWiseMenCaravan" class="christmas-caravan" transform="translate(100, 520) scale(0.95)">
+            
+            <!-- Lead Camel & King Caspar (With Gold Vessel) -->
+            <g id="magiCamel1" transform="translate(240, 0)">
+              <!-- Camel Contact Shadow -->
+              <ellipse cx="45" cy="88" rx="42" ry="7" fill="#000000" opacity="0.65" />
+              <!-- Camel Body, Hump & Neck -->
+              <ellipse cx="42" cy="38" rx="30" ry="19" fill="#070C18" />
+              <circle cx="48" cy="18" r="14" fill="#070C18" /> <!-- Hump -->
+              <path d="M58 32 C74 20 80 4 75 -12 C70 -18 60 -10 65 4 C60 18 52 26 48 32 Z" fill="#070C18" />
+              <ellipse cx="78" cy="-14" rx="9" ry="5" fill="#070C18" /> <!-- Head -->
+              <path d="M74 -18 L70 -24 L76 -20" stroke="#070C18" stroke-width="2.5" /> <!-- Ears -->
+              <!-- Reins & Bridle -->
+              <path d="M78 -10 Q66 10 40 18" stroke="#D97706" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.75" />
+              <!-- Saddle Cloth & Golden Trim -->
+              <path d="M30 24 Q44 20 58 24 L56 46 Q44 48 32 46 Z" fill="#991B1B" />
+              <path d="M30 46 L58 46" stroke="#F59E0B" stroke-width="2" />
+              <!-- King 1 (Caspar) with Crown and Gold Offering -->
+              <ellipse cx="36" cy="10" rx="7" ry="11" fill="#03060E" /> <!-- Torso -->
+              <circle cx="37" cy="-3" r="5" fill="#03060E" /> <!-- Head -->
+              <polygon points="34,-7 40,-7 40,-13 37,-9 34,-13" fill="#F59E0B" /> <!-- Royal Crown -->
+              <circle cx="46" cy="6" r="3.5" fill="#FBBF24" /> <!-- Gift of Gold -->
+              <!-- Camel Legs with Articulated Striding Poses -->
+              <path d="M25 52 L16 88 M32 52 L26 86 M54 52 L60 88 M62 52 L72 86" stroke="#070C18" stroke-width="4.5" stroke-linecap="round" />
+            </g>
+
+            <!-- Second Camel & King Melchior (With Frankincense) -->
+            <g id="magiCamel2" transform="translate(120, 8) scale(0.92)">
+              <ellipse cx="45" cy="88" rx="42" ry="7" fill="#000000" opacity="0.65" />
+              <ellipse cx="42" cy="38" rx="30" ry="19" fill="#070C18" />
+              <circle cx="48" cy="18" r="14" fill="#070C18" />
+              <path d="M58 32 C74 20 80 4 75 -12 C70 -18 60 -10 65 4 C60 18 52 26 48 32 Z" fill="#070C18" />
+              <ellipse cx="78" cy="-14" rx="9" ry="5" fill="#070C18" />
+              <path d="M78 -10 Q66 10 40 18" stroke="#0284C7" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.75" />
+              <path d="M30 24 Q44 20 58 24 L56 46 Q44 48 32 46 Z" fill="#065F46" />
+              <path d="M30 46 L58 46" stroke="#F59E0B" stroke-width="2" />
+              <!-- King 2 (Melchior) with Turban -->
+              <ellipse cx="36" cy="10" rx="7" ry="11" fill="#03060E" />
+              <circle cx="37" cy="-3" r="5" fill="#03060E" />
+              <ellipse cx="37" cy="-7" rx="6" ry="3.5" fill="#FFFFFF" /> <!-- Turban -->
+              <path d="M44 4 L48 8 L44 10 Z" fill="#FDE047" /> <!-- Frankincense Vessel -->
+              <path d="M25 52 L18 88 M32 52 L28 86 M54 52 L58 88 M62 52 L70 86" stroke="#070C18" stroke-width="4.5" stroke-linecap="round" />
+            </g>
+
+            <!-- Third Camel & King Balthazar (With Myrrh) -->
+            <g id="magiCamel3" transform="translate(0, 14) scale(0.86)">
+              <ellipse cx="45" cy="88" rx="42" ry="7" fill="#000000" opacity="0.65" />
+              <ellipse cx="42" cy="38" rx="30" ry="19" fill="#070C18" />
+              <circle cx="48" cy="18" r="14" fill="#070C18" />
+              <path d="M58 32 C74 20 80 4 75 -12 C70 -18 60 -10 65 4 C60 18 52 26 48 32 Z" fill="#070C18" />
+              <ellipse cx="78" cy="-14" rx="9" ry="5" fill="#070C18" />
+              <path d="M78 -10 Q66 10 40 18" stroke="#D97706" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.75" />
+              <path d="M30 24 Q44 20 58 24 L56 46 Q44 48 32 46 Z" fill="#6B21A8" />
+              <path d="M30 46 L58 46" stroke="#F59E0B" stroke-width="2" />
+              <!-- King 3 (Balthazar) -->
+              <ellipse cx="36" cy="10" rx="7" ry="11" fill="#03060E" />
+              <circle cx="37" cy="-3" r="5" fill="#03060E" />
+              <polygon points="34,-6 40,-6 38,-10 36,-10" fill="#F59E0B" />
+              <circle cx="45" cy="6" r="3" fill="#FDA4AF" /> <!-- Myrrh Urn -->
+              <path d="M25 52 L14 88 M32 52 L24 86 M54 52 L62 88 M62 52 L68 86" stroke="#070C18" stroke-width="4.5" stroke-linecap="round" />
+            </g>
+
           </g>
 
           <!-- FOREGROUND: Snow Dunes -->
@@ -1361,7 +1354,7 @@
         // Reset element styles
         gsap.set([
           '#easterRollingStone', '#easterStoneShadow', '#easterGodRays', '#easterSunAura', '#easterSparksGroup',
-          '#christmasSleighGroup', '#christmasNearTrees', '#christmasFarTrees', '.bethlehem-glow', '#christmasWiseMenGroup',
+          '#christmasWiseMenCaravan', '#magiCamel1', '#magiCamel2', '#magiCamel3', '#bethlehemBeam', '#christmasNearTrees', '#christmasFarTrees', '.bethlehem-glow',
           '#passionSacredBacklight', '#passionCloudLeft', '#passionCloudRight', '#passionEmbersGroup', '#passionMistLayer'
         ], { clearProps: 'all' });
 
@@ -1434,52 +1427,74 @@
 
         } else if (theme === 'christmas') {
           // ==================================================================
-          // CHRISTMAS TIMELINE: Santa flight + Wise Men journey + Star flare
+          // CHRISTMAS TIMELINE: Wise Men Caravan Journey across hills toward the Star
           // ==================================================================
-          gsap.set('#christmasSleighGroup', { 
-            x: -320, 
-            y: 210, 
-            rotation: -8, 
-            svgOrigin: 'center' 
+          gsap.set('#christmasWiseMenCaravan', { 
+            x: -360, 
+            y: 0,
+            opacity: 0.95
           });
+          gsap.set('#magiCamel1', { y: 0 });
+          gsap.set('#magiCamel2', { y: 0 });
+          gsap.set('#magiCamel3', { y: 0 });
           gsap.set('#christmasNearTrees', { x: 0 });
           gsap.set('#christmasFarTrees', { x: 0 });
-          gsap.set('#christmasWiseMenGroup', { x: 0 });
-          gsap.set('.bethlehem-glow', { scale: 0.7, opacity: 0.5, svgOrigin: '0 0' });
+          gsap.set('#bethlehemBeam', { opacity: 0.08, scaleY: 0.8, svgOrigin: '1340 120' });
+          gsap.set('.bethlehem-glow', { scale: 0.75, opacity: 0.6, svgOrigin: '0 0' });
 
           tl
-            // 1. Santa's Sleigh flight arc pushed down across open mid-sky
-            .to('#christmasSleighGroup', {
-              x: 1820,
-              y: 130,
-              rotation: 8,
+            // 1. Wise Men Caravan journeys across the hill ridges towards the Bethlehem Star
+            .to('#christmasWiseMenCaravan', {
+              x: 620,              // Journeys into clear view beneath the guidance of the Star
               duration: 5.2,
-              ease: 'power1.inOut'
+              ease: 'power1.out'
             }, 0)
-            // 2. Wise Men slowly journey across the distant hill toward the star
-            .to('#christmasWiseMenGroup', {
-              x: 45,
-              duration: 5.2,
-              ease: 'none'
+            // 2. Natural rhythmic camel gait bobbing as they stride
+            .to('#magiCamel1', {
+              y: -4,
+              duration: 0.65,
+              repeat: 7,
+              yoyo: true,
+              ease: 'sine.inOut'
             }, 0)
-            // 3. Parallax Pine Trees Drift
+            .to('#magiCamel2', {
+              y: -4,
+              duration: 0.65,
+              repeat: 7,
+              yoyo: true,
+              ease: 'sine.inOut'
+            }, 0.15)
+            .to('#magiCamel3', {
+              y: -4,
+              duration: 0.65,
+              repeat: 7,
+              yoyo: true,
+              ease: 'sine.inOut'
+            }, 0.3)
+            // 3. Bethlehem Star radiant pulse and celestial guiding beam
+            .to('.bethlehem-glow', {
+              scale: 1.5,
+              opacity: 1,
+              duration: 4.8,
+              ease: 'sine.out'
+            }, 0.2)
+            .to('#bethlehemBeam', {
+              opacity: 0.35,
+              scaleY: 1,
+              duration: 4.5,
+              ease: 'power2.out'
+            }, 0.3)
+            // 4. Parallax Pine Trees Drift
             .to('#christmasNearTrees', {
-              x: -110,
+              x: -80,
               duration: 5.2,
               ease: 'none'
             }, 0)
             .to('#christmasFarTrees', {
-              x: -50,
+              x: -35,
               duration: 5.2,
               ease: 'none'
-            }, 0)
-            // 4. Bethlehem Star radiant pulse
-            .to('.bethlehem-glow', {
-              scale: 1.4,
-              opacity: 1,
-              duration: 4.5,
-              ease: 'sine.out'
-            }, 0.2);
+            }, 0);
 
         } else if (theme === 'passion') {
           // ==================================================================
