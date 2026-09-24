@@ -1,25 +1,23 @@
 // Admin CMS Portal — Standalone JS (admin.html)
 // Sermon data is persisted in localStorage via the CMS store in sermons.js.
 
-import { getSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
+import { getSermons, saveSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
-import { getPreachers, savePreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
+import { getPreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse, getLocalDateStr } from './data/dailyVerse.js';
-import { getLeadershipTeam, saveLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
-import { getPartners, savePartners, upsertPartner, deletePartner } from './data/partners.js';
-import { getConversations, saveConversations, upsertConversation, deleteConversation } from './data/conversations.js';
+import { getLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
+import { getPartners, upsertPartner, deletePartner } from './data/partners.js';
+import { getConversations, upsertConversation, deleteConversation } from './data/conversations.js';
 import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
 import { getAllReflections, deleteReflection, saveReflections } from './data/reflections.js';
+import { getPrayers, savePrayers, deletePrayer } from './data/prayers.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
 // Data arrays are read from localStorage — persistent across all reloads
 let preachers = getPreachers();
 const scheduledDailyVerses = getDailyVerses();
-let pendingPrayers = [
-  { id:'pr-1', name:'Sarah M.', email:'sarah@example.com', urgency:'Health & Healing', msg:'Please pray for my mother recovering from surgery.', date:'2026-08-22' },
-  { id:'pr-2', name:'David K.', email:'david@example.com', urgency:'Family', msg:'Praying for guidance and peace during a difficult season.', date:'2026-08-23' }
-];
+
 
 const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
 const SESSION_KEY     = '2ms_steward_authenticated';
@@ -72,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:events:updated', refreshAdminView);
   window.addEventListener('2ms:leadership:updated', refreshAdminView);
   window.addEventListener('2ms:reflections:updated', refreshAdminView);
+  window.addEventListener('2ms:prayers:updated', refreshAdminView);
 });
 
 // ── Topbar date ──────────────────────────────────────────────────────────
@@ -310,7 +309,8 @@ function renderDashboardStats() {
   set('statVerses',    scheduledDailyVerses.length);
   set('statPreachers', preachers.length);
   set('statEvents',    getEvents().length);
-  set('statPrayers',   pendingPrayers.length);
+  const allPrayers = getPrayers();
+  set('statPrayers',   allPrayers.length);
   const allReflections = getAllReflections();
   set('statReflections', allReflections.length);
   const refBadge = document.getElementById('reflectionsBadge');
@@ -320,7 +320,7 @@ function renderDashboardStats() {
 
 function updatePrayerBadge() {
   const b = document.getElementById('prayerBadge');
-  if (b) b.textContent = pendingPrayers.length;
+  if (b) b.textContent = getPrayers().length;
 }
 
 // ── DAILY VERSE SCHEDULER ─────────────────────────────────────────────────
@@ -1631,12 +1631,14 @@ function renderPrayerInbox() {
   const c = document.getElementById('adminPrayerInboxList');
   if (!c) return;
 
-  if (!pendingPrayers.length) {
+  const list = getPrayers();
+
+  if (!list.length) {
     c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px;">No pending prayer requests. 🙌</p>`;
     return;
   }
 
-  c.innerHTML = pendingPrayers.map((pr, idx) => `
+  c.innerHTML = list.map((pr) => `
     <div class="admin-prayer-item">
       <div class="admin-prayer-header">
         <strong>${pr.name} · ${pr.email}</strong>
@@ -1645,13 +1647,13 @@ function renderPrayerInbox() {
       <p style="font-size:0.9rem;color:var(--admin-muted);margin-bottom:10px;">"${pr.msg}"</p>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:0.75rem;color:rgba(255,255,255,0.25);">Submitted: ${pr.date}</span>
-        <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="markPrayed(${idx})">✓ Prayed For</button>
+        <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="markPrayed('${pr.id}')">✓ Prayed For</button>
       </div>
     </div>`).join('');
 }
 
-window.markPrayed = idx => {
-  pendingPrayers.splice(idx, 1);
+window.markPrayed = (id) => {
+  deletePrayer(id);
   renderPrayerInbox();
   renderDashboardStats();
   updatePrayerBadge();
@@ -1913,8 +1915,9 @@ function setupBackupPanel() {
         }
 
         if (Array.isArray(parsed.preachers) && parsed.preachers.length) {
-          preachers.length = 0;
-          preachers.push(...parsed.preachers);
+          // Persist each preacher individually so storage + event bus stays in sync
+          parsed.preachers.forEach(p => upsertPreacher(p));
+          preachers = getPreachers();
           restoredItems.push(`${parsed.preachers.length} ministers`);
         }
 
@@ -1929,9 +1932,9 @@ function setupBackupPanel() {
           restoredItems.push(`${parsed.events.length} events`);
         }
 
-        if (Array.isArray(parsed.pendingPrayers)) {
-          pendingPrayers.length = 0;
-          pendingPrayers.push(...parsed.pendingPrayers);
+        if (Array.isArray(parsed.pendingPrayers) && parsed.pendingPrayers.length) {
+          savePrayers(parsed.pendingPrayers);
+          restoredItems.push(`${parsed.pendingPrayers.length} prayers`);
         }
 
         if (Array.isArray(parsed.reflections) && parsed.reflections.length) {

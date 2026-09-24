@@ -9,6 +9,7 @@ import { getPartners, savePartners } from './data/partners.js';
 import { getConversations, saveConversations, extractVideoId, ytThumb } from './data/conversations.js';
 import { addSubscriber } from './data/subscribers.js';
 import { getAllReflections, addReflection, toggleLikeReflection } from './data/reflections.js';
+import { getPrayers, addPrayer, deletePrayer } from './data/prayers.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
 const sermons    = () => getSermons();
@@ -23,10 +24,7 @@ const conversations = () => getConversations();
 let activeView = 'home';
 let activeSeasonChip = 'all';
 let currentCarouselIndex = 0;
-let pendingPrayers = [
-  { id: 'pr-1', name: 'Sarah M.', email: 'sarah@example.com', urgency: 'Health & Healing', msg: 'Please pray for my mother recovering from surgery.', status: 'New', date: '2026-08-22' },
-  { id: 'pr-2', name: 'David K.', email: 'david@example.com', urgency: 'Family', msg: 'Praying for guidance and peace during a difficult season.', status: 'New', date: '2026-08-23' }
-];
+
 
 // Admin Auth
 const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
@@ -2971,15 +2969,7 @@ function setupPrayerForm() {
       return;
     }
 
-    pendingPrayers.unshift({
-      id: `pr-${Date.now()}`,
-      name,
-      email,
-      urgency,
-      msg,
-      status: 'New',
-      date: new Date().toISOString().split('T')[0]
-    });
+    addPrayer({ name, email, urgency, msg });
 
     e.target.reset();
     renderAdminPrayerInbox();
@@ -3443,14 +3433,15 @@ window.removePreacher = idx => {
 function renderAdminPrayerInbox() {
   const c = document.getElementById('adminPrayerInboxList');
   const badge = document.getElementById('adminPendingBadge');
-  if (badge) badge.textContent = pendingPrayers.length;
+  const list = getPrayers();
+  if (badge) badge.textContent = list.length;
   if (!c) return;
 
-  if (!pendingPrayers.length) {
+  if (!list.length) {
     c.innerHTML = `<p style="color:#777;text-align:center;padding:24px;">No pending prayer requests. 🙌</p>`;
     return;
   }
-  c.innerHTML = pendingPrayers.map((pr, idx) => `
+  c.innerHTML = list.map((pr) => `
     <div class="admin-prayer-item">
       <div class="admin-prayer-item-header">
         <strong>${pr.name} (${pr.email})</strong>
@@ -3459,12 +3450,12 @@ function renderAdminPrayerInbox() {
       <p style="font-size:0.9rem;color:#333;margin:6px 0;">"${pr.msg}"</p>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
         <span style="font-size:0.75rem;color:#777;">Submitted: ${pr.date}</span>
-        <button class="btn btn-sm btn-outline" onclick="window.markPrayerDone(${idx})">✓ Prayed For</button>
+        <button class="btn btn-sm btn-outline" onclick="window.markPrayerDone('${pr.id}')">✓ Prayed For</button>
       </div>
     </div>`).join('');
 }
-window.markPrayerDone = idx => {
-  pendingPrayers.splice(idx, 1);
+window.markPrayerDone = (id) => {
+  deletePrayer(id);
   renderAdminPrayerInbox();
   showToast('✓ Prayer request marked as prayed for!');
 };
