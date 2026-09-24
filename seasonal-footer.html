@@ -906,7 +906,7 @@
       </div>
 
       <!-- ====================================================================
-           2. CHRISTMAS STAGE (Luminous Bethlehem Star, Vivid Wise Men Caravan on Hills)
+           2. CHRISTMAS STAGE (Luminous Bethlehem Star, Tree Lights, Ground-Level Wise Men Caravan)
            ==================================================================== -->
       <div class="stage-layer stage-christmas">
         <svg class="christmas-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -927,7 +927,7 @@
             </radialGradient>
 
             <linearGradient id="snowHillGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.25" />
+              <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.3" />
               <stop offset="30%" stop-color="#1E3A8A" />
               <stop offset="100%" stop-color="#0A1128" />
             </linearGradient>
@@ -963,10 +963,10 @@
             <circle cx="180" cy="190" r="1.5" fill="#BAE6FD" opacity="0.75" />
           </g>
 
-          <!-- BETHLEHEM GUIDING BEAM (Sweeping Golden-Blue Light from the Star across the Hills) -->
-          <polygon id="bethlehemBeam" points="1320,110 320,680 1580,680 1320,110" fill="url(#bethlehemBeamGrad)" opacity="0.4" />
+          <!-- BETHLEHEM GUIDING BEAM (Sweeping Light from the Star across the Ground) -->
+          <polygon id="bethlehemBeam" points="1320,110 280,680 1580,680 1320,110" fill="url(#bethlehemBeamGrad)" opacity="0.35" />
 
-          <!-- BETHLEHEM STAR (Large, Radiant & Highly Visible) -->
+          <!-- BETHLEHEM STAR -->
           <g id="bethlehemStarGroup" transform="translate(1320, 110)">
             <circle cx="0" cy="0" r="140" fill="url(#bethlehemAura)" class="bethlehem-glow" />
             <!-- Vertical Starlight Spike -->
@@ -1001,7 +1001,7 @@
           <!-- PARALLAX LAYER 2: Mid Snow Hill with Starlight Rim -->
           <path d="M0 610 Q400 540 900 580 T1600 550 L1600 700 L0 700 Z" fill="url(#snowHillGrad1)" stroke="#60A5FA" stroke-width="2" />
 
-          <!-- PARALLAX LAYER 3: Near Pine Trees -->
+          <!-- PARALLAX LAYER 3: Near Pine Trees with Holiday Lights -->
           <g id="christmasNearTrees" class="christmas-near-trees" fill="#071022">
             <polygon points="60,660 90,530 120,660" />
             <polygon points="210,665 245,510 280,665" />
@@ -1012,87 +1012,113 @@
             <polygon points="1490,660 1525,530 1560,660" />
           </g>
 
-          <!-- THREE WISE MEN (MAGI) CARAVAN JOURNEYING ACROSS THE HILLS TOWARD THE STAR -->
-          <!-- Scaled Up, Elevated & Given High-Contrast Starlight Rim Lighting -->
-          <g id="christmasWiseMenCaravan" class="christmas-caravan" transform="translate(100, 440) scale(1.22)">
-            
-            <!-- Lead Camel & King Caspar (With Glowing Gold Vessel) -->
-            <g id="magiCamel1" transform="translate(260, 0)">
-              <!-- Ground Shadow -->
-              <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
-              <!-- Camel Body, Hump & Neck with Starlight Rim -->
-              <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
-              <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" /> <!-- Hump -->
-              <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
-              <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
-              <path d="M76 -20 L72 -28 L78 -24" stroke="#38BDF8" stroke-width="2" />
-              <!-- Golden Reins & Bridle -->
-              <path d="M80 -12 Q68 10 40 18" stroke="#FDE047" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
-              <!-- Saddle Cloth: Royal Crimson with Gold Trim -->
-              <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#DC2626" stroke="#F59E0B" stroke-width="2" />
-              
-              <!-- King 1 (Caspar) in Royal Scarlet with Crown & Radiating Gold Gift -->
-              <ellipse cx="36" cy="8" rx="8" ry="12" fill="#DC2626" /> <!-- Torso -->
-              <circle cx="37" cy="-6" r="6" fill="#050811" /> <!-- Head -->
-              <polygon points="33,-10 41,-10 41,-17 37,-12 33,-17" fill="#FDE047" stroke="#F59E0B" stroke-width="1" /> <!-- Crown -->
-              <!-- Glowing Gift of Gold -->
-              <circle cx="48" cy="4" r="14" fill="url(#goldChestAura)" />
-              <rect x="44" y="0" width="8" height="7" rx="1.5" fill="#FDE047" stroke="#B45309" stroke-width="1" />
-              <!-- Camel Striding Legs -->
-              <path d="M24 54 L14 90 M32 54 L25 88 M54 54 L62 90 M64 54 L74 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
-              <path d="M24 54 L14 90 M32 54 L25 88 M54 54 L62 90 M64 54 L74 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
-            </g>
-
-            <!-- Second Camel & King Melchior (With Glowing Frankincense) -->
-            <g id="magiCamel2" transform="translate(130, 8) scale(0.93)">
-              <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
-              <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
-              <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
-              <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
-              <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
-              <path d="M80 -12 Q68 10 40 18" stroke="#38BDF8" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
-              <!-- Saddle Cloth: Emerald -->
-              <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#059669" stroke="#F59E0B" stroke-width="2" />
-              <!-- King 2 (Melchior) in Emerald with White/Gold Turban & Urn -->
-              <ellipse cx="36" cy="8" rx="8" ry="12" fill="#059669" />
-              <circle cx="37" cy="-6" r="6" fill="#050811" />
-              <ellipse cx="37" cy="-10" rx="7" ry="4.5" fill="#FFFFFF" stroke="#FDE047" stroke-width="1" />
-              <!-- Frankincense Urn -->
-              <path d="M44 2 L50 6 L45 9 Z" fill="#FDE047" />
-              <path d="M46 -2 Q48 -6 46 -10" stroke="#E0F2FE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8" />
-              <path d="M24 54 L16 90 M32 54 L27 88 M54 54 L60 90 M64 54 L72 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
-              <path d="M24 54 L16 90 M32 54 L27 88 M54 54 L60 90 M64 54 L72 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
-            </g>
-
-            <!-- Third Camel & King Balthazar (With Glowing Myrrh) -->
-            <g id="magiCamel3" transform="translate(0, 15) scale(0.87)">
-              <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
-              <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
-              <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
-              <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
-              <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
-              <path d="M80 -12 Q68 10 40 18" stroke="#FDE047" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
-              <!-- Saddle Cloth: Imperial Purple -->
-              <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#7C3AED" stroke="#F59E0B" stroke-width="2" />
-              <!-- King 3 (Balthazar) in Purple & Gold -->
-              <ellipse cx="36" cy="8" rx="8" ry="12" fill="#7C3AED" />
-              <circle cx="37" cy="-6" r="6" fill="#050811" />
-              <polygon points="33,-9 41,-9 39,-14 35,-14" fill="#FDE047" />
-              <circle cx="46" cy="4" r="4" fill="#FDA4AF" stroke="#FDE047" stroke-width="1" />
-              <path d="M24 54 L12 90 M32 54 L23 88 M54 54 L64 90 M64 54 L70 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
-              <path d="M24 54 L12 90 M32 54 L23 88 M54 54 L64 90 M64 54 L70 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
-            </g>
-
+          <!-- FESTIVE HOLIDAY LIGHTS ON PINE TREES (Subtle Red, Green, and Warm Amber Glow) -->
+          <g id="christmasTreeLights">
+            <!-- Tree 1 Lights -->
+            <circle cx="85" cy="565" r="2.5" fill="#EF4444" />
+            <circle cx="95" cy="590" r="2.5" fill="#10B981" />
+            <circle cx="75" cy="615" r="2.5" fill="#FDE047" />
+            <!-- Tree 2 Lights -->
+            <circle cx="240" cy="545" r="2.5" fill="#10B981" />
+            <circle cx="250" cy="575" r="2.5" fill="#EF4444" />
+            <circle cx="230" cy="605" r="2.5" fill="#FDE047" />
+            <circle cx="260" cy="625" r="2.5" fill="#10B981" />
+            <!-- Tree 3 Lights -->
+            <circle cx="670" cy="555" r="2.5" fill="#EF4444" />
+            <circle cx="685" cy="585" r="2.5" fill="#FDE047" />
+            <circle cx="660" cy="610" r="2.5" fill="#10B981" />
+            <!-- Tree 4 Lights -->
+            <circle cx="1010" cy="535" r="2.5" fill="#FDE047" />
+            <circle cx="1025" cy="565" r="2.5" fill="#EF4444" />
+            <circle cx="1000" cy="595" r="2.5" fill="#10B981" />
+            <!-- Tree 5 Lights -->
+            <circle cx="1290" cy="555" r="2.5" fill="#10B981" />
+            <circle cx="1305" cy="585" r="2.5" fill="#EF4444" />
+            <circle cx="1280" cy="615" r="2.5" fill="#FDE047" />
           </g>
 
-          <!-- FOREGROUND: Snow Dunes (Lowered so caravan is high & unobstructed) -->
+          <!-- THREE WISE MEN (MAGI) CARAVAN JOURNEYING ON THE SNOW GROUND (Anchored at Ground Level) -->
+          <g id="christmasCaravanAnchor" transform="translate(0, 510) scale(1.15)">
+            <g id="christmasWiseMenCaravan" transform="translate(-360, 0)">
+              
+              <!-- Lead Camel & King Caspar (With Glowing Gold Vessel) -->
+              <g id="magiCamel1" transform="translate(260, 0)">
+                <!-- Ground Shadow -->
+                <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
+                <!-- Camel Body, Hump & Neck with Starlight Rim -->
+                <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+                <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" /> <!-- Hump -->
+                <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+                <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+                <path d="M76 -20 L72 -28 L78 -24" stroke="#38BDF8" stroke-width="2" />
+                <!-- Golden Reins & Bridle -->
+                <path d="M80 -12 Q68 10 40 18" stroke="#FDE047" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
+                <!-- Saddle Cloth: Royal Crimson with Gold Trim -->
+                <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#DC2626" stroke="#F59E0B" stroke-width="2" />
+                
+                <!-- King 1 (Caspar) in Royal Scarlet with Crown & Radiating Gold Gift -->
+                <ellipse cx="36" cy="8" rx="8" ry="12" fill="#DC2626" />
+                <circle cx="37" cy="-6" r="6" fill="#050811" />
+                <polygon points="33,-10 41,-10 41,-17 37,-12 33,-17" fill="#FDE047" stroke="#F59E0B" stroke-width="1" />
+                <!-- Glowing Gift of Gold -->
+                <circle cx="48" cy="4" r="14" fill="url(#goldChestAura)" />
+                <rect x="44" y="0" width="8" height="7" rx="1.5" fill="#FDE047" stroke="#B45309" stroke-width="1" />
+                <!-- Camel Striding Legs -->
+                <path d="M24 54 L14 90 M32 54 L25 88 M54 54 L62 90 M64 54 L74 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
+                <path d="M24 54 L14 90 M32 54 L25 88 M54 54 L62 90 M64 54 L74 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
+              </g>
+
+              <!-- Second Camel & King Melchior (With Frankincense) -->
+              <g id="magiCamel2" transform="translate(130, 8) scale(0.93)">
+                <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
+                <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+                <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+                <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+                <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+                <path d="M80 -12 Q68 10 40 18" stroke="#38BDF8" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
+                <!-- Saddle Cloth: Emerald -->
+                <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#059669" stroke="#F59E0B" stroke-width="2" />
+                <!-- King 2 (Melchior) in Emerald with White/Gold Turban -->
+                <ellipse cx="36" cy="8" rx="8" ry="12" fill="#059669" />
+                <circle cx="37" cy="-6" r="6" fill="#050811" />
+                <ellipse cx="37" cy="-10" rx="7" ry="4.5" fill="#FFFFFF" stroke="#FDE047" stroke-width="1" />
+                <!-- Frankincense Urn -->
+                <path d="M44 2 L50 6 L45 9 Z" fill="#FDE047" />
+                <path d="M46 -2 Q48 -6 46 -10" stroke="#E0F2FE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8" />
+                <path d="M24 54 L16 90 M32 54 L27 88 M54 54 L60 90 M64 54 L72 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
+                <path d="M24 54 L16 90 M32 54 L27 88 M54 54 L60 90 M64 54 L72 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
+              </g>
+
+              <!-- Third Camel & King Balthazar (With Myrrh) -->
+              <g id="magiCamel3" transform="translate(0, 15) scale(0.87)">
+                <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
+                <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+                <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+                <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+                <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+                <path d="M80 -12 Q68 10 40 18" stroke="#FDE047" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
+                <!-- Saddle Cloth: Imperial Purple -->
+                <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#7C3AED" stroke="#F59E0B" stroke-width="2" />
+                <!-- King 3 (Balthazar) in Purple & Gold -->
+                <ellipse cx="36" cy="8" rx="8" ry="12" fill="#7C3AED" />
+                <circle cx="37" cy="-6" r="6" fill="#050811" />
+                <polygon points="33,-9 41,-9 39,-14 35,-14" fill="#FDE047" />
+                <circle cx="46" cy="4" r="4" fill="#FDA4AF" stroke="#FDE047" stroke-width="1" />
+                <path d="M24 54 L12 90 M32 54 L23 88 M54 54 L64 90 M64 54 L70 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
+                <path d="M24 54 L12 90 M32 54 L23 88 M54 54 L64 90 M64 54 L70 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
+              </g>
+
+            </g>
+          </g>
+
+          <!-- FOREGROUND: Snow Dunes (Lowered so caravan is completely visible) -->
           <path d="M0 665 Q450 630 950 650 T1600 640 L1600 700 L0 700 Z" fill="url(#snowHillGrad2)" stroke="#93C5FD" stroke-width="2" />
           <path d="M0 684 Q550 665 1100 675 T1600 665 L1600 700 L0 700 Z" fill="#04060C" />
         </svg>
       </div>
 
       <!-- ====================================================================
-           3. PASSION STAGE (Dramatic Golgotha Sunset, Bleeding Center Cross between 2 Crosses)
+           3. PASSION STAGE (Crimson Twilight, Three Solemn Wooden Crosses with Center Focus)
            ==================================================================== -->
       <div class="stage-layer stage-passion">
         <svg class="passion-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1126,132 +1152,58 @@
               <stop offset="70%" stop-color="#881337" stop-opacity="0.45" />
               <stop offset="100%" stop-color="#000000" stop-opacity="0" />
             </linearGradient>
-
-            <!-- Vivid Glowing Blood Stream Gradient -->
-            <linearGradient id="bloodStreamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
-              <stop offset="15%" stop-color="#FDA4AF" stop-opacity="1" />
-              <stop offset="40%" stop-color="#F43F5E" stop-opacity="1" />
-              <stop offset="70%" stop-color="#E11D48" stop-opacity="0.95" />
-              <stop offset="100%" stop-color="#9F1239" stop-opacity="0.9" />
-            </linearGradient>
-
-            <radialGradient id="bloodGroundPool" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#F43F5E" stop-opacity="0.95" />
-              <stop offset="35%" stop-color="#E11D48" stop-opacity="0.75" />
-              <stop offset="70%" stop-color="#881337" stop-opacity="0.4" />
-              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-            </radialGradient>
           </defs>
 
-          <!-- SACRED CELESTIAL BACKLIGHT BEAM & EXPANDING SUNBURST HALO -->
-          <g id="passionSacredBacklight" class="passion-backlight" transform="translate(800, 420)" style="transform-origin: center; opacity: 0.2; transform: scale(0.35);">
-            <circle cx="0" cy="-50" r="450" fill="url(#passionSacredAura)" />
+          <!-- SACRED CELESTIAL BACKLIGHT BEAM & EXPANDING SUNBURST HALO (Behind Center Cross) -->
+          <g id="passionSacredBacklight" class="passion-backlight" transform="translate(800, 440)" style="transform-origin: center; opacity: 0.2; transform: scale(0.35);">
+            <circle cx="0" cy="-40" r="450" fill="url(#passionSacredAura)" />
             <!-- Upward Piercing Light Columns toward heaven -->
-            <polygon points="-220,60 -50,-460 50,-460 220,60" fill="url(#passionBeamGrad)" opacity="0.8" />
-            <polygon points="-100,60 -16,-560 16,-560 100,60" fill="#FFFBEB" opacity="0.75" />
-            <polygon points="-460,60 -220,-360 -120,-360 -80,60" fill="url(#passionBeamGrad)" opacity="0.45" />
-            <polygon points="80,60 120,-360 220,-360 460,60" fill="url(#passionBeamGrad)" opacity="0.45" />
+            <polygon points="-220,60 -50,-460 50,-460 220,60" fill="url(#passionBeamGrad)" opacity="0.85" />
+            <polygon points="-100,60 -16,-560 16,-560 100,60" fill="#FFFBEB" opacity="0.8" />
+            <polygon points="-460,60 -220,-360 -120,-360 -80,60" fill="url(#passionBeamGrad)" opacity="0.5" />
+            <polygon points="80,60 120,-360 220,-360 460,60" fill="url(#passionBeamGrad)" opacity="0.5" />
           </g>
 
-          <!-- HEAVY DARK STORM CLOUDS (Spanning full width, parting slowly to reveal fiery twilight) -->
-          <g id="passionCloudLeft" class="passion-cloud-left" fill="#0D0308" opacity="0.95">
-            <path d="M-220 270 Q100 180 320 270 Q480 210 620 300 Q760 240 920 340 L920 640 L-220 640 Z" />
-          </g>
-          <g id="passionCloudRight" class="passion-cloud-right" fill="#0D0308" opacity="0.95">
-            <path d="M1820 270 Q1500 180 1280 270 Q1120 210 980 300 Q840 240 680 340 L680 640 L1820 640 Z" />
-          </g>
-
-          <!-- CALVARY HILL SILHOUETTE (With Fiery Crimson Rim Highlight) -->
+          <!-- CALVARY HILL SILHOUETTE (With Crimson Rim Highlight) -->
           <path d="M0 650 Q400 590 800 530 Q1200 590 1600 650 L1600 700 L0 700 Z" fill="url(#calvaryHillGrad)" stroke="#F43F5E" stroke-width="2.5" />
           <path d="M0 675 Q500 635 800 595 Q1100 635 1600 675 L1600 700 L0 700 Z" fill="#080104" />
 
-          <!-- LOW ATMOSPHERIC CALVARY MIST (Sweeps across the full ground width) -->
+          <!-- LOW ATMOSPHERIC CALVARY MIST (Sweeps across the ground) -->
           <g id="passionMistLayer" opacity="0.55">
             <path d="M-100 610 Q300 570 800 590 Q1300 570 1700 610 L1700 680 L-100 680 Z" fill="url(#passionMistGrad)" />
           </g>
 
-          <!-- SACRED REDEEMING BLOOD RADIANCE AT FOOT OF CROSS -->
-          <ellipse id="passionBloodPool" cx="800" cy="605" rx="75" ry="18" fill="url(#bloodGroundPool)" opacity="0.5" style="transform-origin: 800px 605px;" />
-
-          <!-- THE THREE CROSSES ON CALVARY (Center Bleeding Cross Towering High between Two Flanking Crosses) -->
+          <!-- THE THREE SOLEMN CROSSES ON CALVARY (Pure Wooden Crosses with Center Focus) -->
           <g id="calvaryCrossesGroup">
             
             <!-- LEFT CROSS (The Repentant Thief) -->
-            <g id="crossThiefLeft" transform="translate(570, 460) rotate(-8 0 0)">
+            <g id="crossThiefLeft" transform="translate(560, 460) rotate(-8 0 0)">
               <!-- Vertical Timber with Crimson Rim Highlight -->
-              <rect x="-5" y="0" width="10" height="125" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
+              <rect x="-6" y="0" width="12" height="135" rx="2" fill="#0A0207" stroke="#BE123C" stroke-width="1.5" />
               <!-- Crossbeam & Binding Rope -->
-              <rect x="-30" y="25" width="60" height="9" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
-              <line x1="-7" y1="22" x2="7" y2="34" stroke="#F43F5E" stroke-width="2" />
-              <line x1="7" y1="22" x2="-7" y2="34" stroke="#F43F5E" stroke-width="2" />
+              <rect x="-32" y="28" width="64" height="10" rx="2" fill="#0A0207" stroke="#BE123C" stroke-width="1.5" />
+              <line x1="-8" y1="24" x2="8" y2="38" stroke="#F43F5E" stroke-width="2" />
+              <line x1="8" y1="24" x2="-8" y2="38" stroke="#F43F5E" stroke-width="2" />
             </g>
 
             <!-- RIGHT CROSS (The Unrepentant Thief) -->
-            <g id="crossThiefRight" transform="translate(1030, 460) rotate(8 0 0)">
+            <g id="crossThiefRight" transform="translate(1040, 460) rotate(8 0 0)">
               <!-- Vertical Timber with Crimson Rim Highlight -->
-              <rect x="-5" y="0" width="10" height="125" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
+              <rect x="-6" y="0" width="12" height="135" rx="2" fill="#0A0207" stroke="#BE123C" stroke-width="1.5" />
               <!-- Crossbeam & Binding Rope -->
-              <rect x="-30" y="25" width="60" height="9" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
-              <line x1="-7" y1="22" x2="7" y2="34" stroke="#F43F5E" stroke-width="2" />
-              <line x1="7" y1="22" x2="-7" y2="34" stroke="#F43F5E" stroke-width="2" />
+              <rect x="-32" y="28" width="64" height="10" rx="2" fill="#0A0207" stroke="#BE123C" stroke-width="1.5" />
+              <line x1="-8" y1="24" x2="8" y2="38" stroke="#F43F5E" stroke-width="2" />
+              <line x1="8" y1="24" x2="-8" y2="38" stroke="#F43F5E" stroke-width="2" />
             </g>
 
-            <!-- CENTER CROSS OF CHRIST (THE SACRED BLEEDING CROSS — TOWERING & PROMINENT) -->
-            <g id="passionCenterCross" transform="translate(800, 340)">
-              
-              <!-- 1. Main Heavy Timber Silhouette (240px tall, 126px wide) with Luminous Edge Lights -->
-              <rect x="-9" y="0" width="18" height="255" rx="3.5" fill="#000000" stroke="#FDA4AF" stroke-width="1.8" />
-              <rect x="-63" y="44" width="126" height="17" rx="3.5" fill="#000000" stroke="#FDA4AF" stroke-width="1.8" />
-
-              <!-- 2. Titulus Crucis ("INRI" Tablet at Top) -->
-              <rect x="-16" y="8" width="32" height="12" rx="2" fill="#2E0414" stroke="#FDE047" stroke-width="1.5" />
-              <line x1="-10" y1="14" x2="10" y2="14" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="3 2" opacity="0.95" />
-
-              <!-- 3. Crown of Thorns Motif around the intersection -->
-              <g id="passionCrownThorns" style="transform-origin: 0px 52px;">
-                <circle cx="0" cy="52" r="24" stroke="#38081A" stroke-width="4" fill="none" stroke-dasharray="5 3" />
-                <circle cx="0" cy="52" r="24" stroke="#FDE047" stroke-width="2" fill="none" opacity="0.9" />
-                <circle cx="0" cy="52" r="24" stroke="#F43F5E" stroke-width="3" fill="none" opacity="0.8" stroke-dasharray="8 4" />
-                <!-- Barbed Thorns -->
-                <line x1="-22" y1="38" x2="-30" y2="32" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
-                <line x1="22" y1="38" x2="30" y2="32" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
-                <line x1="-18" y1="66" x2="-26" y2="74" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
-                <line x1="18" y1="66" x2="26" y2="74" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
-                <line x1="0" y1="28" x2="0" y2="20" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
-              </g>
-
-              <!-- 4. SACRED BLEEDING STREAMS (Vivid & Highly Visible Flowing Holy Blood) -->
-              <g id="passionBloodStreams" opacity="0.95">
-                <!-- Left Hand Nail Wound Blood Stream -->
-                <path d="M-60 51 L-52 53 Q-25 54 0 55" stroke="url(#bloodStreamGrad)" stroke-width="4.5" stroke-linecap="round" fill="none" />
-                <path d="M-60 51 L-52 53 Q-25 54 0 55" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.8" />
-                <circle cx="-58" cy="52" r="5" fill="#FF0044" />
-                <circle cx="-58" cy="52" r="2.2" fill="#FFFFFF" />
-
-                <!-- Right Hand Nail Wound Blood Stream -->
-                <path d="M60 51 L52 53 Q25 54 0 55" stroke="url(#bloodStreamGrad)" stroke-width="4.5" stroke-linecap="round" fill="none" />
-                <path d="M60 51 L52 53 Q25 54 0 55" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.8" />
-                <circle cx="58" cy="52" r="5" fill="#FF0044" />
-                <circle cx="58" cy="52" r="2.2" fill="#FFFFFF" />
-
-                <!-- Spear Pierced Heart Wound & Main Vertical Crimson Stream to Base -->
-                <path d="M-5 85 Q-2 150 0 255" stroke="url(#bloodStreamGrad)" stroke-width="5.5" stroke-linecap="round" fill="none" />
-                <path d="M-3 90 Q-1 160 1 255" stroke="#FFFBEB" stroke-width="1.8" opacity="0.9" fill="none" />
-                <ellipse cx="-5" cy="85" rx="5" ry="7" fill="#FF0044" />
-                <circle cx="-5" cy="85" r="2.2" fill="#FFFFFF" />
-              </g>
-
-              <!-- 5. DRIPPING CRIMSON TEARS OF GRACE -->
-              <g id="passionBloodDrips">
-                <!-- Left Nail Drip -->
-                <path d="M-58 58 C-61 63 -55 71 -58 75 C-61 71 -55 63 -58 58 Z" fill="#FF0044" stroke="#FFF1F2" stroke-width="0.8" />
-                <!-- Right Nail Drip -->
-                <path d="M58 58 C55 63 61 71 58 75 C55 71 61 63 58 58 Z" fill="#FF0044" stroke="#FFF1F2" stroke-width="0.8" />
-                <!-- Base Drip entering the earth -->
-                <path d="M0 250 C-4 260 4 268 0 274 C-4 268 4 260 0 250 Z" fill="#FF0044" stroke="#FFF1F2" stroke-width="1" />
-              </g>
-
+            <!-- CENTER CROSS OF CHRIST (TOWERING, PROMINENT & STRONGLY FOCUSED) -->
+            <g id="passionCenterCross" transform="translate(800, 320)">
+              <!-- Main Heavy Timber (275px tall, 140px wide) with Luminous Sacred Rim -->
+              <rect x="-11" y="0" width="22" height="275" rx="4" fill="#000000" stroke="#FDA4AF" stroke-width="2.5" />
+              <rect x="-70" y="50" width="140" height="20" rx="4" fill="#000000" stroke="#FDA4AF" stroke-width="2.5" />
+              <!-- Center Timber Wood Grain Highlights -->
+              <line x1="-66" y1="60" x2="66" y2="60" stroke="#F43F5E" stroke-width="1.5" opacity="0.8" />
+              <line x1="0" y1="10" x2="0" y2="270" stroke="#F43F5E" stroke-width="1.5" opacity="0.8" />
             </g>
 
           </g>
@@ -1469,8 +1421,8 @@
         // Reset element styles
         gsap.set([
           '#easterRollingStone', '#easterStoneShadow', '#easterGodRays', '#easterSunAura', '#easterSparksGroup',
-          '#christmasWiseMenCaravan', '#magiCamel1', '#magiCamel2', '#magiCamel3', '#bethlehemBeam', '#christmasNearTrees', '#christmasFarTrees', '.bethlehem-glow',
-          '#passionSacredBacklight', '#passionCloudLeft', '#passionCloudRight', '#passionBloodStreams', '#passionBloodDrips', '#passionBloodPool', '#passionCrownThorns', '#passionEmbersGroup', '#passionMistLayer'
+          '#christmasWiseMenCaravan', '#magiCamel1', '#magiCamel2', '#magiCamel3', '#bethlehemBeam', '#christmasNearTrees', '#christmasFarTrees', '#christmasTreeLights', '.bethlehem-glow',
+          '#passionSacredBacklight', '#passionCenterCross', '#crossThiefLeft', '#crossThiefRight', '#passionEmbersGroup', '#passionMistLayer'
         ], { clearProps: 'all' });
 
         // 3. Initialize GSAP timeline triggered on entry (animates slowly over 4.5 - 5s)
@@ -1546,7 +1498,6 @@
           // ==================================================================
           gsap.set('#christmasWiseMenCaravan', { 
             x: -360, 
-            y: 0,
             opacity: 0.95
           });
           gsap.set('#magiCamel1', { y: 0 });
@@ -1558,9 +1509,9 @@
           gsap.set('.bethlehem-glow', { scale: 0.75, opacity: 0.6, svgOrigin: '0 0' });
 
           tl
-            // 1. Wise Men Caravan journeys across the hill ridges towards the Bethlehem Star
+            // 1. Wise Men Caravan journeys across the ground towards the Bethlehem Star
             .to('#christmasWiseMenCaravan', {
-              x: 620,              // Journeys into clear view beneath the guidance of the Star
+              x: 620,              // Journeys smoothly into clear view across the ground
               duration: 5.2,
               ease: 'power1.out'
             }, 0)
@@ -1599,7 +1550,15 @@
               duration: 4.5,
               ease: 'power2.out'
             }, 0.3)
-            // 4. Parallax Pine Trees Drift
+            // 4. Subtle Christmas Tree Lights Glimmer
+            .to('#christmasTreeLights', {
+              opacity: 0.65,
+              duration: 1.4,
+              repeat: 3,
+              yoyo: true,
+              ease: 'sine.inOut'
+            }, 0.2)
+            // 5. Parallax Pine Trees Drift
             .to('#christmasNearTrees', {
               x: -80,
               duration: 5.2,
@@ -1613,83 +1572,42 @@
 
         } else if (theme === 'passion') {
           // ==================================================================
-          // PASSION TIMELINE: Bleeding Cross of Christ between two crosses
+          // PASSION TIMELINE: Solemn Cross of Christ Focused between Two Crosses
           // ==================================================================
-          gsap.set('#passionCloudLeft', { x: 0, opacity: 0.95 });
-          gsap.set('#passionCloudRight', { x: 0, opacity: 0.95 });
-          gsap.set('#passionSacredBacklight', { scale: 0.35, opacity: 0.1, svgOrigin: '0 -70' });
-          gsap.set('#passionBloodStreams', { opacity: 0.2, scaleY: 0.6, svgOrigin: '0 50' });
-          gsap.set('#passionBloodDrips', { y: 0, opacity: 0.3 });
-          gsap.set('#passionBloodPool', { scale: 0.5, opacity: 0.2, svgOrigin: '800 605' });
-          gsap.set('#passionCrownThorns', { scale: 0.9, opacity: 0.7, svgOrigin: '0 52' });
+          gsap.set('#passionSacredBacklight', { scale: 0.4, opacity: 0.15, svgOrigin: '0 -40' });
+          gsap.set('#passionCenterCross', { scale: 0.98, opacity: 0.9, svgOrigin: '0 135' });
           gsap.set('#passionEmbersGroup', { y: 35, opacity: 0.2 });
-          gsap.set('#passionMistLayer', { x: -40, opacity: 0.25 });
+          gsap.set('#passionMistLayer', { x: -40, opacity: 0.3 });
 
           tl
-            // 1. Heavy Storm Clouds Part slowly and majestically to both sides
-            .to('#passionCloudLeft', {
-              x: -520,             // Part wide across the sky
-              opacity: 0.15,
-              duration: 4.8,
-              ease: 'power1.out'
-            }, 0)
-            .to('#passionCloudRight', {
-              x: 520,              // Part wide across the sky
-              opacity: 0.15,
-              duration: 4.8,
-              ease: 'power1.out'
-            }, 0)
-            // 2. Sacred celestial glow & light beam expands behind Center Cross
+            // 1. Sacred celestial backlight expands behind the Center Cross of Christ
             .to('#passionSacredBacklight', {
-              scale: 1.5,
+              scale: 1.45,
               opacity: 1,
               duration: 4.5,
               ease: 'power2.out'
-            }, 0.3)
-            // 3. Sacred Bleeding Cross Streams Flow and Glow with Redemptive Light
-            .to('#passionBloodStreams', {
-              opacity: 1,
-              scaleY: 1,
-              duration: 4.4,
-              ease: 'power1.out'
-            }, 0.4)
-            // 4. Crown of Thorns radiates and pulses with golden-ruby light
-            .to('#passionCrownThorns', {
-              scale: 1.05,
+            }, 0)
+            // 2. Center Cross of Christ draws prominence & solemn focus
+            .to('#passionCenterCross', {
+              scale: 1.0,
               opacity: 1,
               duration: 4.0,
               ease: 'sine.out'
-            }, 0.3)
-            // 5. Dripping Crimson Grace Droplets
-            .to('#passionBloodDrips', {
-              y: 12,
-              opacity: 1,
-              duration: 2.2,
-              repeat: 1,
-              yoyo: true,
-              ease: 'sine.inOut'
-            }, 0.6)
-            // 6. Sacred Blood Pool of Grace radiates at the foot of the Cross
-            .to('#passionBloodPool', {
-              scale: 1.35,
-              opacity: 0.85,
-              duration: 4.5,
-              ease: 'sine.out'
-            }, 0.5)
-            // 7. Low Calvary twilight mist drifts across the ground
+            }, 0.2)
+            // 3. Low Calvary twilight mist drifts across the ground
             .to('#passionMistLayer', {
               x: 40,
-              opacity: 0.55,
+              opacity: 0.6,
               duration: 4.8,
               ease: 'sine.inOut'
             }, 0.2)
-            // 8. Holy redemption embers ascend slowly into the solemn twilight
+            // 4. Holy redemption embers ascend slowly into the solemn twilight
             .to('#passionEmbersGroup', {
               y: -80,
               opacity: 1,
               duration: 4.8,
               ease: 'sine.out'
-            }, 0.4);
+            }, 0.3);
         }
 
         this.activeTimeline = tl;
