@@ -8,7 +8,7 @@ import { getLeadershipTeam, saveLeadershipTeam } from './data/leadership.js';
 import { getPartners, savePartners } from './data/partners.js';
 import { getConversations, saveConversations, extractVideoId, ytThumb } from './data/conversations.js';
 import { addSubscriber } from './data/subscribers.js';
-import { getAllReflections, getReflectionsForDate, addReflection, toggleLikeReflection } from './data/reflections.js';
+import { getAllReflections, addReflection, toggleLikeReflection } from './data/reflections.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
 const sermons    = () => getSermons();

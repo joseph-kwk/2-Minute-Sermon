@@ -50,7 +50,7 @@ export function getAllReflections() {
 
 export function getReflectionsForDate(dateStr) {
   const all = getAllReflections();
-  return all.filter(r => r.verseDate === dateStr || !r.verseDate);
+  return all.filter(r => r.verseDate === dateStr);
 }
 
 export function saveReflections(list) {
