@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2-Minute Sermon — Seasonal Footer Experience</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- GSAP & ScrollTrigger Core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS (Aligned with 2-Minute Sermon site)
+       ========================================================================== */
+    :root {
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-heading: 'Cinzel', Georgia, serif;
+
+      /* Brand Palette */
+      --color-bg-deep: #090A0F;
+      --color-white: #FFFFFF;
+      --color-gold: #F59E0B;
+      --color-sermon-red: #C62828;
+      --color-text-muted: #94A3B8;
+
+      /* STRICT Z-INDEX STACKING ARCHITECTURE */
+      --z-bg-sky: 0;           /* Layer 0: Sky atmospheric gradients */
+      --z-bg-far: 1;           /* Layer 1: Distant stars, storm clouds, hills, magi */
+      --z-bg-mid: 2;           /* Layer 2: Moving key art (Stone, Sleigh, Crosses, Rays) */
+      --z-bg-ground: 3;        /* Layer 3: Hill contours, stone groove base, snowbanks */
+      --z-scrim-contrast: 4;   /* Layer 4: Structural dark scrim (Guarantees WCAG AAA) */
+      --z-ui-content: 10;      /* Layer 5: Foreground (Logo, 4 Columns, Links, Socials) */
+      --z-demo-bar: 999;       /* Sticky interactive control bar */
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-bg-deep);
+      color: var(--color-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==========================================================================
+       2. TOP DEMO CONTROLS BAR (Instant Theme Switcher)
+       ========================================================================== */
+    .demo-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: var(--z-demo-bar);
+      background: rgba(9, 10, 15, 0.92);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 10px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .demo-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .demo-brand-pill {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #FBBF24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      font-weight: 700;
+    }
+
+    .demo-controls-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .theme-picker-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.22s ease;
+    }
+
+    .theme-btn:hover {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .theme-btn.active[data-theme="easter"] {
+      background: #D97706;
+      color: #FFFFFF;
+      box-shadow: 0 2px 14px rgba(217, 119, 6, 0.55);
+    }
+
+    .theme-btn.active[data-theme="christmas"] {
+      background: #0284C7;
+      color: #FFFFFF;
+      box-shadow: 0 2px 14px rgba(2, 132, 199, 0.55);
+    }
+
+    .theme-btn.active[data-theme="passion"] {
+      background: #BE123C;
+      color: #FFFFFF;
+      box-shadow: 0 2px 14px rgba(190, 18, 60, 0.55);
+    }
+
+    .playback-toggle-btn {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .playback-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* ==========================================================================
+       3. SIMULATED PAGE CONTENT (Enables scrolling down to footer)
+       ========================================================================== */
+    .dummy-hero {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 24px 60px;
+      background: radial-gradient(circle at 50% 25%, rgba(56, 189, 248, 0.08), transparent 70%),
+                  radial-gradient(circle at 80% 80%, rgba(217, 119, 6, 0.05), transparent 50%);
+    }
+
+    .dummy-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .dummy-title {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      max-width: 880px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #FFFFFF 40%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dummy-lead {
+      font-size: 1.15rem;
+      color: #CBD5E1;
+      max-width: 640px;
+      margin-bottom: 36px;
+    }
+
+    .scroll-down-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      animation: gentleBounce 2.5s infinite;
+      cursor: pointer;
+    }
+
+    .scroll-arrow-icon {
+      width: 22px;
+      height: 22px;
+      stroke: var(--color-text-muted);
+    }
+
+    @keyframes gentleBounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(8px); }
+      60% { transform: translateY(4px); }
+    }
+
+    /* ==========================================================================
+       4. ACTUAL WEBSITE NEWSLETTER SECTION (Right Above Footer)
+       ========================================================================== */
+    .newsletter-section {
+      background: #111218;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 60px 0;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .newsletter-container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .newsletter-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--color-gold);
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-gold);
+    }
+
+    .newsletter-title {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #FFFFFF;
+    }
+
+    .newsletter-subtitle {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 28px;
+    }
+
+    .newsletter-form {
+      display: flex;
+      gap: 10px;
+      max-width: 520px;
+      margin: 0 auto 16px;
+    }
+
+    .newsletter-input {
+      flex: 1;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .newsletter-input:focus {
+      border-color: var(--color-gold);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+    }
+
+    .newsletter-btn {
+      padding: 12px 24px;
+      border-radius: 999px;
+      background: var(--color-sermon-red);
+      color: #FFFFFF;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .newsletter-btn:hover {
+      background: #B71C1C;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(198, 40, 40, 0.4);
+    }
+
+    .newsletter-perks {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ==========================================================================
+       5. THE ACTUAL 2-MINUTE SERMON APP FOOTER
+       ========================================================================== */
+    .app-footer {
+      background: #0C0807;
+      color: var(--color-white);
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid rgba(245, 158, 11, 0.15);
+      isolation: isolate;
+      min-height: 600px;
+    }
+
+    /* --------------------------------------------------------------------------
+       LAYER 0: Sky Atmosphere Gradients
+       -------------------------------------------------------------------------- */
+    .footer-bg-atmosphere {
+      position: absolute;
+      inset: 0;
+      z-index: var(--z-bg-sky);
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .app-footer.easter .footer-bg-atmosphere {
+      background: linear-gradient(180deg, #160B29 0%, #361445 28%, #782A40 55%, #D45D25 82%, #F59E0B 100%);
+    }
+
+    .app-footer.christmas .footer-bg-atmosphere {
+      background: linear-gradient(180deg, #020511 0%, #061229 35%, #0B1F42 70%, #153258 100%);
+    }
+
+    .app-footer.passion .footer-bg-atmosphere {
+      background: linear-gradient(180deg, #020104 0%, #09020C 30%, #170211 60%, #320410 88%, #0C0104 100%);
+    }
+
+    /* --------------------------------------------------------------------------
+       LAYERS 1, 2, 3: Animated Vector Stage (Easter, Christmas, Passion)
+       -------------------------------------------------------------------------- */
+    .footer-anim-stage {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .stage-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .app-footer.easter .stage-easter,
+    .app-footer.christmas .stage-christmas,
+    .app-footer.passion .stage-passion {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .stage-layer svg {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    /* --------------------------------------------------------------------------
+       LAYER 4: Contrast Scrim (Guarantees WCAG AAA > 7:1 for text, links, inputs)
+       -------------------------------------------------------------------------- */
+    .footer-scrim-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: var(--z-scrim-contrast);
+      pointer-events: none;
+      background: radial-gradient(ellipse at 50% 60%, rgba(8, 7, 11, 0.76) 0%, rgba(8, 7, 11, 0.58) 60%, rgba(8, 7, 11, 0.15) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(8, 7, 11, 0.95) 0%, rgba(8, 7, 11, 0.65) 50%, rgba(8, 7, 11, 0.20) 100%);
+    }
+
+    /* --------------------------------------------------------------------------
+       LAYER 5: Actual Website Foreground Content (Z-Index: 10)
+       -------------------------------------------------------------------------- */
+    .footer-foreground-content {
+      position: relative;
+      z-index: var(--z-ui-content);
+    }
+
+    /* Scripture Anchor (Original Site Text) */
+    .footer-scripture-anchor {
+      padding: 38px 0 28px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      text-align: center;
+    }
+
+    .footer-anchor-quote {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-style: italic;
+      color: #FFFFFF;
+      max-width: 680px;
+      margin: 0 auto 8px;
+      line-height: 1.5;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
+    }
+
+    .footer-anchor-ref {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: var(--color-gold);
+      text-transform: uppercase;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
+    }
+
+    /* 4 Columns Container (100% Original Site Layout & Texts) */
+    .footer-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 44px;
+      padding-top: 48px;
+      padding-bottom: 52px;
+    }
+
+    .footer-brand-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .footer-logo-wrap {
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+
+    .footer-logo {
+      height: 54px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.85));
+    }
+
+    .footer-desc {
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.82);
+      margin-bottom: 22px;
+      line-height: 1.7;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+    }
+
+    /* Social Icons */
+    .social-links {
+      display: flex;
+      gap: 10px;
+    }
+
+    .social-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .social-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .social-icon:hover {
+      background: var(--color-sermon-red);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 6px 20px rgba(198, 40, 40, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .social-icon[data-social="youtube"]:hover { background: #FF0000; border-color: #FF0000; }
+    .social-icon[data-social="facebook"]:hover { background: #1877F2; border-color: #1877F2; }
+    .social-icon[data-social="instagram"]:hover { background: #E1306C; border-color: #E1306C; }
+    .social-icon[data-social="tiktok"]:hover { background: #010101; border-color: #25F4EE; }
+    .social-icon[data-social="email"]:hover { background: #EA4335; border-color: #EA4335; }
+
+    /* Nav Columns */
+    .footer-heading {
+      font-size: 1.05rem;
+      color: var(--color-white);
+      margin-bottom: 16px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.92rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-block;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
+    }
+
+    .footer-links a:hover {
+      color: var(--color-gold);
+      transform: translateX(4px);
+    }
+
+    .footer-admin-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-admin-link:hover {
+      color: #FFFFFF;
+    }
+
+    /* Footer Bottom */
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px 0;
+      font-size: 0.84rem;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .footer-bottom-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-bottom-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .footer-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: #FBBF24;
+      background: rgba(245, 158, 11, 0.12);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #FBBF24;
+    }
+
+    .footer-legal a {
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      margin: 0 4px;
+    }
+
+    .footer-legal a:hover {
+      color: #FFFFFF;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .footer-container {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .footer-container {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+      .newsletter-form {
+        flex-direction: column;
+      }
+      .newsletter-btn {
+        width: 100%;
+      }
+      .demo-bar {
+        padding: 8px 12px;
+      }
+      .theme-btn {
+        padding: 5px 10px;
+        font-size: 0.76rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ========================================================================
+       TOP DEMO CONTROLS (Theme Switcher + Replay Button)
+       ======================================================================== -->
+  <header class="demo-bar" aria-label="Seasonal Demo Controls">
+    <div class="demo-brand">
+      <span class="demo-brand-pill">Vite + GSAP</span>
+      <span>2-Minute Sermon Actual Website Footer</span>
+    </div>
+
+    <div class="demo-controls-wrap">
+      <!-- Theme Switcher Buttons -->
+      <div class="theme-picker-group" role="radiogroup" aria-label="Select Seasonal Footer Theme">
+        <button class="theme-btn active" data-theme="easter" role="radio" aria-checked="true">
+          🌅 Easter
+        </button>
+        <button class="theme-btn" data-theme="christmas" role="radio" aria-checked="false">
+          🎄 Christmas
+        </button>
+        <button class="theme-btn" data-theme="passion" role="radio" aria-checked="false">
+          ✝️ Passion (Holy Week)
+        </button>
+      </div>
+
+      <!-- Playback Mode Preview -->
+      <button class="playback-toggle-btn" id="btnPlayCinematic" title="Replay animation at smooth average speed">
+        <span>↺ Replay Animation</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       SIMULATED PAGE CONTENT (Enables scrolling down to footer)
+       ======================================================================== -->
+  <main>
+    <section class="dummy-hero">
+      <div class="dummy-badge">
+        <span>🎨 Seasonal Background Animation System</span>
+      </div>
+      <h1 class="dummy-title">All Three Seasons Animate in the Background Behind the Real Footer</h1>
+      <p class="dummy-lead">
+        As soon as you scroll down and reach the footer, the background animation begins automatically and unfolds at a smooth, unhurried pace.
+      </p>
+      <div class="scroll-down-card" onclick="document.getElementById('actualFooter').scrollIntoView({behavior:'smooth'})">
+        <span>Scroll down to the footer to watch the entrance animation</span>
+        <svg class="scroll-arrow-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       ACTUAL WEBSITE NEWSLETTER SECTION (Right Above Footer)
+       ======================================================================== -->
+  <section class="newsletter-section">
+    <div class="container newsletter-container">
+      <span class="newsletter-tag-pill"><span class="badge-dot"></span>WEEKLY SCRIPTURE INBOX</span>
+      <h2 class="newsletter-title">Receive Weekly 2-Minute Sermons</h2>
+      <p class="newsletter-subtitle">Get weekly scripture encouragement and sermon highlights delivered directly to your inbox.</p>
+      <form class="newsletter-form" id="newsletterForm" onsubmit="event.preventDefault(); alert('Subscribed successfully!');">
+        <input type="email" class="newsletter-input" placeholder="Enter your email address..." required>
+        <button type="submit" class="newsletter-btn">Subscribe Now</button>
+      </form>
+      <div class="newsletter-perks">
+        <span>✓ Free Weekly Delivery</span> • <span>✓ Zero Spam</span> • <span>✓ Unsubscribe Anytime</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       THE ACTUAL 2-MINUTE SERMON APP FOOTER (With Background Seasonal Animation)
+       ======================================================================== -->
+  <footer class="app-footer easter" id="actualFooter">
+
+    <!-- LAYER 0: Ambient Background Gradient Atmosphere -->
+    <div class="footer-bg-atmosphere" aria-hidden="true"></div>
+
+    <!-- LAYERS 1, 2, 3: Animated Vector Stages (Easter, Christmas, Passion) -->
+    <div class="footer-anim-stage" aria-hidden="true">
+
+      <!-- ====================================================================
+           1. EASTER STAGE (Bright Sunrise, Open Tomb, Rolling Stone with Sand Track, God-Rays)
+           ==================================================================== -->
+      <div class="stage-layer stage-easter">
+        <svg class="easter-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="easterSunGlow" cx="25%" cy="60%" r="65%">
+              <stop offset="0%" stop-color="#FFFBEB" stop-opacity="1" />
+              <stop offset="25%" stop-color="#FEF08A" stop-opacity="0.9" />
+              <stop offset="55%" stop-color="#F59E0B" stop-opacity="0.55" />
+              <stop offset="80%" stop-color="#EA580C" stop-opacity="0.22" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </radialGradient>
+
+            <linearGradient id="godRayBeamGrad" x1="0%" y1="50%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="20%" stop-color="#FEF08A" stop-opacity="0.85" />
+              <stop offset="55%" stop-color="#F59E0B" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="#EA580C" stop-opacity="0" />
+            </linearGradient>
+
+            <radialGradient id="tombDarkness" cx="45%" cy="55%" r="50%">
+              <stop offset="0%" stop-color="#020204" />
+              <stop offset="85%" stop-color="#0A0B10" />
+              <stop offset="100%" stop-color="#141520" />
+            </radialGradient>
+
+            <radialGradient id="stoneSurface" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#B8B4C0" />
+              <stop offset="45%" stop-color="#73707B" />
+              <stop offset="80%" stop-color="#3D3A44" />
+              <stop offset="100%" stop-color="#1E1C22" />
+            </radialGradient>
+
+            <linearGradient id="cliffRockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3A324A" />
+              <stop offset="60%" stop-color="#231B2F" />
+              <stop offset="100%" stop-color="#110D1A" />
+            </linearGradient>
+
+            <!-- Sand/Rock Groove Track Gradient -->
+            <linearGradient id="stoneTrackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#140D1E" />
+              <stop offset="40%" stop-color="#3D291E" />
+              <stop offset="80%" stop-color="#6E4424" />
+              <stop offset="100%" stop-color="#24140D" />
+            </linearGradient>
+          </defs>
+
+          <!-- RISING DAWN SUN AURA -->
+          <circle id="easterSunAura" cx="340" cy="500" r="500" fill="url(#easterSunGlow)" opacity="0.8" />
+
+          <!-- Distant Dawn Hills -->
+          <path d="M0 640 Q400 520 900 580 T1600 540 L1600 700 L0 700 Z" fill="#241933" opacity="0.65" />
+          <path d="M0 660 Q500 570 1100 620 T1600 600 L1600 700 L0 700 Z" fill="#181122" opacity="0.88" />
+
+          <!-- GOD-RAY BEAMS -->
+          <g id="easterGodRays" style="transform-origin: 270px 520px; opacity: 0.15; transform: scale(0.35);">
+            <polygon points="270,520 660,160 1020,240 280,540" fill="url(#godRayBeamGrad)" opacity="0.95" />
+            <polygon points="265,510 920,20 1400,140 285,530" fill="url(#godRayBeamGrad)" opacity="0.6" />
+            <polygon points="260,530 1140,300 1640,460 275,550" fill="url(#godRayBeamGrad)" opacity="0.45" />
+            <polygon points="275,515 560,10 760,50 270,515" fill="url(#godRayBeamGrad)" opacity="0.75" />
+            <circle cx="275" cy="520" r="170" fill="url(#easterSunGlow)" opacity="1" />
+          </g>
+
+          <!-- ROCK CLIFF & TOMB ARCHWAY -->
+          <g id="easterTombCliff">
+            <path d="M-60 700 L-40 310 Q40 260 120 290 Q210 210 290 250 Q370 300 400 380 Q450 450 490 530 Q510 600 520 700 Z" fill="url(#cliffRockGrad)" />
+            <path d="M140 680 L140 490 C140 400 220 370 290 370 C360 370 440 400 440 490 L440 680 Z" fill="url(#tombDarkness)" />
+            <path d="M130 680 L130 490 C130 390 215 355 290 355 C365 355 450 390 450 490 L450 680 L430 680 L430 492 C430 410 355 385 290 385 C225 385 150 410 150 492 L150 680 Z" fill="#524B5E" />
+          </g>
+
+          <!-- STONE RUNWAY / FLAT SAND BASE GROOVE (Revealed beneath stone as it rolls) -->
+          <g id="easterStoneBaseTrack" opacity="0.85">
+            <!-- Cut groove trench in the stone floor where the circular stone rests and rolls -->
+            <path d="M160 668 L780 668 Q800 668 810 674 L810 682 Q780 688 740 688 L160 688 Z" fill="url(#stoneTrackGrad)" />
+            <!-- Sand/pebble lip texture along the rolling path -->
+            <path d="M170 668 Q320 664 480 666 Q640 664 780 668" stroke="#A16207" stroke-width="2" fill="none" opacity="0.6" />
+            <line x1="160" y1="680" x2="760" y2="680" stroke="#000000" stroke-width="2" opacity="0.7" />
+          </g>
+
+          <!-- MASSIVE CIRCULAR SEALING STONE (Rolls along base track) -->
+          <g id="easterStoneRollGroup">
+            <g id="easterRollingStone" style="transform-origin: 300px 525px;">
+              <!-- Drop Shadow on Floor -->
+              <ellipse cx="300" cy="665" rx="145" ry="22" fill="#000000" opacity="0.75" />
+              <!-- Stone Body -->
+              <circle cx="300" cy="525" r="145" fill="url(#stoneSurface)" stroke="#1F1D22" stroke-width="4.5" />
+              <!-- Cracks & Weathering Textures -->
+              <path d="M220 475 Q260 495 280 480 Q310 465 360 495" stroke="#1C1B1E" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.85" />
+              <path d="M240 565 Q290 575 320 545 Q360 525 390 555" stroke="#1C1B1E" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.8" />
+              <path d="M280 415 Q295 455 290 505" stroke="#2D2B32" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9" />
+              <circle cx="296" cy="521" r="140" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.35" />
+            </g>
+          </g>
+
+          <!-- Ascending Golden Dawn Sparks -->
+          <g id="easterSparksGroup" opacity="0.8">
+            <circle cx="350" cy="500" r="2.2" fill="#FFFBEB" />
+            <circle cx="490" cy="440" r="2.6" fill="#FEF08A" />
+            <circle cx="630" cy="370" r="2.0" fill="#FDE047" />
+            <circle cx="760" cy="410" r="2.4" fill="#FEF08A" />
+            <circle cx="930" cy="340" r="2.2" fill="#F59E0B" />
+          </g>
+
+          <!-- Foreground Ground Silhouettes -->
+          <path d="M0 670 Q450 640 950 660 T1600 650 L1600 700 L0 700 Z" fill="#0E0A16" />
+          <path d="M0 690 Q600 670 1200 680 T1600 675 L1600 700 L0 700 Z" fill="#06040A" />
+        </svg>
+      </div>
+
+      <!-- ====================================================================
+           2. CHRISTMAS STAGE (Santa Sleigh, Bethlehem Star, Wise Men on Camels)
+           ==================================================================== -->
+      <div class="stage-layer stage-christmas">
+        <svg class="christmas-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="bethlehemAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+              <stop offset="25%" stop-color="#BAE6FD" stop-opacity="0.6" />
+              <stop offset="60%" stop-color="#38BDF8" stop-opacity="0.25" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </radialGradient>
+
+            <linearGradient id="snowHillGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1E293B" />
+              <stop offset="40%" stop-color="#0F172A" />
+              <stop offset="100%" stop-color="#080D1A" />
+            </linearGradient>
+
+            <linearGradient id="snowHillGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#334155" />
+              <stop offset="20%" stop-color="#1E293B" />
+              <stop offset="100%" stop-color="#0B1120" />
+            </linearGradient>
+          </defs>
+
+          <!-- Star Clusters -->
+          <g id="christmasStarfield" opacity="0.85">
+            <circle cx="120" cy="80" r="1.5" fill="#FFFFFF" opacity="0.8" />
+            <circle cx="280" cy="140" r="1.2" fill="#E0F2FE" opacity="0.7" />
+            <circle cx="420" cy="60" r="2.0" fill="#FFFFFF" opacity="0.9" />
+            <circle cx="560" cy="110" r="1.0" fill="#BAE6FD" opacity="0.6" />
+            <circle cx="720" cy="75" r="1.8" fill="#FFFFFF" opacity="0.85" />
+            <circle cx="890" cy="130" r="1.2" fill="#E0F2FE" opacity="0.7" />
+            <circle cx="1050" cy="50" r="1.6" fill="#FFFFFF" opacity="0.8" />
+            <circle cx="1220" cy="115" r="1.4" fill="#BAE6FD" opacity="0.75" />
+            <circle cx="1480" cy="90" r="2.2" fill="#FFFFFF" opacity="0.9" />
+            <circle cx="1380" cy="160" r="1.0" fill="#FFFFFF" opacity="0.5" />
+            <circle cx="980" cy="95" r="1.4" fill="#FFFFFF" opacity="0.7" />
+            <circle cx="180" cy="190" r="1.0" fill="#BAE6FD" opacity="0.6" />
+          </g>
+
+          <!-- BETHLEHEM STAR -->
+          <g id="bethlehemStarGroup" transform="translate(1340, 120)">
+            <circle cx="0" cy="0" r="95" fill="url(#bethlehemAura)" class="bethlehem-glow" />
+            <polygon points="-2,-65 2,-65 0,65" fill="#FFFFFF" opacity="0.95" />
+            <polygon points="-1,-85 1,-85 0,85" fill="#E0F2FE" opacity="0.5" />
+            <polygon points="-65,-2 -65,2 65,0" fill="#FFFFFF" opacity="0.95" />
+            <polygon points="-32,-32 32,32 0,0" stroke="#BAE6FD" stroke-width="1.5" fill="none" opacity="0.75" />
+            <polygon points="32,-32 -32,32 0,0" stroke="#BAE6FD" stroke-width="1.5" fill="none" opacity="0.75" />
+            <polygon points="0,-14 12,0 0,14 -12,0" fill="#FFFFFF" />
+            <circle cx="0" cy="0" r="3.5" fill="#FFFFFF" />
+          </g>
+
+          <!-- THREE WISE MEN (MAGI ON CAMELS) SILHOUETTE JOURNEYING TOWARD THE STAR -->
+          <g id="christmasWiseMenGroup" class="christmas-wisemen" transform="translate(140, 560) scale(0.65)" fill="#090E1A" opacity="0.85">
+            <!-- Camel 1 + King 1 -->
+            <g transform="translate(0, 0)">
+              <!-- Camel Body & Hump -->
+              <ellipse cx="40" cy="30" rx="25" ry="16" />
+              <circle cx="45" cy="14" r="12" /> <!-- Hump -->
+              <path d="M55 24 C68 14 74 2 70 -12 C66 -16 58 -10 62 4 C58 14 50 20 45 25 Z" /> <!-- Neck & Head -->
+              <ellipse cx="72" cy="-14" rx="7" ry="4" /> <!-- Head -->
+              <!-- King on Camel -->
+              <ellipse cx="32" cy="6" rx="6" ry="9" fill="#050811" />
+              <circle cx="33" cy="-4" r="4.5" fill="#050811" />
+              <path d="M30 -8 L36 -8 L33 -12 Z" fill="#D97706" /> <!-- Crown -->
+              <!-- Legs -->
+              <path d="M22 42 L16 75 M28 42 L24 74 M52 42 L56 75 M58 42 L66 74" stroke="#090E1A" stroke-width="4" stroke-linecap="round" />
+            </g>
+
+            <!-- Camel 2 + King 2 -->
+            <g transform="translate(90, 4) scale(0.92)">
+              <ellipse cx="40" cy="30" rx="25" ry="16" />
+              <circle cx="45" cy="14" r="12" />
+              <path d="M55 24 C68 14 74 2 70 -12 C66 -16 58 -10 62 4 C58 14 50 20 45 25 Z" />
+              <ellipse cx="72" cy="-14" rx="7" ry="4" />
+              <ellipse cx="32" cy="6" rx="6" ry="9" fill="#050811" />
+              <circle cx="33" cy="-4" r="4.5" fill="#050811" />
+              <path d="M30 -8 L36 -8 L33 -12 Z" fill="#D97706" />
+              <path d="M22 42 L16 75 M28 42 L24 74 M52 42 L56 75 M58 42 L66 74" stroke="#090E1A" stroke-width="4" stroke-linecap="round" />
+            </g>
+
+            <!-- Camel 3 + King 3 -->
+            <g transform="translate(175, 8) scale(0.86)">
+              <ellipse cx="40" cy="30" rx="25" ry="16" />
+              <circle cx="45" cy="14" r="12" />
+              <path d="M55 24 C68 14 74 2 70 -12 C66 -16 58 -10 62 4 C58 14 50 20 45 25 Z" />
+              <ellipse cx="72" cy="-14" rx="7" ry="4" />
+              <ellipse cx="32" cy="6" rx="6" ry="9" fill="#050811" />
+              <circle cx="33" cy="-4" r="4.5" fill="#050811" />
+              <path d="M30 -8 L36 -8 L33 -12 Z" fill="#D97706" />
+              <path d="M22 42 L16 75 M28 42 L24 74 M52 42 L56 75 M58 42 L66 74" stroke="#090E1A" stroke-width="4" stroke-linecap="round" />
+            </g>
+          </g>
+
+          <!-- SANTA'S SLEIGH & REINDEER -->
+          <g id="christmasSleighGroup" class="christmas-sleigh" transform="translate(-320, 210) scale(0.95)">
+            <path d="M-130 22 Q-65 16 0 24" stroke="#BAE6FD" stroke-width="2" stroke-dasharray="4 6" opacity="0.65" fill="none" />
+            
+            <!-- Sleigh -->
+            <g transform="translate(0, 0)">
+              <path d="M-45 15 C-42 2 -25 -2 -10 0 C-4 -12 18 -15 32 -4 C38 0 42 10 40 22 C36 28 20 30 -25 30 C-38 30 -47 24 -45 15 Z" fill="#991B1B" />
+              <path d="M-52 35 L38 35 C48 35 52 28 50 24" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none" />
+              <line x1="-30" y1="30" x2="-26" y2="35" stroke="#F59E0B" stroke-width="2" />
+              <line x1="18" y1="28" x2="22" y2="35" stroke="#F59E0B" stroke-width="2" />
+              <path d="M-22 2 C-20 -14 -6 -16 -4 2 Z" fill="#1E293B" />
+              <circle cx="2" cy="-6" r="7" fill="#DC2626" />
+              <circle cx="8" cy="-6" r="3" fill="#FFFFFF" />
+              <ellipse cx="-24" cy="5" rx="14" ry="12" fill="#B45309" />
+            </g>
+
+            <line x1="42" y1="18" x2="160" y2="8" stroke="#FDE68A" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.8" />
+            <line x1="42" y1="22" x2="260" y2="2" stroke="#FDE68A" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.7" />
+
+            <!-- Reindeer 1 -->
+            <g transform="translate(130, -5) scale(0.9)">
+              <ellipse cx="20" cy="18" rx="18" ry="9" fill="#1E293B" />
+              <path d="M30 14 C36 6 42 0 46 -2 C48 4 44 12 36 18 Z" fill="#1E293B" />
+              <ellipse cx="46" cy="-2" rx="6" ry="4" fill="#1E293B" />
+              <path d="M44 -6 L40 -18 M40 -14 L34 -16 M40 -12 L44 -14" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" fill="none" />
+              <path d="M10 24 L-4 36 M16 25 L8 38 M28 24 L42 32 M32 23 L48 28" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
+            </g>
+
+            <!-- Reindeer 2 (Rudolph) -->
+            <g transform="translate(230, -12) scale(0.92)">
+              <ellipse cx="20" cy="18" rx="18" ry="9" fill="#1E293B" />
+              <path d="M30 14 C36 6 42 0 46 -2 C48 4 44 12 36 18 Z" fill="#1E293B" />
+              <ellipse cx="46" cy="-2" rx="6" ry="4" fill="#1E293B" />
+              <path d="M44 -6 L40 -18 M40 -14 L34 -16 M40 -12 L44 -14" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" fill="none" />
+              <circle cx="51" cy="-1" r="3.5" fill="#EF4444" />
+              <circle cx="51" cy="-1" r="9" fill="#EF4444" opacity="0.5" />
+              <path d="M10 24 L-4 36 M16 25 L8 38 M28 24 L42 32 M32 23 L48 28" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
+            </g>
+          </g>
+
+          <!-- PARALLAX LAYER 1: Far Pine Trees -->
+          <g id="christmasFarTrees" class="christmas-far-trees" fill="#0B132B" opacity="0.75">
+            <polygon points="120,620 145,530 170,620" />
+            <polygon points="150,625 175,545 200,625" />
+            <polygon points="260,630 280,560 300,630" />
+            <polygon points="450,635 480,520 510,635" />
+            <polygon points="490,640 515,550 540,640" />
+            <polygon points="780,630 805,535 830,630" />
+            <polygon points="815,635 840,555 865,635" />
+            <polygon points="1120,635 1150,515 1180,635" />
+            <polygon points="1160,640 1185,540 1210,640" />
+            <polygon points="1350,625 1375,530 1400,625" />
+            <polygon points="1385,630 1410,550 1435,630" />
+          </g>
+
+          <!-- PARALLAX LAYER 2: Near Pine Trees & Snow Hill -->
+          <path d="M0 640 Q400 580 900 615 T1600 590 L1600 700 L0 700 Z" fill="url(#snowHillGrad1)" />
+
+          <g id="christmasNearTrees" class="christmas-near-trees" fill="#060C1E">
+            <polygon points="60,670 90,560 120,670" />
+            <polygon points="210,675 245,540 280,675" />
+            <polygon points="340,680 370,580 400,680" />
+            <polygon points="640,670 675,550 710,670" />
+            <polygon points="980,675 1015,535 1050,675" />
+            <polygon points="1260,680 1295,555 1330,680" />
+            <polygon points="1490,670 1525,560 1560,670" />
+          </g>
+
+          <!-- FOREGROUND: Snow Dunes -->
+          <path d="M0 660 Q450 635 950 655 T1600 640 L1600 700 L0 700 Z" fill="url(#snowHillGrad2)" opacity="0.9" />
+          <path d="M0 682 Q550 665 1100 675 T1600 665 L1600 700 L0 700 Z" fill="#050811" />
+        </svg>
+      </div>
+
+      <!-- ====================================================================
+           3. PASSION STAGE (Full Footer Animated Atmosphere: Wide Clouds, Mist, Light Columns)
+           ==================================================================== -->
+      <div class="stage-layer stage-passion">
+        <svg class="passion-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="passionSacredAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFF1F2" stop-opacity="1" />
+              <stop offset="18%" stop-color="#F43F5E" stop-opacity="0.9" />
+              <stop offset="42%" stop-color="#9F1239" stop-opacity="0.65" />
+              <stop offset="70%" stop-color="#4C0519" stop-opacity="0.3" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </radialGradient>
+
+            <linearGradient id="calvaryHillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#190A18" />
+              <stop offset="50%" stop-color="#0E040E" />
+              <stop offset="100%" stop-color="#030104" />
+            </linearGradient>
+
+            <linearGradient id="passionBeamGrad" x1="50%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stop-color="#F43F5E" stop-opacity="0.8" />
+              <stop offset="35%" stop-color="#FDE047" stop-opacity="0.45" />
+              <stop offset="75%" stop-color="#FDA4AF" stop-opacity="0.15" />
+              <stop offset="100%" stop-color="#FFF1F2" stop-opacity="0" />
+            </linearGradient>
+
+            <!-- Twilight Mist Gradient -->
+            <linearGradient id="passionMistGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#000000" stop-opacity="0" />
+              <stop offset="30%" stop-color="#580E23" stop-opacity="0.35" />
+              <stop offset="70%" stop-color="#3A0818" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+
+          <!-- SACRED BACKLIGHT BEAM & EXPANDING HALO (Spans across the full footer width) -->
+          <g id="passionSacredBacklight" class="passion-backlight" transform="translate(800, 520)" style="transform-origin: center; opacity: 0.12; transform: scale(0.35);">
+            <circle cx="0" cy="-60" r="360" fill="url(#passionSacredAura)" />
+            <!-- Upward Piercing Light Columns toward heaven -->
+            <polygon points="-180,40 -40,-380 40,-380 180,40" fill="url(#passionBeamGrad)" opacity="0.6" />
+            <polygon points="-80,40 -12,-480 12,-480 80,40" fill="#FFF1F2" opacity="0.5" />
+            <polygon points="-380,40 -180,-300 -100,-300 -60,40" fill="url(#passionBeamGrad)" opacity="0.3" />
+            <polygon points="60,40 100,-300 180,-300 380,40" fill="url(#passionBeamGrad)" opacity="0.3" />
+          </g>
+
+          <!-- HEAVY DARK STORM CLOUDS (Spanning full width, parting slowly) -->
+          <g id="passionCloudLeft" class="passion-cloud-left" fill="#0C0410" opacity="0.95">
+            <path d="M-220 270 Q100 180 320 270 Q480 210 620 300 Q760 240 920 340 L920 640 L-220 640 Z" />
+          </g>
+          <g id="passionCloudRight" class="passion-cloud-right" fill="#0C0410" opacity="0.95">
+            <path d="M1820 270 Q1500 180 1280 270 Q1120 210 980 300 Q840 240 680 340 L680 640 L1820 640 Z" />
+          </g>
+
+          <!-- CALVARY HILL SILHOUETTE -->
+          <path d="M0 660 Q400 620 800 565 Q1200 620 1600 660 L1600 700 L0 700 Z" fill="url(#calvaryHillGrad)" />
+          <path d="M0 680 Q500 650 800 615 Q1100 650 1600 680 L1600 700 L0 700 Z" fill="#030104" />
+
+          <!-- LOW ATMOSPHERIC CALVARY MIST (Sweeps across the full ground width) -->
+          <g id="passionMistLayer" opacity="0.45">
+            <path d="M-100 630 Q300 600 800 620 Q1300 600 1700 630 L1700 680 L-100 680 Z" fill="url(#passionMistGrad)" />
+          </g>
+
+          <!-- THE THREE CROSSES ON CALVARY -->
+          <g id="calvaryCrossesGroup">
+            <!-- Left Cross (The Repentant Thief) -->
+            <g transform="translate(680, 540) rotate(-4 0 0)">
+              <rect x="-3.5" y="0" width="7" height="85" rx="1.5" fill="#060207" />
+              <rect x="-20" y="18" width="40" height="6.5" rx="1.5" fill="#060207" />
+            </g>
+
+            <!-- Right Cross -->
+            <g transform="translate(920, 540) rotate(4 0 0)">
+              <rect x="-3.5" y="0" width="7" height="85" rx="1.5" fill="#060207" />
+              <rect x="-20" y="18" width="40" height="6.5" rx="1.5" fill="#060207" />
+            </g>
+
+            <!-- CENTER CROSS OF CHRIST -->
+            <g id="passionCenterCross" transform="translate(800, 455)">
+              <rect x="-6" y="0" width="12" height="155" rx="2.5" fill="#000000" />
+              <rect x="-10" y="4" width="20" height="7.5" rx="1.5" fill="#1C0617" />
+              <rect x="-42" y="28" width="84" height="11" rx="2.5" fill="#000000" />
+              <circle cx="0" cy="28" r="14" stroke="#1A0414" stroke-width="2.5" fill="none" stroke-dasharray="3 2" />
+              <line x1="-41" y1="28" x2="41" y2="28" stroke="#FDA4AF" stroke-width="1.8" opacity="0.75" />
+              <line x1="-5" y1="4" x2="-5" y2="155" stroke="#FDA4AF" stroke-width="1.2" opacity="0.6" />
+            </g>
+          </g>
+
+          <!-- RICH CLUSTER OF ASCENDING REDEMPTION EMBERS (Floating across full width) -->
+          <g id="passionEmbersGroup" opacity="0.85">
+            <circle cx="480" cy="580" r="1.6" fill="#F43F5E" />
+            <circle cx="620" cy="540" r="2.0" fill="#FDE047" />
+            <circle cx="740" cy="560" r="2.0" fill="#F43F5E" />
+            <circle cx="820" cy="530" r="2.5" fill="#FDE047" />
+            <circle cx="770" cy="470" r="1.8" fill="#F43F5E" />
+            <circle cx="850" cy="540" r="2.2" fill="#FDE047" />
+            <circle cx="710" cy="500" r="1.6" fill="#FDA4AF" />
+            <circle cx="880" cy="490" r="2.0" fill="#F43F5E" />
+            <circle cx="790" cy="430" r="1.5" fill="#FFF1F2" />
+            <circle cx="830" cy="410" r="1.8" fill="#FDE047" />
+            <circle cx="980" cy="550" r="1.8" fill="#FDA4AF" />
+            <circle cx="1120" cy="570" r="2.2" fill="#F43F5E" />
+            <circle cx="1260" cy="540" r="1.5" fill="#FDE047" />
+            <circle cx="760" cy="380" r="1.2" fill="#FFF1F2" />
+            <circle cx="810" cy="350" r="1.5" fill="#FDE047" />
+          </g>
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- LAYER 4: Scrim & Readability Backdrop (Guarantees WCAG AAA Text Contrast) -->
+    <div class="footer-scrim-backdrop" aria-hidden="true"></div>
+
+    <!-- LAYER 5: Actual Website Foreground Content (Z-Index: 10, Completely Clickable) -->
+    <div class="footer-foreground-content">
+
+      <!-- Scripture Anchor Quote (100% Original Site Text) -->
+      <div class="footer-scripture-anchor">
+        <div class="container text-center">
+          <blockquote class="footer-anchor-quote">
+            “Your word is a lamp to my feet and a light to my path.”
+          </blockquote>
+          <span class="footer-anchor-ref">— Psalm 119:105</span>
+        </div>
+      </div>
+
+      <!-- 4 Columns Container (100% Original Site Layout & Texts) -->
+      <div class="container footer-container">
+        
+        <!-- Column 1: Brand & Social Links -->
+        <div class="footer-col footer-brand-col">
+          <div class="footer-logo-wrap">
+            <img src="/assets/logo.png" alt="2-Minute Sermon" class="footer-logo">
+          </div>
+          <p class="footer-desc">Quick encouragement for your day. Short, scripture-rooted messages from ministers worldwide.</p>
+          
+          <div class="social-links">
+            <a href="https://www.youtube.com/c/2MinuteSermonP" target="_blank" rel="noopener" aria-label="YouTube Channel" class="social-icon" data-social="youtube" title="YouTube">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </a>
+            <a href="https://www.facebook.com/2minutesermon" target="_blank" rel="noopener" aria-label="Facebook Page" class="social-icon" data-social="facebook" title="Facebook">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/2_minutesermon/" target="_blank" rel="noopener" aria-label="Instagram Profile" class="social-icon" data-social="instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="https://www.tiktok.com/@2minutesermon" target="_blank" rel="noopener" aria-label="TikTok Profile" class="social-icon" data-social="tiktok" title="TikTok">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.88 2.89 2.89 0 0 1 2.88-2.88c.37 0 .72.07 1.05.2v-3.53a6.34 6.34 0 0 0-1.05-.09A6.33 6.33 0 0 0 3 15.67 6.33 6.33 0 0 0 9.33 22a6.33 6.33 0 0 0 6.34-6.33V8.87a8.28 8.28 0 0 0 4.87 1.57V7a4.84 4.84 0 0 1-.95-.31z"/></svg>
+            </a>
+            <a href="mailto:info2minutesermon@gmail.com" target="_blank" rel="noopener" aria-label="Email Us" class="social-icon" data-social="email" title="Email Us">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Column 2: Navigation -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#sermons">All Sermons</a></li>
+            <li><a href="#conversations">The Conversation</a></li>
+            <li><a href="#conversations">2-Minute PLUS (3–15 min)</a></li>
+            <li><a href="#seasons">Seasons Hub</a></li>
+            <li><a href="#topics">Topics &amp; Themes</a></li>
+            <li><a href="#preachers">Preachers Directory</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Devotion & Resources -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Devotion &amp; Resources</h4>
+          <ul class="footer-links">
+            <li><a href="#daily-verse">Daily Verse &amp; Reflection</a></li>
+            <li><a href="#community">Community Reflections</a></li>
+            <li><a href="#prayers">Written Prayers</a></li>
+            <li><a href="#requests">Prayer Requests</a></li>
+            <li><a href="#events">Ministry Events</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4: Ministry & About -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Ministry &amp; About</h4>
+          <ul class="footer-links">
+            <li><a href="#about">Our Mission</a></li>
+            <li><a href="#structure">Ministry Structure</a></li>
+            <li><a href="#team">Leadership &amp; Team</a></li>
+            <li><a href="#partners">Ministry Partners</a></li>
+            <li><a href="#contact">Contact Us</a></li>
+          </ul>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+            <a href="/admin.html" target="_blank" rel="noopener" class="footer-admin-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              The Steward (Portal)
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Bottom Bar -->
+      <div class="footer-bottom">
+        <div class="container footer-bottom-container">
+          <div class="footer-bottom-left">
+            <span>&copy; 2026 2-Minute Sermon Ministry. All rights reserved.</span>
+            <span class="footer-live-badge"><span class="live-dot"></span> Broadcasting across 40+ nations</span>
+          </div>
+          <div class="footer-legal">
+            <a href="/privacy">Privacy Policy</a> • <a href="/terms">Terms of Use</a> • <a href="/sitemap">Sitemap</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </footer>
+
+  <!-- ========================================================================
+       6. GSAP ANIMATION ENGINE: TRIGGERS ON ENTRY & ANIMATES SLOWLY
+       ======================================================================== -->
+  <script>
+    class ActualSiteFooterController {
+      constructor() {
+        this.footer = document.getElementById('actualFooter');
+        this.btnPlayCinematic = document.getElementById('btnPlayCinematic');
+        this.currentTheme = 'easter';
+        this.activeTimeline = null;
+
+        this.init();
+      }
+
+      init() {
+        if (window.gsap && window.ScrollTrigger) {
+          gsap.registerPlugin(ScrollTrigger);
+        }
+
+        this.bindThemeButtons();
+        this.bindReplayButton();
+        this.applyTheme(this.currentTheme);
+
+        window.addEventListener('resize', () => {
+          ScrollTrigger.refresh();
+        });
+      }
+
+      bindThemeButtons() {
+        const buttons = document.querySelectorAll('.theme-btn');
+        buttons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const targetTheme = btn.dataset.theme;
+            if (targetTheme === this.currentTheme) return;
+
+            buttons.forEach(b => {
+              b.classList.remove('active');
+              b.setAttribute('aria-checked', 'false');
+            });
+
+            btn.classList.add('active');
+            btn.setAttribute('aria-checked', 'true');
+
+            this.applyTheme(targetTheme);
+          });
+        });
+      }
+
+      bindReplayButton() {
+        if (!this.btnPlayCinematic) return;
+
+        this.btnPlayCinematic.addEventListener('click', () => {
+          this.footer.scrollIntoView({ behavior: 'smooth' });
+
+          if (this.activeTimeline) {
+            this.activeTimeline.restart();
+          }
+        });
+      }
+
+      applyTheme(theme) {
+        this.currentTheme = theme;
+
+        // 1. Update CSS class on footer wrapper
+        this.footer.className = `app-footer ${theme}`;
+
+        // 2. Kill previous timeline & reset transforms cleanly
+        if (this.activeTimeline) {
+          if (this.activeTimeline.scrollTrigger) {
+            this.activeTimeline.scrollTrigger.kill();
+          }
+          this.activeTimeline.kill();
+          this.activeTimeline = null;
+        }
+
+        // Reset element styles
+        gsap.set([
+          '#easterRollingStone', '#easterGodRays', '#easterSunAura', '#easterSparksGroup',
+          '#christmasSleighGroup', '#christmasNearTrees', '#christmasFarTrees', '.bethlehem-glow', '#christmasWiseMenGroup',
+          '#passionSacredBacklight', '#passionCloudLeft', '#passionCloudRight', '#passionEmbersGroup', '#passionMistLayer'
+        ], { clearProps: 'all' });
+
+        // 3. Initialize GSAP timeline triggered on entry (animates slowly over 4.5 - 5s)
+        this.buildTimeline(theme);
+
+        ScrollTrigger.refresh();
+      }
+
+      buildTimeline(theme) {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // TRIGGER ON FOOTER ENTRY: Plays automatically at an unhurried, majestic pace
+        const scrollTriggerConfig = {
+          trigger: this.footer,
+          start: 'top 75%',
+          toggleActions: 'play none none none',
+          invalidateOnRefresh: true
+        };
+
+        const tl = gsap.timeline({
+          scrollTrigger: prefersReducedMotion ? null : scrollTriggerConfig,
+          defaults: { ease: 'power1.inOut' }
+        });
+
+        if (theme === 'easter') {
+          // ==================================================================
+          // EASTER TIMELINE: Unhurried, majestic dawn with stone base groove
+          // ==================================================================
+          gsap.set('#easterRollingStone', { x: 0, rotation: 0, svgOrigin: '300 525' });
+          gsap.set('#easterGodRays', { opacity: 0.1, scale: 0.35, svgOrigin: '270 520' });
+          gsap.set('#easterSunAura', { scale: 0.8, opacity: 0.55, svgOrigin: '340 500' });
+          gsap.set('#easterSparksGroup', { y: 25, opacity: 0.2 });
+
+          tl
+            // 1. Dawn Sun Warmth Rises First
+            .to('#easterSunAura', {
+              scale: 1.45,
+              opacity: 1,
+              duration: 3.8,
+              ease: 'sine.out'
+            }, 0)
+            // 2. Massive Sealing Stone Rolls steadily across its stone base track
+            .to('#easterRollingStone', {
+              x: 420,              // Rolls comfortably past tomb entrance
+              rotation: 360,       // Full natural rolling rotation
+              duration: 4.2,       // Slow, weighted, majestic
+              ease: 'power1.out'
+            }, 0.3)
+            // 3. Divine God-Rays burst and sweep outward across the whole footer
+            .to('#easterGodRays', {
+              opacity: 1,
+              scale: 1,
+              duration: 4.0,
+              ease: 'power2.out'
+            }, 0.6)
+            // 4. Holy dawn golden sparks float gently upward
+            .to('#easterSparksGroup', {
+              y: -60,
+              opacity: 1,
+              duration: 4.5,
+              ease: 'sine.out'
+            }, 0.5);
+
+        } else if (theme === 'christmas') {
+          // ==================================================================
+          // CHRISTMAS TIMELINE: Santa flight + Wise Men journey + Star flare
+          // ==================================================================
+          gsap.set('#christmasSleighGroup', { 
+            x: -320, 
+            y: 210, 
+            rotation: -8, 
+            svgOrigin: 'center' 
+          });
+          gsap.set('#christmasNearTrees', { x: 0 });
+          gsap.set('#christmasFarTrees', { x: 0 });
+          gsap.set('#christmasWiseMenGroup', { x: 0 });
+          gsap.set('.bethlehem-glow', { scale: 0.7, opacity: 0.5, svgOrigin: '0 0' });
+
+          tl
+            // 1. Santa's Sleigh flight arc pushed down across open mid-sky
+            .to('#christmasSleighGroup', {
+              x: 1820,
+              y: 130,
+              rotation: 8,
+              duration: 5.2,
+              ease: 'power1.inOut'
+            }, 0)
+            // 2. Wise Men slowly journey across the distant hill toward the star
+            .to('#christmasWiseMenGroup', {
+              x: 45,
+              duration: 5.2,
+              ease: 'none'
+            }, 0)
+            // 3. Parallax Pine Trees Drift
+            .to('#christmasNearTrees', {
+              x: -110,
+              duration: 5.2,
+              ease: 'none'
+            }, 0)
+            .to('#christmasFarTrees', {
+              x: -50,
+              duration: 5.2,
+              ease: 'none'
+            }, 0)
+            // 4. Bethlehem Star radiant pulse
+            .to('.bethlehem-glow', {
+              scale: 1.4,
+              opacity: 1,
+              duration: 4.5,
+              ease: 'sine.out'
+            }, 0.2);
+
+        } else if (theme === 'passion') {
+          // ==================================================================
+          // PASSION TIMELINE: Solemn parting clouds, mist drift & celestial cross halo
+          // ==================================================================
+          gsap.set('#passionCloudLeft', { x: 0, opacity: 0.95 });
+          gsap.set('#passionCloudRight', { x: 0, opacity: 0.95 });
+          gsap.set('#passionSacredBacklight', { scale: 0.35, opacity: 0.1, svgOrigin: '0 -60' });
+          gsap.set('#passionEmbersGroup', { y: 30, opacity: 0.2 });
+          gsap.set('#passionMistLayer', { x: -40, opacity: 0.25 });
+
+          tl
+            // 1. Heavy Storm Clouds Part slowly and majestically to both sides
+            .to('#passionCloudLeft', {
+              x: -520,             // Part wide across the sky
+              opacity: 0.15,
+              duration: 4.8,
+              ease: 'power1.out'
+            }, 0)
+            .to('#passionCloudRight', {
+              x: 520,              // Part wide across the sky
+              opacity: 0.15,
+              duration: 4.8,
+              ease: 'power1.out'
+            }, 0)
+            // 2. Sacred celestial glow & light beam expands behind Center Cross
+            .to('#passionSacredBacklight', {
+              scale: 1.45,
+              opacity: 1,
+              duration: 4.5,
+              ease: 'power2.out'
+            }, 0.3)
+            // 3. Low Calvary twilight mist drifts across the ground
+            .to('#passionMistLayer', {
+              x: 40,
+              opacity: 0.55,
+              duration: 4.8,
+              ease: 'sine.inOut'
+            }, 0.2)
+            // 4. Holy redemption embers ascend slowly into the solemn twilight
+            .to('#passionEmbersGroup', {
+              y: -75,
+              opacity: 1,
+              duration: 4.8,
+              ease: 'sine.out'
+            }, 0.4);
+        }
+
+        this.activeTimeline = tl;
+      }
+    }
+
+    // Auto-initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      window.siteFooterController = new ActualSiteFooterController();
+    });
+  </script>
+</body>
+</html>
