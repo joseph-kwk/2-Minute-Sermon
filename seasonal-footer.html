@@ -392,11 +392,13 @@
     }
 
     .app-footer.christmas .footer-bg-atmosphere {
-      background: linear-gradient(180deg, #020511 0%, #061229 35%, #0B1F42 70%, #153258 100%);
+      background: radial-gradient(circle at 82% 25%, #0284C7 0%, #0369A1 25%, #0F172A 60%, #020617 100%),
+                  linear-gradient(180deg, #020617 0%, #0C2A4D 35%, #0369A1 70%, #38BDF8 100%);
     }
 
     .app-footer.passion .footer-bg-atmosphere {
-      background: linear-gradient(180deg, #020104 0%, #09020C 30%, #170211 60%, #320410 88%, #0C0104 100%);
+      background: radial-gradient(circle at 50% 60%, #E11D48 0%, #BE123C 25%, #881337 50%, #4C0519 75%, #09010A 100%),
+                  linear-gradient(180deg, #09010C 0%, #3B0418 30%, #881337 60%, #E11D48 85%, #F59E0B 100%);
     }
 
     /* --------------------------------------------------------------------------
@@ -442,13 +444,23 @@
       inset: 0;
       z-index: var(--z-scrim-contrast);
       pointer-events: none;
-      background: radial-gradient(ellipse at 50% 60%, rgba(8, 7, 11, 0.72) 0%, rgba(8, 7, 11, 0.54) 60%, rgba(8, 7, 11, 0.12) 90%, transparent 100%),
-                  linear-gradient(to top, rgba(8, 7, 11, 0.92) 0%, rgba(8, 7, 11, 0.58) 50%, rgba(8, 7, 11, 0.15) 100%);
+      background: radial-gradient(ellipse at 50% 60%, rgba(8, 7, 11, 0.55) 0%, rgba(8, 7, 11, 0.35) 60%, rgba(8, 7, 11, 0.05) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(8, 7, 11, 0.85) 0%, rgba(8, 7, 11, 0.40) 50%, rgba(8, 7, 11, 0.08) 100%);
     }
 
     .app-footer.easter .footer-scrim-backdrop {
-      background: radial-gradient(ellipse at 50% 60%, rgba(14, 10, 20, 0.65) 0%, rgba(14, 10, 20, 0.45) 60%, rgba(14, 10, 20, 0.08) 90%, transparent 100%),
-                  linear-gradient(to top, rgba(14, 10, 20, 0.88) 0%, rgba(14, 10, 20, 0.48) 50%, rgba(14, 10, 20, 0.10) 100%);
+      background: radial-gradient(ellipse at 50% 60%, rgba(14, 10, 20, 0.55) 0%, rgba(14, 10, 20, 0.35) 60%, rgba(14, 10, 20, 0.05) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(14, 10, 20, 0.85) 0%, rgba(14, 10, 20, 0.40) 50%, rgba(14, 10, 20, 0.08) 100%);
+    }
+
+    .app-footer.christmas .footer-scrim-backdrop {
+      background: radial-gradient(ellipse at 50% 60%, rgba(2, 6, 23, 0.55) 0%, rgba(2, 6, 23, 0.35) 60%, rgba(2, 6, 23, 0.05) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(2, 6, 23, 0.85) 0%, rgba(2, 6, 23, 0.40) 50%, rgba(2, 6, 23, 0.08) 100%);
+    }
+
+    .app-footer.passion .footer-scrim-backdrop {
+      background: radial-gradient(ellipse at 50% 60%, rgba(15, 2, 8, 0.55) 0%, rgba(15, 2, 8, 0.35) 60%, rgba(15, 2, 8, 0.05) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(15, 2, 8, 0.85) 0%, rgba(15, 2, 8, 0.40) 50%, rgba(15, 2, 8, 0.08) 100%);
     }
 
     /* --------------------------------------------------------------------------
@@ -894,325 +906,350 @@
       </div>
 
       <!-- ====================================================================
-           2. CHRISTMAS STAGE (Santa Sleigh, Bethlehem Star, Wise Men on Camels)
+           2. CHRISTMAS STAGE (Luminous Bethlehem Star, Vivid Wise Men Caravan on Hills)
            ==================================================================== -->
       <div class="stage-layer stage-christmas">
         <svg class="christmas-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="bethlehemAura" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
-              <stop offset="25%" stop-color="#BAE6FD" stop-opacity="0.6" />
-              <stop offset="60%" stop-color="#38BDF8" stop-opacity="0.25" />
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="20%" stop-color="#BAE6FD" stop-opacity="0.9" />
+              <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.6" />
+              <stop offset="80%" stop-color="#0284C7" stop-opacity="0.25" />
               <stop offset="100%" stop-color="#000000" stop-opacity="0" />
             </radialGradient>
 
+            <radialGradient id="goldChestAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="40%" stop-color="#FDE047" stop-opacity="0.9" />
+              <stop offset="80%" stop-color="#F59E0B" stop-opacity="0.4" />
+              <stop offset="100%" stop-color="#F59E0B" stop-opacity="0" />
+            </radialGradient>
+
             <linearGradient id="snowHillGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#1E293B" />
-              <stop offset="40%" stop-color="#0F172A" />
-              <stop offset="100%" stop-color="#080D1A" />
+              <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.25" />
+              <stop offset="30%" stop-color="#1E3A8A" />
+              <stop offset="100%" stop-color="#0A1128" />
             </linearGradient>
 
             <linearGradient id="snowHillGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#334155" />
-              <stop offset="20%" stop-color="#1E293B" />
-              <stop offset="100%" stop-color="#0B1120" />
+              <stop offset="0%" stop-color="#7DD3FC" stop-opacity="0.35" />
+              <stop offset="25%" stop-color="#1E293B" />
+              <stop offset="100%" stop-color="#060913" />
             </linearGradient>
-          <!-- Guiding Beam from Bethlehem Star -->
-          <linearGradient id="bethlehemBeamGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.35" />
-            <stop offset="60%" stop-color="#38BDF8" stop-opacity="0.12" />
-            <stop offset="100%" stop-color="#0284C7" stop-opacity="0" />
-          </linearGradient>
-        </defs>
+
+            <!-- Guiding Beam from Bethlehem Star -->
+            <linearGradient id="bethlehemBeamGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75" />
+              <stop offset="30%" stop-color="#BAE6FD" stop-opacity="0.45" />
+              <stop offset="70%" stop-color="#38BDF8" stop-opacity="0.18" />
+              <stop offset="100%" stop-color="#0284C7" stop-opacity="0" />
+            </linearGradient>
+          </defs>
 
           <!-- Star Clusters -->
-          <g id="christmasStarfield" opacity="0.85">
-            <circle cx="120" cy="80" r="1.5" fill="#FFFFFF" opacity="0.8" />
-            <circle cx="280" cy="140" r="1.2" fill="#E0F2FE" opacity="0.7" />
-            <circle cx="420" cy="60" r="2.0" fill="#FFFFFF" opacity="0.9" />
-            <circle cx="560" cy="110" r="1.0" fill="#BAE6FD" opacity="0.6" />
-            <circle cx="720" cy="75" r="1.8" fill="#FFFFFF" opacity="0.85" />
-            <circle cx="890" cy="130" r="1.2" fill="#E0F2FE" opacity="0.7" />
-            <circle cx="1050" cy="50" r="1.6" fill="#FFFFFF" opacity="0.8" />
-            <circle cx="1220" cy="115" r="1.4" fill="#BAE6FD" opacity="0.75" />
-            <circle cx="1480" cy="90" r="2.2" fill="#FFFFFF" opacity="0.9" />
-            <circle cx="1380" cy="160" r="1.0" fill="#FFFFFF" opacity="0.5" />
-            <circle cx="980" cy="95" r="1.4" fill="#FFFFFF" opacity="0.7" />
-            <circle cx="180" cy="190" r="1.0" fill="#BAE6FD" opacity="0.6" />
+          <g id="christmasStarfield" opacity="0.9">
+            <circle cx="120" cy="80" r="2.0" fill="#FFFFFF" opacity="0.9" />
+            <circle cx="280" cy="140" r="1.5" fill="#BAE6FD" opacity="0.8" />
+            <circle cx="420" cy="60" r="2.2" fill="#FFFFFF" opacity="0.95" />
+            <circle cx="560" cy="110" r="1.4" fill="#BAE6FD" opacity="0.75" />
+            <circle cx="720" cy="75" r="2.0" fill="#FFFFFF" opacity="0.9" />
+            <circle cx="890" cy="130" r="1.6" fill="#BAE6FD" opacity="0.8" />
+            <circle cx="1050" cy="50" r="2.0" fill="#FFFFFF" opacity="0.9" />
+            <circle cx="1220" cy="115" r="1.8" fill="#BAE6FD" opacity="0.85" />
+            <circle cx="1480" cy="90" r="2.5" fill="#FFFFFF" opacity="0.95" />
+            <circle cx="1380" cy="160" r="1.4" fill="#FFFFFF" opacity="0.7" />
+            <circle cx="980" cy="95" r="1.8" fill="#FFFFFF" opacity="0.85" />
+            <circle cx="180" cy="190" r="1.5" fill="#BAE6FD" opacity="0.75" />
           </g>
 
-          <!-- BETHLEHEM GUIDING BEAM (Shining from the Star across the Hills) -->
-          <polygon id="bethlehemBeam" points="1340,120 400,690 1560,690 1340,120" fill="url(#bethlehemBeamGrad)" opacity="0.25" />
+          <!-- BETHLEHEM GUIDING BEAM (Sweeping Golden-Blue Light from the Star across the Hills) -->
+          <polygon id="bethlehemBeam" points="1320,110 320,680 1580,680 1320,110" fill="url(#bethlehemBeamGrad)" opacity="0.4" />
 
-          <!-- BETHLEHEM STAR -->
-          <g id="bethlehemStarGroup" transform="translate(1340, 120)">
-            <circle cx="0" cy="0" r="110" fill="url(#bethlehemAura)" class="bethlehem-glow" />
-            <polygon points="-2.5,-80 2.5,-80 0,80" fill="#FFFFFF" opacity="0.95" />
-            <polygon points="-1.5,-105 1.5,-105 0,105" fill="#E0F2FE" opacity="0.55" />
-            <polygon points="-80,-2.5 -80,2.5 80,0" fill="#FFFFFF" opacity="0.95" />
-            <polygon points="-40,-40 40,40 0,0" stroke="#BAE6FD" stroke-width="2" fill="none" opacity="0.8" />
-            <polygon points="40,-40 -40,40 0,0" stroke="#BAE6FD" stroke-width="2" fill="none" opacity="0.8" />
-            <polygon points="0,-18 16,0 0,18 -16,0" fill="#FFFFFF" />
-            <circle cx="0" cy="0" r="4.5" fill="#FFFFFF" />
+          <!-- BETHLEHEM STAR (Large, Radiant & Highly Visible) -->
+          <g id="bethlehemStarGroup" transform="translate(1320, 110)">
+            <circle cx="0" cy="0" r="140" fill="url(#bethlehemAura)" class="bethlehem-glow" />
+            <!-- Vertical Starlight Spike -->
+            <polygon points="-3.5,-100 3.5,-100 0,100" fill="#FFFFFF" opacity="0.98" />
+            <polygon points="-2,-135 2,-135 0,135" fill="#BAE6FD" opacity="0.7" />
+            <!-- Horizontal Starlight Spike -->
+            <polygon points="-100,-3.5 -100,3.5 100,0" fill="#FFFFFF" opacity="0.98" />
+            <polygon points="-135,-2 -135,2 135,0" fill="#BAE6FD" opacity="0.7" />
+            <!-- Diagonal Starlight Rays -->
+            <polygon points="-50,-50 50,50 0,0" stroke="#BAE6FD" stroke-width="2.5" fill="none" opacity="0.85" />
+            <polygon points="50,-50 -50,50 0,0" stroke="#BAE6FD" stroke-width="2.5" fill="none" opacity="0.85" />
+            <polygon points="0,-24 22,0 0,24 -22,0" fill="#FFFFFF" />
+            <circle cx="0" cy="0" r="7" fill="#FEF08A" />
+            <circle cx="0" cy="0" r="3.5" fill="#FFFFFF" />
           </g>
 
           <!-- PARALLAX LAYER 1: Far Pine Trees & Distant Dunes -->
-          <g id="christmasFarTrees" class="christmas-far-trees" fill="#0B132B" opacity="0.75">
-            <polygon points="120,620 145,530 170,620" />
-            <polygon points="150,625 175,545 200,625" />
-            <polygon points="260,630 280,560 300,630" />
-            <polygon points="450,635 480,520 510,635" />
-            <polygon points="490,640 515,550 540,640" />
-            <polygon points="780,630 805,535 830,630" />
-            <polygon points="815,635 840,555 865,635" />
-            <polygon points="1120,635 1150,515 1180,635" />
-            <polygon points="1160,640 1185,540 1210,640" />
-            <polygon points="1350,625 1375,530 1400,625" />
-            <polygon points="1385,630 1410,550 1435,630" />
+          <g id="christmasFarTrees" class="christmas-far-trees" fill="#0C1B33" opacity="0.85">
+            <polygon points="120,620 145,510 170,620" />
+            <polygon points="150,625 175,525 200,625" />
+            <polygon points="260,630 280,540 300,630" />
+            <polygon points="450,635 480,500 510,635" />
+            <polygon points="490,640 515,530 540,640" />
+            <polygon points="780,630 805,515 830,630" />
+            <polygon points="815,635 840,535 865,635" />
+            <polygon points="1120,635 1150,495 1180,635" />
+            <polygon points="1160,640 1185,520 1210,640" />
+            <polygon points="1350,625 1375,510 1400,625" />
+            <polygon points="1385,630 1410,530 1435,630" />
           </g>
 
-          <!-- PARALLAX LAYER 2: Mid Hills -->
-          <path d="M0 640 Q400 580 900 615 T1600 590 L1600 700 L0 700 Z" fill="url(#snowHillGrad1)" />
+          <!-- PARALLAX LAYER 2: Mid Snow Hill with Starlight Rim -->
+          <path d="M0 610 Q400 540 900 580 T1600 550 L1600 700 L0 700 Z" fill="url(#snowHillGrad1)" stroke="#60A5FA" stroke-width="2" />
 
           <!-- PARALLAX LAYER 3: Near Pine Trees -->
-          <g id="christmasNearTrees" class="christmas-near-trees" fill="#060C1E">
-            <polygon points="60,670 90,560 120,670" />
-            <polygon points="210,675 245,540 280,675" />
-            <polygon points="340,680 370,580 400,680" />
-            <polygon points="640,670 675,550 710,670" />
-            <polygon points="980,675 1015,535 1050,675" />
-            <polygon points="1260,680 1295,555 1330,680" />
-            <polygon points="1490,670 1525,560 1560,670" />
+          <g id="christmasNearTrees" class="christmas-near-trees" fill="#071022">
+            <polygon points="60,660 90,530 120,660" />
+            <polygon points="210,665 245,510 280,665" />
+            <polygon points="340,670 370,550 400,670" />
+            <polygon points="640,660 675,520 710,660" />
+            <polygon points="980,665 1015,505 1050,665" />
+            <polygon points="1260,670 1295,525 1330,670" />
+            <polygon points="1490,660 1525,530 1560,660" />
           </g>
 
-          <!-- THREE WISE MEN (MAGI) CARAVAN JOURNEYING ACROSS THE RIDGELINE TOWARD THE STAR -->
-          <g id="christmasWiseMenCaravan" class="christmas-caravan" transform="translate(100, 520) scale(0.95)">
+          <!-- THREE WISE MEN (MAGI) CARAVAN JOURNEYING ACROSS THE HILLS TOWARD THE STAR -->
+          <!-- Scaled Up, Elevated & Given High-Contrast Starlight Rim Lighting -->
+          <g id="christmasWiseMenCaravan" class="christmas-caravan" transform="translate(100, 440) scale(1.22)">
             
-            <!-- Lead Camel & King Caspar (With Gold Vessel) -->
-            <g id="magiCamel1" transform="translate(240, 0)">
-              <!-- Camel Contact Shadow -->
-              <ellipse cx="45" cy="88" rx="42" ry="7" fill="#000000" opacity="0.65" />
-              <!-- Camel Body, Hump & Neck -->
-              <ellipse cx="42" cy="38" rx="30" ry="19" fill="#070C18" />
-              <circle cx="48" cy="18" r="14" fill="#070C18" /> <!-- Hump -->
-              <path d="M58 32 C74 20 80 4 75 -12 C70 -18 60 -10 65 4 C60 18 52 26 48 32 Z" fill="#070C18" />
-              <ellipse cx="78" cy="-14" rx="9" ry="5" fill="#070C18" /> <!-- Head -->
-              <path d="M74 -18 L70 -24 L76 -20" stroke="#070C18" stroke-width="2.5" /> <!-- Ears -->
-              <!-- Reins & Bridle -->
-              <path d="M78 -10 Q66 10 40 18" stroke="#D97706" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.75" />
-              <!-- Saddle Cloth & Golden Trim -->
-              <path d="M30 24 Q44 20 58 24 L56 46 Q44 48 32 46 Z" fill="#991B1B" />
-              <path d="M30 46 L58 46" stroke="#F59E0B" stroke-width="2" />
-              <!-- King 1 (Caspar) with Crown and Gold Offering -->
-              <ellipse cx="36" cy="10" rx="7" ry="11" fill="#03060E" /> <!-- Torso -->
-              <circle cx="37" cy="-3" r="5" fill="#03060E" /> <!-- Head -->
-              <polygon points="34,-7 40,-7 40,-13 37,-9 34,-13" fill="#F59E0B" /> <!-- Royal Crown -->
-              <circle cx="46" cy="6" r="3.5" fill="#FBBF24" /> <!-- Gift of Gold -->
-              <!-- Camel Legs with Articulated Striding Poses -->
-              <path d="M25 52 L16 88 M32 52 L26 86 M54 52 L60 88 M62 52 L72 86" stroke="#070C18" stroke-width="4.5" stroke-linecap="round" />
+            <!-- Lead Camel & King Caspar (With Glowing Gold Vessel) -->
+            <g id="magiCamel1" transform="translate(260, 0)">
+              <!-- Ground Shadow -->
+              <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
+              <!-- Camel Body, Hump & Neck with Starlight Rim -->
+              <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+              <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" /> <!-- Hump -->
+              <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+              <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+              <path d="M76 -20 L72 -28 L78 -24" stroke="#38BDF8" stroke-width="2" />
+              <!-- Golden Reins & Bridle -->
+              <path d="M80 -12 Q68 10 40 18" stroke="#FDE047" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
+              <!-- Saddle Cloth: Royal Crimson with Gold Trim -->
+              <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#DC2626" stroke="#F59E0B" stroke-width="2" />
+              
+              <!-- King 1 (Caspar) in Royal Scarlet with Crown & Radiating Gold Gift -->
+              <ellipse cx="36" cy="8" rx="8" ry="12" fill="#DC2626" /> <!-- Torso -->
+              <circle cx="37" cy="-6" r="6" fill="#050811" /> <!-- Head -->
+              <polygon points="33,-10 41,-10 41,-17 37,-12 33,-17" fill="#FDE047" stroke="#F59E0B" stroke-width="1" /> <!-- Crown -->
+              <!-- Glowing Gift of Gold -->
+              <circle cx="48" cy="4" r="14" fill="url(#goldChestAura)" />
+              <rect x="44" y="0" width="8" height="7" rx="1.5" fill="#FDE047" stroke="#B45309" stroke-width="1" />
+              <!-- Camel Striding Legs -->
+              <path d="M24 54 L14 90 M32 54 L25 88 M54 54 L62 90 M64 54 L74 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
+              <path d="M24 54 L14 90 M32 54 L25 88 M54 54 L62 90 M64 54 L74 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
             </g>
 
-            <!-- Second Camel & King Melchior (With Frankincense) -->
-            <g id="magiCamel2" transform="translate(120, 8) scale(0.92)">
-              <ellipse cx="45" cy="88" rx="42" ry="7" fill="#000000" opacity="0.65" />
-              <ellipse cx="42" cy="38" rx="30" ry="19" fill="#070C18" />
-              <circle cx="48" cy="18" r="14" fill="#070C18" />
-              <path d="M58 32 C74 20 80 4 75 -12 C70 -18 60 -10 65 4 C60 18 52 26 48 32 Z" fill="#070C18" />
-              <ellipse cx="78" cy="-14" rx="9" ry="5" fill="#070C18" />
-              <path d="M78 -10 Q66 10 40 18" stroke="#0284C7" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.75" />
-              <path d="M30 24 Q44 20 58 24 L56 46 Q44 48 32 46 Z" fill="#065F46" />
-              <path d="M30 46 L58 46" stroke="#F59E0B" stroke-width="2" />
-              <!-- King 2 (Melchior) with Turban -->
-              <ellipse cx="36" cy="10" rx="7" ry="11" fill="#03060E" />
-              <circle cx="37" cy="-3" r="5" fill="#03060E" />
-              <ellipse cx="37" cy="-7" rx="6" ry="3.5" fill="#FFFFFF" /> <!-- Turban -->
-              <path d="M44 4 L48 8 L44 10 Z" fill="#FDE047" /> <!-- Frankincense Vessel -->
-              <path d="M25 52 L18 88 M32 52 L28 86 M54 52 L58 88 M62 52 L70 86" stroke="#070C18" stroke-width="4.5" stroke-linecap="round" />
+            <!-- Second Camel & King Melchior (With Glowing Frankincense) -->
+            <g id="magiCamel2" transform="translate(130, 8) scale(0.93)">
+              <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
+              <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+              <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+              <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+              <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+              <path d="M80 -12 Q68 10 40 18" stroke="#38BDF8" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
+              <!-- Saddle Cloth: Emerald -->
+              <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#059669" stroke="#F59E0B" stroke-width="2" />
+              <!-- King 2 (Melchior) in Emerald with White/Gold Turban & Urn -->
+              <ellipse cx="36" cy="8" rx="8" ry="12" fill="#059669" />
+              <circle cx="37" cy="-6" r="6" fill="#050811" />
+              <ellipse cx="37" cy="-10" rx="7" ry="4.5" fill="#FFFFFF" stroke="#FDE047" stroke-width="1" />
+              <!-- Frankincense Urn -->
+              <path d="M44 2 L50 6 L45 9 Z" fill="#FDE047" />
+              <path d="M46 -2 Q48 -6 46 -10" stroke="#E0F2FE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8" />
+              <path d="M24 54 L16 90 M32 54 L27 88 M54 54 L60 90 M64 54 L72 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
+              <path d="M24 54 L16 90 M32 54 L27 88 M54 54 L60 90 M64 54 L72 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
             </g>
 
-            <!-- Third Camel & King Balthazar (With Myrrh) -->
-            <g id="magiCamel3" transform="translate(0, 14) scale(0.86)">
-              <ellipse cx="45" cy="88" rx="42" ry="7" fill="#000000" opacity="0.65" />
-              <ellipse cx="42" cy="38" rx="30" ry="19" fill="#070C18" />
-              <circle cx="48" cy="18" r="14" fill="#070C18" />
-              <path d="M58 32 C74 20 80 4 75 -12 C70 -18 60 -10 65 4 C60 18 52 26 48 32 Z" fill="#070C18" />
-              <ellipse cx="78" cy="-14" rx="9" ry="5" fill="#070C18" />
-              <path d="M78 -10 Q66 10 40 18" stroke="#D97706" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.75" />
-              <path d="M30 24 Q44 20 58 24 L56 46 Q44 48 32 46 Z" fill="#6B21A8" />
-              <path d="M30 46 L58 46" stroke="#F59E0B" stroke-width="2" />
-              <!-- King 3 (Balthazar) -->
-              <ellipse cx="36" cy="10" rx="7" ry="11" fill="#03060E" />
-              <circle cx="37" cy="-3" r="5" fill="#03060E" />
-              <polygon points="34,-6 40,-6 38,-10 36,-10" fill="#F59E0B" />
-              <circle cx="45" cy="6" r="3" fill="#FDA4AF" /> <!-- Myrrh Urn -->
-              <path d="M25 52 L14 88 M32 52 L24 86 M54 52 L62 88 M62 52 L68 86" stroke="#070C18" stroke-width="4.5" stroke-linecap="round" />
+            <!-- Third Camel & King Balthazar (With Glowing Myrrh) -->
+            <g id="magiCamel3" transform="translate(0, 15) scale(0.87)">
+              <ellipse cx="45" cy="90" rx="46" ry="8" fill="#000000" opacity="0.75" />
+              <ellipse cx="42" cy="38" rx="32" ry="20" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+              <circle cx="48" cy="18" r="15" fill="#080E1C" stroke="#38BDF8" stroke-width="1.8" />
+              <path d="M58 32 C76 18 82 2 77 -14 C72 -20 60 -12 66 2 C60 18 52 26 48 32 Z" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+              <ellipse cx="80" cy="-16" rx="10" ry="6" fill="#080E1C" stroke="#38BDF8" stroke-width="1.5" />
+              <path d="M80 -12 Q68 10 40 18" stroke="#FDE047" stroke-width="1.6" stroke-dasharray="3 2" fill="none" opacity="0.9" />
+              <!-- Saddle Cloth: Imperial Purple -->
+              <path d="M28 24 Q44 20 60 24 L58 48 Q44 50 30 48 Z" fill="#7C3AED" stroke="#F59E0B" stroke-width="2" />
+              <!-- King 3 (Balthazar) in Purple & Gold -->
+              <ellipse cx="36" cy="8" rx="8" ry="12" fill="#7C3AED" />
+              <circle cx="37" cy="-6" r="6" fill="#050811" />
+              <polygon points="33,-9 41,-9 39,-14 35,-14" fill="#FDE047" />
+              <circle cx="46" cy="4" r="4" fill="#FDA4AF" stroke="#FDE047" stroke-width="1" />
+              <path d="M24 54 L12 90 M32 54 L23 88 M54 54 L64 90 M64 54 L70 88" stroke="#080E1C" stroke-width="5" stroke-linecap="round" />
+              <path d="M24 54 L12 90 M32 54 L23 88 M54 54 L64 90 M64 54 L70 88" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round" />
             </g>
 
           </g>
 
-          <!-- FOREGROUND: Snow Dunes -->
-          <path d="M0 660 Q450 635 950 655 T1600 640 L1600 700 L0 700 Z" fill="url(#snowHillGrad2)" opacity="0.9" />
-          <path d="M0 682 Q550 665 1100 675 T1600 665 L1600 700 L0 700 Z" fill="#050811" />
+          <!-- FOREGROUND: Snow Dunes (Lowered so caravan is high & unobstructed) -->
+          <path d="M0 665 Q450 630 950 650 T1600 640 L1600 700 L0 700 Z" fill="url(#snowHillGrad2)" stroke="#93C5FD" stroke-width="2" />
+          <path d="M0 684 Q550 665 1100 675 T1600 665 L1600 700 L0 700 Z" fill="#04060C" />
         </svg>
       </div>
 
       <!-- ====================================================================
-           3. PASSION STAGE (Full Footer Animated Atmosphere: Wide Clouds, Mist, Light Columns)
+           3. PASSION STAGE (Dramatic Golgotha Sunset, Bleeding Center Cross between 2 Crosses)
            ==================================================================== -->
       <div class="stage-layer stage-passion">
         <svg class="passion-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="passionSacredAura" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#FFF1F2" stop-opacity="1" />
-              <stop offset="18%" stop-color="#F43F5E" stop-opacity="0.9" />
-              <stop offset="42%" stop-color="#9F1239" stop-opacity="0.65" />
-              <stop offset="70%" stop-color="#4C0519" stop-opacity="0.3" />
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="15%" stop-color="#FEF08A" stop-opacity="0.95" />
+              <stop offset="35%" stop-color="#F43F5E" stop-opacity="0.9" />
+              <stop offset="60%" stop-color="#9F1239" stop-opacity="0.65" />
+              <stop offset="85%" stop-color="#4C0519" stop-opacity="0.3" />
               <stop offset="100%" stop-color="#000000" stop-opacity="0" />
             </radialGradient>
 
             <linearGradient id="calvaryHillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#190A18" />
-              <stop offset="50%" stop-color="#0E040E" />
-              <stop offset="100%" stop-color="#030104" />
+              <stop offset="0%" stop-color="#3B071A" />
+              <stop offset="30%" stop-color="#1F040E" />
+              <stop offset="100%" stop-color="#080104" />
             </linearGradient>
 
             <linearGradient id="passionBeamGrad" x1="50%" y1="100%" x2="50%" y2="0%">
-              <stop offset="0%" stop-color="#F43F5E" stop-opacity="0.8" />
-              <stop offset="35%" stop-color="#FDE047" stop-opacity="0.45" />
-              <stop offset="75%" stop-color="#FDA4AF" stop-opacity="0.15" />
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+              <stop offset="25%" stop-color="#FDE047" stop-opacity="0.8" />
+              <stop offset="55%" stop-color="#F43F5E" stop-opacity="0.5" />
               <stop offset="100%" stop-color="#FFF1F2" stop-opacity="0" />
             </linearGradient>
 
             <!-- Twilight Mist Gradient -->
             <linearGradient id="passionMistGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="#000000" stop-opacity="0" />
-              <stop offset="30%" stop-color="#580E23" stop-opacity="0.35" />
-              <stop offset="70%" stop-color="#3A0818" stop-opacity="0.35" />
+              <stop offset="30%" stop-color="#BE123C" stop-opacity="0.45" />
+              <stop offset="70%" stop-color="#881337" stop-opacity="0.45" />
               <stop offset="100%" stop-color="#000000" stop-opacity="0" />
             </linearGradient>
-            <!-- Sacred Blood Stream Gradient -->
+
+            <!-- Vivid Glowing Blood Stream Gradient -->
             <linearGradient id="bloodStreamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#FDA4AF" stop-opacity="0.9" />
-              <stop offset="20%" stop-color="#F43F5E" stop-opacity="1" />
-              <stop offset="60%" stop-color="#E11D48" stop-opacity="0.95" />
-              <stop offset="100%" stop-color="#881337" stop-opacity="0.85" />
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="15%" stop-color="#FDA4AF" stop-opacity="1" />
+              <stop offset="40%" stop-color="#F43F5E" stop-opacity="1" />
+              <stop offset="70%" stop-color="#E11D48" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="#9F1239" stop-opacity="0.9" />
             </linearGradient>
 
             <radialGradient id="bloodGroundPool" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#F43F5E" stop-opacity="0.9" />
-              <stop offset="40%" stop-color="#9F1239" stop-opacity="0.6" />
-              <stop offset="80%" stop-color="#4C0519" stop-opacity="0.25" />
+              <stop offset="0%" stop-color="#F43F5E" stop-opacity="0.95" />
+              <stop offset="35%" stop-color="#E11D48" stop-opacity="0.75" />
+              <stop offset="70%" stop-color="#881337" stop-opacity="0.4" />
               <stop offset="100%" stop-color="#000000" stop-opacity="0" />
             </radialGradient>
           </defs>
 
-          <!-- SACRED BACKLIGHT BEAM & EXPANDING HALO (Spans across the full footer width) -->
-          <g id="passionSacredBacklight" class="passion-backlight" transform="translate(800, 500)" style="transform-origin: center; opacity: 0.12; transform: scale(0.35);">
-            <circle cx="0" cy="-70" r="380" fill="url(#passionSacredAura)" />
+          <!-- SACRED CELESTIAL BACKLIGHT BEAM & EXPANDING SUNBURST HALO -->
+          <g id="passionSacredBacklight" class="passion-backlight" transform="translate(800, 420)" style="transform-origin: center; opacity: 0.2; transform: scale(0.35);">
+            <circle cx="0" cy="-50" r="450" fill="url(#passionSacredAura)" />
             <!-- Upward Piercing Light Columns toward heaven -->
-            <polygon points="-200,50 -45,-420 45,-420 200,50" fill="url(#passionBeamGrad)" opacity="0.65" />
-            <polygon points="-90,50 -14,-520 14,-520 90,50" fill="#FFF1F2" opacity="0.55" />
-            <polygon points="-420,50 -200,-330 -110,-330 -70,50" fill="url(#passionBeamGrad)" opacity="0.35" />
-            <polygon points="70,50 110,-330 200,-330 420,50" fill="url(#passionBeamGrad)" opacity="0.35" />
+            <polygon points="-220,60 -50,-460 50,-460 220,60" fill="url(#passionBeamGrad)" opacity="0.8" />
+            <polygon points="-100,60 -16,-560 16,-560 100,60" fill="#FFFBEB" opacity="0.75" />
+            <polygon points="-460,60 -220,-360 -120,-360 -80,60" fill="url(#passionBeamGrad)" opacity="0.45" />
+            <polygon points="80,60 120,-360 220,-360 460,60" fill="url(#passionBeamGrad)" opacity="0.45" />
           </g>
 
-          <!-- HEAVY DARK STORM CLOUDS (Spanning full width, parting slowly) -->
-          <g id="passionCloudLeft" class="passion-cloud-left" fill="#0C0410" opacity="0.95">
+          <!-- HEAVY DARK STORM CLOUDS (Spanning full width, parting slowly to reveal fiery twilight) -->
+          <g id="passionCloudLeft" class="passion-cloud-left" fill="#0D0308" opacity="0.95">
             <path d="M-220 270 Q100 180 320 270 Q480 210 620 300 Q760 240 920 340 L920 640 L-220 640 Z" />
           </g>
-          <g id="passionCloudRight" class="passion-cloud-right" fill="#0C0410" opacity="0.95">
+          <g id="passionCloudRight" class="passion-cloud-right" fill="#0D0308" opacity="0.95">
             <path d="M1820 270 Q1500 180 1280 270 Q1120 210 980 300 Q840 240 680 340 L680 640 L1820 640 Z" />
           </g>
 
-          <!-- CALVARY HILL SILHOUETTE -->
-          <path d="M0 660 Q400 620 800 565 Q1200 620 1600 660 L1600 700 L0 700 Z" fill="url(#calvaryHillGrad)" />
-          <path d="M0 680 Q500 650 800 615 Q1100 650 1600 680 L1600 700 L0 700 Z" fill="#030104" />
+          <!-- CALVARY HILL SILHOUETTE (With Fiery Crimson Rim Highlight) -->
+          <path d="M0 650 Q400 590 800 530 Q1200 590 1600 650 L1600 700 L0 700 Z" fill="url(#calvaryHillGrad)" stroke="#F43F5E" stroke-width="2.5" />
+          <path d="M0 675 Q500 635 800 595 Q1100 635 1600 675 L1600 700 L0 700 Z" fill="#080104" />
 
           <!-- LOW ATMOSPHERIC CALVARY MIST (Sweeps across the full ground width) -->
-          <g id="passionMistLayer" opacity="0.45">
-            <path d="M-100 630 Q300 600 800 620 Q1300 600 1700 630 L1700 680 L-100 680 Z" fill="url(#passionMistGrad)" />
+          <g id="passionMistLayer" opacity="0.55">
+            <path d="M-100 610 Q300 570 800 590 Q1300 570 1700 610 L1700 680 L-100 680 Z" fill="url(#passionMistGrad)" />
           </g>
 
           <!-- SACRED REDEEMING BLOOD RADIANCE AT FOOT OF CROSS -->
-          <ellipse id="passionBloodPool" cx="800" cy="625" rx="55" ry="14" fill="url(#bloodGroundPool)" opacity="0.4" style="transform-origin: 800px 625px;" />
+          <ellipse id="passionBloodPool" cx="800" cy="605" rx="75" ry="18" fill="url(#bloodGroundPool)" opacity="0.5" style="transform-origin: 800px 605px;" />
 
-          <!-- THE THREE CROSSES ON CALVARY (Center Bleeding Cross between Two Flanking Crosses) -->
+          <!-- THE THREE CROSSES ON CALVARY (Center Bleeding Cross Towering High between Two Flanking Crosses) -->
           <g id="calvaryCrossesGroup">
             
             <!-- LEFT CROSS (The Repentant Thief) -->
-            <g id="crossThiefLeft" transform="translate(640, 525) rotate(-6 0 0)">
-              <!-- Vertical Timber -->
-              <rect x="-4" y="0" width="8" height="98" rx="1.5" fill="#080309" />
+            <g id="crossThiefLeft" transform="translate(570, 460) rotate(-8 0 0)">
+              <!-- Vertical Timber with Crimson Rim Highlight -->
+              <rect x="-5" y="0" width="10" height="125" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
               <!-- Crossbeam & Binding Rope -->
-              <rect x="-24" y="20" width="48" height="7.5" rx="1.5" fill="#080309" />
-              <line x1="-5" y1="18" x2="5" y2="28" stroke="#1A0A16" stroke-width="2" />
-              <line x1="5" y1="18" x2="-5" y2="28" stroke="#1A0A16" stroke-width="2" />
+              <rect x="-30" y="25" width="60" height="9" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
+              <line x1="-7" y1="22" x2="7" y2="34" stroke="#F43F5E" stroke-width="2" />
+              <line x1="7" y1="22" x2="-7" y2="34" stroke="#F43F5E" stroke-width="2" />
             </g>
 
             <!-- RIGHT CROSS (The Unrepentant Thief) -->
-            <g id="crossThiefRight" transform="translate(960, 525) rotate(6 0 0)">
-              <!-- Vertical Timber -->
-              <rect x="-4" y="0" width="8" height="98" rx="1.5" fill="#080309" />
+            <g id="crossThiefRight" transform="translate(1030, 460) rotate(8 0 0)">
+              <!-- Vertical Timber with Crimson Rim Highlight -->
+              <rect x="-5" y="0" width="10" height="125" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
               <!-- Crossbeam & Binding Rope -->
-              <rect x="-24" y="20" width="48" height="7.5" rx="1.5" fill="#080309" />
-              <line x1="-5" y1="18" x2="5" y2="28" stroke="#1A0A16" stroke-width="2" />
-              <line x1="5" y1="18" x2="-5" y2="28" stroke="#1A0A16" stroke-width="2" />
+              <rect x="-30" y="25" width="60" height="9" rx="2" fill="#0C0207" stroke="#BE123C" stroke-width="1.5" />
+              <line x1="-7" y1="22" x2="7" y2="34" stroke="#F43F5E" stroke-width="2" />
+              <line x1="7" y1="22" x2="-7" y2="34" stroke="#F43F5E" stroke-width="2" />
             </g>
 
-            <!-- CENTER CROSS OF CHRIST (THE SACRED BLEEDING CROSS) -->
-            <g id="passionCenterCross" transform="translate(800, 420)">
+            <!-- CENTER CROSS OF CHRIST (THE SACRED BLEEDING CROSS — TOWERING & PROMINENT) -->
+            <g id="passionCenterCross" transform="translate(800, 340)">
               
-              <!-- 1. Main Timber Silhouette -->
-              <rect x="-7.5" y="0" width="15" height="195" rx="3" fill="#000000" />
-              <rect x="-52" y="34" width="104" height="14" rx="3" fill="#000000" />
+              <!-- 1. Main Heavy Timber Silhouette (240px tall, 126px wide) with Luminous Edge Lights -->
+              <rect x="-9" y="0" width="18" height="255" rx="3.5" fill="#000000" stroke="#FDA4AF" stroke-width="1.8" />
+              <rect x="-63" y="44" width="126" height="17" rx="3.5" fill="#000000" stroke="#FDA4AF" stroke-width="1.8" />
 
               <!-- 2. Titulus Crucis ("INRI" Tablet at Top) -->
-              <rect x="-12" y="6" width="24" height="9" rx="1.5" fill="#1C0617" stroke="#FDA4AF" stroke-width="0.8" opacity="0.85" />
-              <line x1="-7" y1="10.5" x2="7" y2="10.5" stroke="#FDE047" stroke-width="1.2" stroke-dasharray="2 1.5" opacity="0.9" />
+              <rect x="-16" y="8" width="32" height="12" rx="2" fill="#2E0414" stroke="#FDE047" stroke-width="1.5" />
+              <line x1="-10" y1="14" x2="10" y2="14" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="3 2" opacity="0.95" />
 
               <!-- 3. Crown of Thorns Motif around the intersection -->
-              <g id="passionCrownThorns" style="transform-origin: 0px 41px;">
-                <circle cx="0" cy="41" r="18" stroke="#38081A" stroke-width="3" fill="none" stroke-dasharray="4 2.5" />
-                <circle cx="0" cy="41" r="18" stroke="#F43F5E" stroke-width="1.2" fill="none" opacity="0.8" />
-                <!-- Thorns -->
-                <line x1="-16" y1="30" x2="-22" y2="26" stroke="#FDA4AF" stroke-width="1.5" stroke-linecap="round" />
-                <line x1="16" y1="30" x2="22" y2="26" stroke="#FDA4AF" stroke-width="1.5" stroke-linecap="round" />
-                <line x1="-14" y1="52" x2="-20" y2="58" stroke="#FDA4AF" stroke-width="1.5" stroke-linecap="round" />
-                <line x1="14" y1="52" x2="20" y2="58" stroke="#FDA4AF" stroke-width="1.5" stroke-linecap="round" />
-                <line x1="0" y1="22" x2="0" y2="16" stroke="#FDA4AF" stroke-width="1.5" stroke-linecap="round" />
+              <g id="passionCrownThorns" style="transform-origin: 0px 52px;">
+                <circle cx="0" cy="52" r="24" stroke="#38081A" stroke-width="4" fill="none" stroke-dasharray="5 3" />
+                <circle cx="0" cy="52" r="24" stroke="#FDE047" stroke-width="2" fill="none" opacity="0.9" />
+                <circle cx="0" cy="52" r="24" stroke="#F43F5E" stroke-width="3" fill="none" opacity="0.8" stroke-dasharray="8 4" />
+                <!-- Barbed Thorns -->
+                <line x1="-22" y1="38" x2="-30" y2="32" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
+                <line x1="22" y1="38" x2="30" y2="32" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
+                <line x1="-18" y1="66" x2="-26" y2="74" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
+                <line x1="18" y1="66" x2="26" y2="74" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
+                <line x1="0" y1="28" x2="0" y2="20" stroke="#FFF1F2" stroke-width="2" stroke-linecap="round" />
               </g>
 
-              <!-- 4. SACRED BLEEDING STREAMS (Flowing from the Holy Wounds) -->
-              <g id="passionBloodStreams" opacity="0.85">
+              <!-- 4. SACRED BLEEDING STREAMS (Vivid & Highly Visible Flowing Holy Blood) -->
+              <g id="passionBloodStreams" opacity="0.95">
                 <!-- Left Hand Nail Wound Blood Stream -->
-                <path d="M-50 39 L-44 41 Q-20 42 0 43" stroke="url(#bloodStreamGrad)" stroke-width="2.5" stroke-linecap="round" fill="none" />
-                <circle cx="-47" cy="40" r="3.2" fill="#F43F5E" />
-                <circle cx="-47" cy="40" r="1.5" fill="#FFF1F2" />
+                <path d="M-60 51 L-52 53 Q-25 54 0 55" stroke="url(#bloodStreamGrad)" stroke-width="4.5" stroke-linecap="round" fill="none" />
+                <path d="M-60 51 L-52 53 Q-25 54 0 55" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.8" />
+                <circle cx="-58" cy="52" r="5" fill="#FF0044" />
+                <circle cx="-58" cy="52" r="2.2" fill="#FFFFFF" />
 
                 <!-- Right Hand Nail Wound Blood Stream -->
-                <path d="M50 39 L44 41 Q20 42 0 43" stroke="url(#bloodStreamGrad)" stroke-width="2.5" stroke-linecap="round" fill="none" />
-                <circle cx="47" cy="40" r="3.2" fill="#F43F5E" />
-                <circle cx="47" cy="40" r="1.5" fill="#FFF1F2" />
+                <path d="M60 51 L52 53 Q25 54 0 55" stroke="url(#bloodStreamGrad)" stroke-width="4.5" stroke-linecap="round" fill="none" />
+                <path d="M60 51 L52 53 Q25 54 0 55" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.8" />
+                <circle cx="58" cy="52" r="5" fill="#FF0044" />
+                <circle cx="58" cy="52" r="2.2" fill="#FFFFFF" />
 
-                <!-- Spear Wound & Center Crimson Stream Flowing to Base -->
-                <path d="M-4 65 Q-2 110 0 195" stroke="url(#bloodStreamGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" />
-                <path d="M-2 70 Q-1 120 1 195" stroke="#FDA4AF" stroke-width="1.2" opacity="0.8" fill="none" />
-                <ellipse cx="-4" cy="65" rx="3.5" ry="5" fill="#F43F5E" />
-                <circle cx="-4" cy="65" r="1.5" fill="#FFF1F2" />
-                
-                <!-- Radiant cross timber edge lighting -->
-                <line x1="-50" y1="34" x2="50" y2="34" stroke="#FDA4AF" stroke-width="1.2" opacity="0.6" />
-                <line x1="-7" y1="6" x2="-7" y2="195" stroke="#FDA4AF" stroke-width="1.0" opacity="0.5" />
+                <!-- Spear Pierced Heart Wound & Main Vertical Crimson Stream to Base -->
+                <path d="M-5 85 Q-2 150 0 255" stroke="url(#bloodStreamGrad)" stroke-width="5.5" stroke-linecap="round" fill="none" />
+                <path d="M-3 90 Q-1 160 1 255" stroke="#FFFBEB" stroke-width="1.8" opacity="0.9" fill="none" />
+                <ellipse cx="-5" cy="85" rx="5" ry="7" fill="#FF0044" />
+                <circle cx="-5" cy="85" r="2.2" fill="#FFFFFF" />
               </g>
 
               <!-- 5. DRIPPING CRIMSON TEARS OF GRACE -->
               <g id="passionBloodDrips">
                 <!-- Left Nail Drip -->
-                <path d="M-47 44 C-49 48 -45 54 -47 57 C-49 54 -45 48 -47 44 Z" fill="#F43F5E" opacity="0.9" />
+                <path d="M-58 58 C-61 63 -55 71 -58 75 C-61 71 -55 63 -58 58 Z" fill="#FF0044" stroke="#FFF1F2" stroke-width="0.8" />
                 <!-- Right Nail Drip -->
-                <path d="M47 44 C45 48 49 54 47 57 C45 54 49 48 47 44 Z" fill="#F43F5E" opacity="0.9" />
+                <path d="M58 58 C55 63 61 71 58 75 C55 71 61 63 58 58 Z" fill="#FF0044" stroke="#FFF1F2" stroke-width="0.8" />
                 <!-- Base Drip entering the earth -->
-                <path d="M0 190 C-3 197 3 203 0 206 C-3 203 3 197 0 190 Z" fill="#F43F5E" />
+                <path d="M0 250 C-4 260 4 268 0 274 C-4 268 4 260 0 250 Z" fill="#FF0044" stroke="#FFF1F2" stroke-width="1" />
               </g>
 
             </g>
@@ -1220,25 +1257,25 @@
           </g>
 
           <!-- RICH CLUSTER OF ASCENDING REDEMPTION EMBERS (Floating across full width) -->
-          <g id="passionEmbersGroup" opacity="0.9">
-            <circle cx="480" cy="580" r="1.6" fill="#F43F5E" />
-            <circle cx="620" cy="540" r="2.0" fill="#FDE047" />
-            <circle cx="740" cy="560" r="2.0" fill="#F43F5E" />
-            <circle cx="800" cy="600" r="2.8" fill="#F43F5E" />
-            <circle cx="800" cy="540" r="2.4" fill="#FDE047" />
-            <circle cx="820" cy="530" r="2.5" fill="#FDE047" />
-            <circle cx="770" cy="470" r="1.8" fill="#F43F5E" />
-            <circle cx="850" cy="540" r="2.2" fill="#FDE047" />
-            <circle cx="710" cy="500" r="1.6" fill="#FDA4AF" />
-            <circle cx="880" cy="490" r="2.0" fill="#F43F5E" />
-            <circle cx="790" cy="430" r="1.5" fill="#FFF1F2" />
-            <circle cx="830" cy="410" r="1.8" fill="#FDE047" />
-            <circle cx="800" cy="370" r="2.0" fill="#FFF1F2" />
-            <circle cx="980" cy="550" r="1.8" fill="#FDA4AF" />
-            <circle cx="1120" cy="570" r="2.2" fill="#F43F5E" />
-            <circle cx="1260" cy="540" r="1.5" fill="#FDE047" />
-            <circle cx="760" cy="380" r="1.2" fill="#FFF1F2" />
-            <circle cx="810" cy="350" r="1.5" fill="#FDE047" />
+          <g id="passionEmbersGroup" opacity="0.95">
+            <circle cx="480" cy="580" r="2.2" fill="#F43F5E" />
+            <circle cx="620" cy="540" r="2.6" fill="#FDE047" />
+            <circle cx="740" cy="560" r="2.4" fill="#F43F5E" />
+            <circle cx="800" cy="580" r="3.5" fill="#F43F5E" />
+            <circle cx="800" cy="500" r="3.0" fill="#FDE047" />
+            <circle cx="820" cy="480" r="3.2" fill="#FDE047" />
+            <circle cx="770" cy="420" r="2.4" fill="#F43F5E" />
+            <circle cx="850" cy="490" r="2.8" fill="#FDE047" />
+            <circle cx="710" cy="450" r="2.2" fill="#FDA4AF" />
+            <circle cx="880" cy="440" r="2.6" fill="#F43F5E" />
+            <circle cx="790" cy="370" r="2.0" fill="#FFF1F2" />
+            <circle cx="830" cy="350" r="2.4" fill="#FDE047" />
+            <circle cx="800" cy="300" r="2.8" fill="#FFF1F2" />
+            <circle cx="980" cy="520" r="2.4" fill="#FDA4AF" />
+            <circle cx="1120" cy="540" r="2.8" fill="#F43F5E" />
+            <circle cx="1260" cy="510" r="2.2" fill="#FDE047" />
+            <circle cx="760" cy="320" r="1.8" fill="#FFF1F2" />
+            <circle cx="810" cy="270" r="2.2" fill="#FDE047" />
           </g>
         </svg>
       </div>
@@ -1517,7 +1554,7 @@
           gsap.set('#magiCamel3', { y: 0 });
           gsap.set('#christmasNearTrees', { x: 0 });
           gsap.set('#christmasFarTrees', { x: 0 });
-          gsap.set('#bethlehemBeam', { opacity: 0.08, scaleY: 0.8, svgOrigin: '1340 120' });
+          gsap.set('#bethlehemBeam', { opacity: 0.08, scaleY: 0.8, svgOrigin: '1320 110' });
           gsap.set('.bethlehem-glow', { scale: 0.75, opacity: 0.6, svgOrigin: '0 0' });
 
           tl
@@ -1581,10 +1618,10 @@
           gsap.set('#passionCloudLeft', { x: 0, opacity: 0.95 });
           gsap.set('#passionCloudRight', { x: 0, opacity: 0.95 });
           gsap.set('#passionSacredBacklight', { scale: 0.35, opacity: 0.1, svgOrigin: '0 -70' });
-          gsap.set('#passionBloodStreams', { opacity: 0.2, scaleY: 0.6, svgOrigin: '0 40' });
+          gsap.set('#passionBloodStreams', { opacity: 0.2, scaleY: 0.6, svgOrigin: '0 50' });
           gsap.set('#passionBloodDrips', { y: 0, opacity: 0.3 });
-          gsap.set('#passionBloodPool', { scale: 0.5, opacity: 0.2, svgOrigin: '800 625' });
-          gsap.set('#passionCrownThorns', { scale: 0.9, opacity: 0.7, svgOrigin: '0 41' });
+          gsap.set('#passionBloodPool', { scale: 0.5, opacity: 0.2, svgOrigin: '800 605' });
+          gsap.set('#passionCrownThorns', { scale: 0.9, opacity: 0.7, svgOrigin: '0 52' });
           gsap.set('#passionEmbersGroup', { y: 35, opacity: 0.2 });
           gsap.set('#passionMistLayer', { x: -40, opacity: 0.25 });
 
