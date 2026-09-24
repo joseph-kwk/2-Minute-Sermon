@@ -387,7 +387,8 @@
     }
 
     .app-footer.easter .footer-bg-atmosphere {
-      background: linear-gradient(180deg, #160B29 0%, #361445 28%, #782A40 55%, #D45D25 82%, #F59E0B 100%);
+      background: radial-gradient(circle at 25% 65%, #92400E 0%, #5B1E31 35%, #2E1045 70%, #150921 100%),
+                  linear-gradient(180deg, #2E1045 0%, #5B1E31 30%, #9A3412 60%, #EA580C 82%, #F59E0B 100%);
     }
 
     .app-footer.christmas .footer-bg-atmosphere {
@@ -441,8 +442,13 @@
       inset: 0;
       z-index: var(--z-scrim-contrast);
       pointer-events: none;
-      background: radial-gradient(ellipse at 50% 60%, rgba(8, 7, 11, 0.76) 0%, rgba(8, 7, 11, 0.58) 60%, rgba(8, 7, 11, 0.15) 90%, transparent 100%),
-                  linear-gradient(to top, rgba(8, 7, 11, 0.95) 0%, rgba(8, 7, 11, 0.65) 50%, rgba(8, 7, 11, 0.20) 100%);
+      background: radial-gradient(ellipse at 50% 60%, rgba(8, 7, 11, 0.72) 0%, rgba(8, 7, 11, 0.54) 60%, rgba(8, 7, 11, 0.12) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(8, 7, 11, 0.92) 0%, rgba(8, 7, 11, 0.58) 50%, rgba(8, 7, 11, 0.15) 100%);
+    }
+
+    .app-footer.easter .footer-scrim-backdrop {
+      background: radial-gradient(ellipse at 50% 60%, rgba(14, 10, 20, 0.65) 0%, rgba(14, 10, 20, 0.45) 60%, rgba(14, 10, 20, 0.08) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(14, 10, 20, 0.88) 0%, rgba(14, 10, 20, 0.48) 50%, rgba(14, 10, 20, 0.10) 100%);
     }
 
     /* --------------------------------------------------------------------------
@@ -768,19 +774,20 @@
       <div class="stage-layer stage-easter">
         <svg class="easter-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <radialGradient id="easterSunGlow" cx="25%" cy="60%" r="65%">
-              <stop offset="0%" stop-color="#FFFBEB" stop-opacity="1" />
-              <stop offset="25%" stop-color="#FEF08A" stop-opacity="0.9" />
-              <stop offset="55%" stop-color="#F59E0B" stop-opacity="0.55" />
-              <stop offset="80%" stop-color="#EA580C" stop-opacity="0.22" />
+            <radialGradient id="easterSunGlow" cx="25%" cy="60%" r="75%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="18%" stop-color="#FEF08A" stop-opacity="0.95" />
+              <stop offset="42%" stop-color="#FDE047" stop-opacity="0.85" />
+              <stop offset="68%" stop-color="#F59E0B" stop-opacity="0.55" />
+              <stop offset="90%" stop-color="#EA580C" stop-opacity="0.25" />
               <stop offset="100%" stop-color="#000000" stop-opacity="0" />
             </radialGradient>
 
             <linearGradient id="godRayBeamGrad" x1="0%" y1="50%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
-              <stop offset="20%" stop-color="#FEF08A" stop-opacity="0.85" />
-              <stop offset="55%" stop-color="#F59E0B" stop-opacity="0.45" />
-              <stop offset="100%" stop-color="#EA580C" stop-opacity="0" />
+              <stop offset="25%" stop-color="#FEF08A" stop-opacity="0.95" />
+              <stop offset="60%" stop-color="#FDE047" stop-opacity="0.65" />
+              <stop offset="100%" stop-color="#F59E0B" stop-opacity="0" />
             </linearGradient>
 
             <radialGradient id="tombDarkness" cx="45%" cy="55%" r="50%">
@@ -790,76 +797,89 @@
             </radialGradient>
 
             <radialGradient id="stoneSurface" cx="35%" cy="35%" r="70%">
-              <stop offset="0%" stop-color="#B8B4C0" />
-              <stop offset="45%" stop-color="#73707B" />
-              <stop offset="80%" stop-color="#3D3A44" />
-              <stop offset="100%" stop-color="#1E1C22" />
+              <stop offset="0%" stop-color="#D4D0DC" />
+              <stop offset="35%" stop-color="#9C98A6" />
+              <stop offset="70%" stop-color="#555260" />
+              <stop offset="100%" stop-color="#26232D" />
             </radialGradient>
 
             <linearGradient id="cliffRockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#3A324A" />
-              <stop offset="60%" stop-color="#231B2F" />
-              <stop offset="100%" stop-color="#110D1A" />
+              <stop offset="0%" stop-color="#4C3D63" />
+              <stop offset="60%" stop-color="#2E233D" />
+              <stop offset="100%" stop-color="#150E20" />
             </linearGradient>
 
             <!-- Sand/Rock Groove Track Gradient -->
             <linearGradient id="stoneTrackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#140D1E" />
-              <stop offset="40%" stop-color="#3D291E" />
-              <stop offset="80%" stop-color="#6E4424" />
-              <stop offset="100%" stop-color="#24140D" />
+              <stop offset="0%" stop-color="#1D1229" />
+              <stop offset="30%" stop-color="#4E3120" />
+              <stop offset="75%" stop-color="#8B532B" />
+              <stop offset="100%" stop-color="#2F1B12" />
             </linearGradient>
           </defs>
 
-          <!-- RISING DAWN SUN AURA -->
-          <circle id="easterSunAura" cx="340" cy="500" r="500" fill="url(#easterSunGlow)" opacity="0.8" />
+          <!-- RISING DAWN SUN AURA (Brighter & Wider Radiant Sunlight) -->
+          <circle id="easterSunAura" cx="340" cy="500" r="550" fill="url(#easterSunGlow)" opacity="0.95" />
 
           <!-- Distant Dawn Hills -->
-          <path d="M0 640 Q400 520 900 580 T1600 540 L1600 700 L0 700 Z" fill="#241933" opacity="0.65" />
-          <path d="M0 660 Q500 570 1100 620 T1600 600 L1600 700 L0 700 Z" fill="#181122" opacity="0.88" />
+          <path d="M0 640 Q400 510 900 570 T1600 530 L1600 700 L0 700 Z" fill="#3D204E" opacity="0.75" />
+          <path d="M0 660 Q500 560 1100 610 T1600 590 L1600 700 L0 700 Z" fill="#251533" opacity="0.92" />
 
-          <!-- GOD-RAY BEAMS -->
-          <g id="easterGodRays" style="transform-origin: 270px 520px; opacity: 0.15; transform: scale(0.35);">
-            <polygon points="270,520 660,160 1020,240 280,540" fill="url(#godRayBeamGrad)" opacity="0.95" />
-            <polygon points="265,510 920,20 1400,140 285,530" fill="url(#godRayBeamGrad)" opacity="0.6" />
-            <polygon points="260,530 1140,300 1640,460 275,550" fill="url(#godRayBeamGrad)" opacity="0.45" />
-            <polygon points="275,515 560,10 760,50 270,515" fill="url(#godRayBeamGrad)" opacity="0.75" />
-            <circle cx="275" cy="520" r="170" fill="url(#easterSunGlow)" opacity="1" />
+          <!-- GOD-RAY BEAMS (Sweeping Holy Golden Light) -->
+          <g id="easterGodRays" style="transform-origin: 270px 520px; opacity: 0.2; transform: scale(0.35);">
+            <polygon points="270,520 680,120 1080,210 280,540" fill="url(#godRayBeamGrad)" opacity="1" />
+            <polygon points="265,510 960,-10 1480,110 285,530" fill="url(#godRayBeamGrad)" opacity="0.75" />
+            <polygon points="260,530 1180,260 1660,420 275,550" fill="url(#godRayBeamGrad)" opacity="0.55" />
+            <polygon points="275,515 560,-20 800,20 270,515" fill="url(#godRayBeamGrad)" opacity="0.85" />
+            <circle cx="275" cy="520" r="210" fill="url(#easterSunGlow)" opacity="1" />
           </g>
 
           <!-- ROCK CLIFF & TOMB ARCHWAY -->
           <g id="easterTombCliff">
             <path d="M-60 700 L-40 310 Q40 260 120 290 Q210 210 290 250 Q370 300 400 380 Q450 450 490 530 Q510 600 520 700 Z" fill="url(#cliffRockGrad)" />
             <path d="M140 680 L140 490 C140 400 220 370 290 370 C360 370 440 400 440 490 L440 680 Z" fill="url(#tombDarkness)" />
-            <path d="M130 680 L130 490 C130 390 215 355 290 355 C365 355 450 390 450 490 L450 680 L430 680 L430 492 C430 410 355 385 290 385 C225 385 150 410 150 492 L150 680 Z" fill="#524B5E" />
+            <path d="M130 680 L130 490 C130 390 215 355 290 355 C365 355 450 390 450 490 L450 680 L430 680 L430 492 C430 410 355 385 290 385 C225 385 150 410 150 492 L150 680 Z" fill="#6B6278" />
           </g>
 
           <!-- STONE RUNWAY / FLAT SAND BASE GROOVE (Revealed beneath stone as it rolls) -->
-          <g id="easterStoneBaseTrack" opacity="0.85">
+          <g id="easterStoneBaseTrack" opacity="0.95">
             <!-- Cut groove trench in the stone floor where the circular stone rests and rolls -->
-            <path d="M160 668 L780 668 Q800 668 810 674 L810 682 Q780 688 740 688 L160 688 Z" fill="url(#stoneTrackGrad)" />
+            <path d="M140 666 L860 666 Q880 666 890 673 L890 683 Q850 690 800 690 L140 690 Z" fill="url(#stoneTrackGrad)" />
             <!-- Sand/pebble lip texture along the rolling path -->
-            <path d="M170 668 Q320 664 480 666 Q640 664 780 668" stroke="#A16207" stroke-width="2" fill="none" opacity="0.6" />
-            <line x1="160" y1="680" x2="760" y2="680" stroke="#000000" stroke-width="2" opacity="0.7" />
+            <path d="M150 666 Q350 662 550 664 Q720 662 860 666" stroke="#D97706" stroke-width="2.5" fill="none" opacity="0.75" />
+            <line x1="140" y1="680" x2="840" y2="680" stroke="#000000" stroke-width="2.5" opacity="0.8" />
           </g>
 
-          <!-- MASSIVE CIRCULAR SEALING STONE (Rolls along base track) -->
+          <!-- FLOOR CONTACT DROP SHADOW (Moves horizontally with stone, does not rotate) -->
+          <g id="easterStoneShadow">
+            <ellipse cx="300" cy="668" rx="145" ry="18" fill="#000000" opacity="0.8" />
+          </g>
+
+          <!-- MASSIVE FULL-CIRCULAR SEALING STONE (Rolls cleanly like a heavy circular stone disc) -->
           <g id="easterStoneRollGroup">
-            <g id="easterRollingStone" style="transform-origin: 300px 525px;">
-              <!-- Drop Shadow on Floor -->
-              <ellipse cx="300" cy="665" rx="145" ry="22" fill="#000000" opacity="0.75" />
-              <!-- Stone Body -->
-              <circle cx="300" cy="525" r="145" fill="url(#stoneSurface)" stroke="#1F1D22" stroke-width="4.5" />
-              <!-- Cracks & Weathering Textures -->
-              <path d="M220 475 Q260 495 280 480 Q310 465 360 495" stroke="#1C1B1E" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.85" />
-              <path d="M240 565 Q290 575 320 545 Q360 525 390 555" stroke="#1C1B1E" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.8" />
-              <path d="M280 415 Q295 455 290 505" stroke="#2D2B32" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9" />
-              <circle cx="296" cy="521" r="140" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.35" />
+            <g id="easterRollingStone" style="transform-origin: 300px 520px;">
+              <!-- Outer Chiseled Stone Body -->
+              <circle cx="300" cy="520" r="145" fill="url(#stoneSurface)" stroke="#1F1C23" stroke-width="5" />
+              <!-- Concentric Chisel Rings (Give visual rotation feedback) -->
+              <circle cx="300" cy="520" r="130" stroke="#484452" stroke-width="2.5" fill="none" opacity="0.6" />
+              <circle cx="300" cy="520" r="95" stroke="#373340" stroke-width="2" fill="none" stroke-dasharray="8 6" opacity="0.75" />
+              <circle cx="300" cy="520" r="48" stroke="#2B2733" stroke-width="2.5" fill="none" stroke-dasharray="4 4" opacity="0.85" />
+              
+              <!-- Cross Chisel Lines & Radial Stone Fractures (Make rotation distinct & authentic) -->
+              <line x1="160" y1="520" x2="440" y2="520" stroke="#25222C" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+              <line x1="300" y1="380" x2="300" y2="660" stroke="#25222C" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+              <line x1="202" y1="422" x2="398" y2="618" stroke="#2E2A37" stroke-width="2.5" stroke-linecap="round" opacity="0.75" />
+              <line x1="398" y1="422" x2="202" y2="618" stroke="#2E2A37" stroke-width="2.5" stroke-linecap="round" opacity="0.75" />
+              <path d="M225 470 Q265 490 285 475 Q315 460 365 490" stroke="#1A181E" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.9" />
+              <path d="M245 560 Q295 570 325 540 Q365 520 395 550" stroke="#1A181E" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.85" />
+              
+              <!-- Radiant Rim Highlight -->
+              <circle cx="296" cy="516" r="141" stroke="#FFFBEB" stroke-width="2.5" fill="none" opacity="0.5" />
             </g>
           </g>
 
           <!-- Ascending Golden Dawn Sparks -->
-          <g id="easterSparksGroup" opacity="0.8">
+          <g id="easterSparksGroup" opacity="0.9">
             <circle cx="350" cy="500" r="2.2" fill="#FFFBEB" />
             <circle cx="490" cy="440" r="2.6" fill="#FEF08A" />
             <circle cx="630" cy="370" r="2.0" fill="#FDE047" />
@@ -868,8 +888,8 @@
           </g>
 
           <!-- Foreground Ground Silhouettes -->
-          <path d="M0 670 Q450 640 950 660 T1600 650 L1600 700 L0 700 Z" fill="#0E0A16" />
-          <path d="M0 690 Q600 670 1200 680 T1600 675 L1600 700 L0 700 Z" fill="#06040A" />
+          <path d="M0 670 Q450 640 950 660 T1600 650 L1600 700 L0 700 Z" fill="#120A1A" />
+          <path d="M0 690 Q600 670 1200 680 T1600 675 L1600 700 L0 700 Z" fill="#07030A" />
         </svg>
       </div>
 
@@ -1340,7 +1360,7 @@
 
         // Reset element styles
         gsap.set([
-          '#easterRollingStone', '#easterGodRays', '#easterSunAura', '#easterSparksGroup',
+          '#easterRollingStone', '#easterStoneShadow', '#easterGodRays', '#easterSunAura', '#easterSparksGroup',
           '#christmasSleighGroup', '#christmasNearTrees', '#christmasFarTrees', '.bethlehem-glow', '#christmasWiseMenGroup',
           '#passionSacredBacklight', '#passionCloudLeft', '#passionCloudRight', '#passionEmbersGroup', '#passionMistLayer'
         ], { clearProps: 'all' });
@@ -1354,11 +1374,11 @@
       buildTimeline(theme) {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // TRIGGER ON FOOTER ENTRY: Plays automatically at an unhurried, majestic pace
+        // TRIGGER ON FOOTER ENTRY: Plays and restarts fresh every time the user gets to the footer
         const scrollTriggerConfig = {
           trigger: this.footer,
-          start: 'top 75%',
-          toggleActions: 'play none none none',
+          start: 'top 80%',
+          toggleActions: 'restart none none reset',
           invalidateOnRefresh: true
         };
 
@@ -1369,29 +1389,35 @@
 
         if (theme === 'easter') {
           // ==================================================================
-          // EASTER TIMELINE: Unhurried, majestic dawn with stone base groove
+          // EASTER TIMELINE: Unhurried, majestic dawn with stone rolling along track
           // ==================================================================
-          gsap.set('#easterRollingStone', { x: 0, rotation: 0, svgOrigin: '300 525' });
-          gsap.set('#easterGodRays', { opacity: 0.1, scale: 0.35, svgOrigin: '270 520' });
-          gsap.set('#easterSunAura', { scale: 0.8, opacity: 0.55, svgOrigin: '340 500' });
+          gsap.set('#easterRollingStone', { x: 0, rotation: 0, svgOrigin: '300 520' });
+          gsap.set('#easterStoneShadow', { x: 0 });
+          gsap.set('#easterGodRays', { opacity: 0.15, scale: 0.35, svgOrigin: '270 520' });
+          gsap.set('#easterSunAura', { scale: 0.75, opacity: 0.6, svgOrigin: '340 500' });
           gsap.set('#easterSparksGroup', { y: 25, opacity: 0.2 });
 
           tl
-            // 1. Dawn Sun Warmth Rises First
+            // 1. Bright Dawn Sun Warmth Rises First
             .to('#easterSunAura', {
-              scale: 1.45,
+              scale: 1.5,
               opacity: 1,
               duration: 3.8,
               ease: 'sine.out'
             }, 0)
-            // 2. Massive Sealing Stone Rolls steadily across its stone base track
+            // 2. Full-Circular Sealing Stone rolls like a heavy stone disc across the sand track
             .to('#easterRollingStone', {
-              x: 420,              // Rolls comfortably past tomb entrance
-              rotation: 360,       // Full natural rolling rotation
-              duration: 4.2,       // Slow, weighted, majestic
+              x: 520,              // Rolls comfortably along the ground track past tomb archway
+              rotation: 215,       // Physically authentic roll rotation for displacement
+              duration: 4.4,       // Steady, weighted, majestic
               ease: 'power1.out'
             }, 0.3)
-            // 3. Divine God-Rays burst and sweep outward across the whole footer
+            .to('#easterStoneShadow', {
+              x: 520,
+              duration: 4.4,
+              ease: 'power1.out'
+            }, 0.3)
+            // 3. Radiant God-Rays burst and sweep outward across the whole footer
             .to('#easterGodRays', {
               opacity: 1,
               scale: 1,
@@ -1400,7 +1426,7 @@
             }, 0.6)
             // 4. Holy dawn golden sparks float gently upward
             .to('#easterSparksGroup', {
-              y: -60,
+              y: -65,
               opacity: 1,
               duration: 4.5,
               ease: 'sine.out'
