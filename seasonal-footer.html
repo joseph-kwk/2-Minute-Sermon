@@ -163,6 +163,12 @@
       box-shadow: 0 2px 14px rgba(190, 18, 60, 0.55);
     }
 
+    .theme-btn.active[data-theme="newyear"] {
+      background: #D97706;
+      color: #FFFFFF;
+      box-shadow: 0 2px 14px rgba(217, 119, 6, 0.55);
+    }
+
     .playback-toggle-btn {
       appearance: none;
       border: 1px solid rgba(255, 255, 255, 0.22);
@@ -401,8 +407,13 @@
                   linear-gradient(180deg, #09010C 0%, #3B0418 30%, #881337 60%, #E11D48 85%, #F59E0B 100%);
     }
 
+    .app-footer.newyear .footer-bg-atmosphere {
+      background: radial-gradient(circle at 50% 25%, #D97706 0%, #B45309 20%, #1E1B4B 50%, #0A0A14 80%, #030408 100%),
+                  linear-gradient(180deg, #05060A 0%, #0F172A 30%, #1E1B4B 60%, #451A03 85%, #F59E0B 100%);
+    }
+
     /* --------------------------------------------------------------------------
-       LAYERS 1, 2, 3: Animated Vector Stage (Easter, Christmas, Passion)
+       LAYERS 1, 2, 3: Animated Vector Stage (Easter, Christmas, Passion, New Year)
        -------------------------------------------------------------------------- */
     .footer-anim-stage {
       position: absolute;
@@ -423,7 +434,8 @@
 
     .app-footer.easter .stage-easter,
     .app-footer.christmas .stage-christmas,
-    .app-footer.passion .stage-passion {
+    .app-footer.passion .stage-passion,
+    .app-footer.newyear .stage-newyear {
       opacity: 1;
       visibility: visible;
     }
@@ -461,6 +473,11 @@
     .app-footer.passion .footer-scrim-backdrop {
       background: radial-gradient(ellipse at 50% 60%, rgba(15, 2, 8, 0.55) 0%, rgba(15, 2, 8, 0.35) 60%, rgba(15, 2, 8, 0.05) 90%, transparent 100%),
                   linear-gradient(to top, rgba(15, 2, 8, 0.85) 0%, rgba(15, 2, 8, 0.40) 50%, rgba(15, 2, 8, 0.08) 100%);
+    }
+
+    .app-footer.newyear .footer-scrim-backdrop {
+      background: radial-gradient(ellipse at 50% 60%, rgba(10, 8, 16, 0.55) 0%, rgba(10, 8, 16, 0.35) 60%, rgba(10, 8, 16, 0.05) 90%, transparent 100%),
+                  linear-gradient(to top, rgba(10, 8, 16, 0.85) 0%, rgba(10, 8, 16, 0.40) 50%, rgba(10, 8, 16, 0.08) 100%);
     }
 
     /* --------------------------------------------------------------------------
@@ -719,6 +736,9 @@
         </button>
         <button class="theme-btn" data-theme="passion" role="radio" aria-checked="false">
           ✝️ Passion (Holy Week)
+        </button>
+        <button class="theme-btn" data-theme="newyear" role="radio" aria-checked="false">
+          ✨ New Year
         </button>
       </div>
 
@@ -1219,6 +1239,331 @@
         </svg>
       </div>
 
+      <!-- ====================================================================
+           4. NEW YEAR & SACRED CROSSOVER STAGE
+           (Midnight Clock Tower, Outgoing 2026 Dissolve, Fireworks, Radiant 2027 Emergence)
+           ==================================================================== -->
+      <div class="stage-layer stage-newyear">
+        <svg class="newyear-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Midnight Starlight & Cosmic Aura -->
+            <radialGradient id="nyMidnightSkyGlow" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#3B1D6B" stop-opacity="0.45" />
+              <stop offset="40%" stop-color="#1E1B4B" stop-opacity="0.25" />
+              <stop offset="80%" stop-color="#090A12" stop-opacity="0.1" />
+              <stop offset="100%" stop-color="#020306" stop-opacity="0" />
+            </radialGradient>
+
+            <!-- Midnight Chime Aura (Expanding golden pulse at 12:00) -->
+            <radialGradient id="nyChimeRadial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFBEB" stop-opacity="0.95" />
+              <stop offset="25%" stop-color="#FDE68A" stop-opacity="0.75" />
+              <stop offset="60%" stop-color="#D97706" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#B45309" stop-opacity="0" />
+            </radialGradient>
+
+            <!-- Golden Sunburst Aura behind 2027 -->
+            <radialGradient id="nyGoldBurstAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="20%" stop-color="#FEF08A" stop-opacity="0.9" />
+              <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.6" />
+              <stop offset="80%" stop-color="#B45309" stop-opacity="0.25" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+            </radialGradient>
+
+            <!-- Stardust Bridge Gradient -->
+            <linearGradient id="nyBridgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#64748B" stop-opacity="0.4" />
+              <stop offset="30%" stop-color="#CBD5E1" stop-opacity="0.7" />
+              <stop offset="50%" stop-color="#FDE047" stop-opacity="1" />
+              <stop offset="75%" stop-color="#F59E0B" stop-opacity="0.85" />
+              <stop offset="100%" stop-color="#FEF08A" stop-opacity="0.6" />
+            </linearGradient>
+
+            <!-- Firework 1: Warm Gold Starburst Gradient -->
+            <radialGradient id="fw1Grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="30%" stop-color="#FDE047" stop-opacity="0.9" />
+              <stop offset="70%" stop-color="#EA580C" stop-opacity="0.4" />
+              <stop offset="100%" stop-color="#7C2D12" stop-opacity="0" />
+            </radialGradient>
+
+            <!-- Firework 2: Crown Midnight Sapphire & Silver -->
+            <radialGradient id="fw2Grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="25%" stop-color="#BAE6FD" stop-opacity="0.95" />
+              <stop offset="65%" stop-color="#6366F1" stop-opacity="0.45" />
+              <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0" />
+            </radialGradient>
+
+            <!-- Firework 3: Rose Gold Radiance -->
+            <radialGradient id="fw3Grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+              <stop offset="30%" stop-color="#FDA4AF" stop-opacity="0.9" />
+              <stop offset="70%" stop-color="#E11D48" stop-opacity="0.4" />
+              <stop offset="100%" stop-color="#881337" stop-opacity="0" />
+            </radialGradient>
+
+            <linearGradient id="nyGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#131525" stop-opacity="0.9" />
+              <stop offset="50%" stop-color="#0A0B12" stop-opacity="0.98" />
+              <stop offset="100%" stop-color="#040407" stop-opacity="1" />
+            </linearGradient>
+          </defs>
+
+          <!-- DEEP CELESTIAL BACKGROUND AURA -->
+          <circle cx="800" cy="220" r="620" fill="url(#nyMidnightSkyGlow)" />
+
+          <!-- DISTANT CONSTELLATION STARS & CELESTIAL DUST -->
+          <g id="nyConstellations" opacity="0.85">
+            <!-- Major Sparkling Stars -->
+            <path d="M180 80 L183 95 L198 98 L183 101 L180 116 L177 101 L162 98 L177 95 Z" fill="#FFFFFF" opacity="0.9" />
+            <path d="M380 60 L382 70 L392 72 L382 74 L380 84 L378 74 L368 72 L378 70 Z" fill="#FDE68A" opacity="0.8" />
+            <path d="M640 50 L642 62 L654 64 L642 66 L640 78 L638 66 L626 64 L638 62 Z" fill="#FFFFFF" opacity="0.85" />
+            <path d="M960 45 L962 57 L974 59 L962 61 L960 73 L958 61 L946 59 L958 57 Z" fill="#FDE68A" opacity="0.85" />
+            <path d="M1240 70 L1242 82 L1254 84 L1242 86 L1240 98 L1238 86 L1226 84 L1238 82 Z" fill="#FFFFFF" opacity="0.9" />
+            <path d="M1450 95 L1452 105 L1462 107 L1452 109 L1450 119 L1448 109 L1438 107 L1448 105 Z" fill="#FDE68A" opacity="0.75" />
+            <!-- Pinpoint Stardust -->
+            <circle cx="120" cy="140" r="1.5" fill="#E2E8F0" opacity="0.6" />
+            <circle cx="260" cy="110" r="1.8" fill="#FDE68A" opacity="0.7" />
+            <circle cx="450" cy="160" r="1.3" fill="#FFFFFF" opacity="0.6" />
+            <circle cx="710" cy="120" r="1.6" fill="#FDE68A" opacity="0.8" />
+            <circle cx="890" cy="130" r="1.4" fill="#FFFFFF" opacity="0.7" />
+            <circle cx="1070" cy="90" r="1.8" fill="#FDE68A" opacity="0.8" />
+            <circle cx="1360" cy="140" r="1.5" fill="#FFFFFF" opacity="0.7" />
+            <circle cx="1520" cy="120" r="1.6" fill="#FDE68A" opacity="0.6" />
+          </g>
+
+          <!-- GRAND CELEBRATORY FIREWORKS (Apexes across sky) -->
+          <!-- Firework 1 (Left Sky, Warm Gold Chrysanthemum) -->
+          <g id="nyFirework1" transform="translate(480, 130)">
+            <circle cx="0" cy="0" r="90" fill="url(#fw1Grad)" opacity="0.35" />
+            <!-- Spark Rays -->
+            <line x1="0" y1="0" x2="0" y2="-75" stroke="#FDE047" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="0" y2="75" stroke="#FDE047" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-75" y2="0" stroke="#FDE047" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="75" y2="0" stroke="#FDE047" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-53" y2="-53" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="53" y2="-53" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-53" y2="53" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="53" y2="53" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" />
+            <!-- Ray Tip Sparks -->
+            <circle cx="0" cy="-80" r="3.2" fill="#FFFFFF" />
+            <circle cx="0" cy="80" r="3.2" fill="#FFFFFF" />
+            <circle cx="-80" cy="0" r="3.2" fill="#FFFFFF" />
+            <circle cx="80" cy="0" r="3.2" fill="#FFFFFF" />
+            <circle cx="-58" cy="-58" r="2.8" fill="#FEF08A" />
+            <circle cx="58" cy="-58" r="2.8" fill="#FEF08A" />
+            <circle cx="-58" cy="58" r="2.8" fill="#FEF08A" />
+            <circle cx="58" cy="58" r="2.8" fill="#FEF08A" />
+            <circle cx="0" cy="0" r="5" fill="#FFFFFF" />
+          </g>
+
+          <!-- Firework 2 (Center Sky Crown, Above Clock Tower) -->
+          <g id="nyFirework2" transform="translate(800, 85)">
+            <circle cx="0" cy="0" r="110" fill="url(#fw2Grad)" opacity="0.4" />
+            <circle cx="0" cy="0" r="65" stroke="#BAE6FD" stroke-width="1.2" stroke-dasharray="4 6" fill="none" />
+            <circle cx="0" cy="0" r="95" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="3 7" fill="none" />
+            <!-- Radial Burst Lines -->
+            <line x1="0" y1="0" x2="0" y2="-90" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="0" y2="90" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-90" y2="0" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="90" y2="0" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-64" y2="-64" stroke="#818CF8" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="64" y2="-64" stroke="#818CF8" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-64" y2="64" stroke="#818CF8" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="64" y2="64" stroke="#818CF8" stroke-width="2" stroke-linecap="round" />
+            <!-- Sparks -->
+            <circle cx="0" cy="-96" r="3.5" fill="#FFFFFF" />
+            <circle cx="0" cy="96" r="3.5" fill="#FFFFFF" />
+            <circle cx="-96" cy="0" r="3.5" fill="#FFFFFF" />
+            <circle cx="96" cy="0" r="3.5" fill="#FFFFFF" />
+            <circle cx="-70" cy="-70" r="3" fill="#BAE6FD" />
+            <circle cx="70" cy="-70" r="3" fill="#BAE6FD" />
+            <circle cx="-70" cy="70" r="3" fill="#BAE6FD" />
+            <circle cx="70" cy="70" r="3" fill="#BAE6FD" />
+            <circle cx="0" cy="0" r="6" fill="#FFFFFF" />
+          </g>
+
+          <!-- Firework 3 (Right Sky, Rose Gold Radiance over 2027) -->
+          <g id="nyFirework3" transform="translate(1160, 140)">
+            <circle cx="0" cy="0" r="95" fill="url(#fw3Grad)" opacity="0.38" />
+            <line x1="0" y1="0" x2="0" y2="-80" stroke="#FDA4AF" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="0" y2="80" stroke="#FDA4AF" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-80" y2="0" stroke="#FDA4AF" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="80" y2="0" stroke="#FDA4AF" stroke-width="2" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-56" y2="-56" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="56" y2="-56" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="-56" y2="56" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" />
+            <line x1="0" y1="0" x2="56" y2="56" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" />
+            <circle cx="0" cy="-85" r="3.2" fill="#FFF1F2" />
+            <circle cx="0" cy="85" r="3.2" fill="#FFF1F2" />
+            <circle cx="-85" cy="0" r="3.2" fill="#FFF1F2" />
+            <circle cx="85" cy="0" r="3.2" fill="#FFF1F2" />
+            <circle cx="-60" cy="-60" r="2.8" fill="#FECDD3" />
+            <circle cx="60" cy="-60" r="2.8" fill="#FECDD3" />
+            <circle cx="-60" cy="60" r="2.8" fill="#FECDD3" />
+            <circle cx="60" cy="60" r="2.8" fill="#FECDD3" />
+            <circle cx="0" cy="0" r="5" fill="#FFFFFF" />
+          </g>
+
+          <!-- STARDUST BRIDGE (Parabolic Arc Connecting the Outgoing & Incoming Eras) -->
+          <g id="nyStardustBridge">
+            <!-- Double Glowing Luminous Arcs -->
+            <path d="M 280 430 Q 800 210 1320 430" stroke="url(#nyBridgeGrad)" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85" />
+            <path d="M 310 440 Q 800 230 1290 440" stroke="#FDE68A" stroke-width="1.2" stroke-dasharray="4 8" fill="none" opacity="0.6" />
+            <!-- Stardust Trail Orbs on Bridge -->
+            <circle cx="480" cy="340" r="3.5" fill="#FFFFFF" opacity="0.9" />
+            <circle cx="620" cy="275" r="4.0" fill="#FDE047" opacity="0.85" />
+            <circle cx="980" cy="275" r="4.0" fill="#FDE047" opacity="0.85" />
+            <circle cx="1120" cy="340" r="3.5" fill="#FFFFFF" opacity="0.9" />
+            <!-- Sacred Inscription Under Center Arch -->
+            <text x="800" y="325" text-anchor="middle" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FDE68A" letter-spacing="4" opacity="0.9">
+              “BEHOLD, I MAKE ALL THINGS NEW” • REV 21:5
+            </text>
+          </g>
+
+          <!-- CENTER MIDNIGHT CLOCK TOWER SILHOUETTE (Romanesque / Gothic Campanile) -->
+          <g id="nyClockTowerGroup">
+            <!-- Midnight Chime Aura (Expands behind the tower clock when striking midnight) -->
+            <circle id="nyMidnightAura" cx="800" cy="240" r="140" fill="url(#nyChimeRadial)" opacity="0.2" />
+
+            <!-- Campanile Spire & Architecture -->
+            <g id="nyClockTower" fill="#0C0E1A" stroke="#2D3250" stroke-width="1.5">
+              <!-- Slender Spire Tip -->
+              <polygon points="800,120 792,180 808,180" fill="#1E2338" />
+              <line x1="800" y1="105" x2="800" y2="120" stroke="#FDE047" stroke-width="2.5" />
+              <circle cx="800" cy="103" r="3.5" fill="#FDE047" stroke="none" />
+              <!-- Belfry Roof & Cornice -->
+              <rect x="780" y="180" width="40" height="12" rx="2" fill="#161B2E" />
+              <polygon points="772,192 828,192 820,205 780,205" fill="#101424" />
+              <!-- Main Clock Chamber Section -->
+              <rect x="768" y="205" width="64" height="70" rx="3" fill="#0C0E1A" />
+              <!-- Arch Openings below clock -->
+              <path d="M778 280 Q788 272 798 280 L798 305 L778 305 Z" fill="#05060A" />
+              <path d="M802 280 Q812 272 822 280 L822 305 L802 305 Z" fill="#05060A" />
+              <!-- Tower Base Pillars descending to ground -->
+              <rect x="764" y="305" width="72" height="260" fill="#0A0C16" />
+            </g>
+
+            <!-- Clock Face Dial at (800, 240) -->
+            <circle cx="800" cy="240" r="26" fill="#05060A" stroke="#FDE047" stroke-width="2" />
+            <circle cx="800" cy="240" r="23" fill="none" stroke="#64748B" stroke-width="0.8" stroke-dasharray="2 3" />
+            <!-- Dial Cardinal Ticks (XII, III, VI, IX) -->
+            <line x1="800" y1="216" x2="800" y2="221" stroke="#FDE047" stroke-width="2" />
+            <line x1="800" y1="259" x2="800" y2="264" stroke="#FDE047" stroke-width="2" />
+            <line x1="776" y1="240" x2="781" y2="240" stroke="#FDE047" stroke-width="2" />
+            <line x1="819" y1="240" x2="824" y2="240" stroke="#FDE047" stroke-width="2" />
+            <!-- Center Pivot Pin -->
+            <circle cx="800" cy="240" r="3" fill="#FDE047" />
+
+            <!-- Hour Hand (Locked at 12) -->
+            <line id="nyClockHandHour" x1="800" y1="240" x2="800" y2="226" stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" />
+            <!-- Minute Hand (GSAP animates from -36deg to 0deg at 12:00) -->
+            <line id="nyClockHandMinute" x1="800" y1="240" x2="800" y2="220" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" />
+          </g>
+
+          <!-- LEFT SECTOR: THE OUTGOING / LAST YEAR (2026) -->
+          <g id="nyLastYearGroup" transform="translate(300, 410)">
+            <!-- Monumental Arch / Classical Base Silhouette -->
+            <rect x="-110" y="40" width="220" height="20" rx="3" fill="#0E121E" stroke="#334155" stroke-width="1.5" />
+            <rect x="-120" y="58" width="240" height="150" fill="#080A12" stroke="#1E293B" stroke-width="1" />
+            <!-- Pillar Accents -->
+            <rect x="-105" y="60" width="16" height="140" fill="#0D111A" />
+            <rect x="89" y="60" width="16" height="140" fill="#0D111A" />
+
+            <!-- Outgoing Year Typographic Monument -->
+            <g id="nyLastYearTextWrap">
+              <text id="nyLastYearText" x="0" y="24" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="58" font-weight="900" fill="#CBD5E1" stroke="#475569" stroke-width="1.5" letter-spacing="4">
+                2026
+              </text>
+              <text x="0" y="48" text-anchor="middle" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="2.5">
+                FAITHFUL IN EVERY TRIAL
+              </text>
+              <text x="0" y="66" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9.5" font-weight="600" fill="#64748B" letter-spacing="2">
+                BIDDING FAREWELL
+              </text>
+            </g>
+
+            <!-- Rising Stardust Dust (Particles lifting off 2026 as it softly dissolves) -->
+            <g id="nyOutgoingDustGroup" opacity="0.8">
+              <circle cx="-50" cy="0" r="2.2" fill="#E2E8F0" />
+              <circle cx="-35" cy="-25" r="2.8" fill="#FDE68A" />
+              <circle cx="-10" cy="-40" r="2.0" fill="#CBD5E1" />
+              <circle cx="15" cy="-30" r="3.0" fill="#FDE68A" />
+              <circle cx="45" cy="-15" r="2.2" fill="#E2E8F0" />
+              <circle cx="65" cy="-35" r="2.5" fill="#FDE68A" />
+              <circle cx="-25" cy="-60" r="1.8" fill="#FFFFFF" />
+              <circle cx="30" cy="-65" r="2.0" fill="#FEF08A" />
+            </g>
+          </g>
+
+          <!-- RIGHT SECTOR: THE INCOMING / NEW YEAR (2027) -->
+          <g id="nyNewYearGroup" transform="translate(1300, 410)">
+            <!-- Radiant Golden Corona & Sunburst (GSAP scales to 1.5) -->
+            <circle id="nyNewYearAura" cx="0" cy="15" r="210" fill="url(#nyGoldBurstAura)" opacity="0.3" />
+
+            <!-- Crowning Stars above 2027 Arch -->
+            <g id="nyCrownStars" transform="translate(0, -50)">
+              <path d="M0 -15 L3 -5 L13 0 L3 5 L0 15 L-3 5 L-13 0 L-3 -5 Z" fill="#FFFFFF" />
+              <circle cx="0" cy="0" r="2" fill="#FDE047" />
+              <circle cx="-45" cy="10" r="2.5" fill="#FDE68A" />
+              <circle cx="45" cy="10" r="2.5" fill="#FDE68A" />
+              <circle cx="-80" cy="25" r="2.0" fill="#FFFFFF" />
+              <circle cx="80" cy="25" r="2.0" fill="#FFFFFF" />
+            </g>
+
+            <!-- Triumphal Sunrise Arch / Golden Pedestal -->
+            <rect x="-120" y="40" width="240" height="22" rx="3" fill="#1A1528" stroke="#F59E0B" stroke-width="1.8" />
+            <rect x="-130" y="60" width="260" height="150" fill="#0C0A14" stroke="#B45309" stroke-width="1.2" />
+            <!-- Golden Fluted Columns -->
+            <rect x="-115" y="62" width="18" height="140" fill="#1E1730" stroke="#F59E0B" stroke-width="0.8" />
+            <rect x="97" y="62" width="18" height="140" fill="#1E1730" stroke="#F59E0B" stroke-width="0.8" />
+
+            <!-- Incoming New Year Typographic Glory -->
+            <g id="nyNewYearTextWrap">
+              <text id="nyNewYearText" x="0" y="24" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="64" font-weight="900" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2" letter-spacing="4">
+                2027
+              </text>
+              <text x="0" y="48" text-anchor="middle" font-family="'Inter', sans-serif" font-size="11.5" font-weight="800" fill="#FDE047" letter-spacing="3">
+                WALKING IN DIVINE FAVOR
+              </text>
+              <text x="0" y="66" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9.5" font-weight="700" fill="#F59E0B" letter-spacing="2">
+                STEPPING INTO THE PROMISE
+              </text>
+            </g>
+          </g>
+
+          <!-- ASCENDING CELEBRATORY CONFETTI & GOLDEN STARDUST (Spans Full Width) -->
+          <g id="nyConfettiEmbersGroup" opacity="0.95">
+            <!-- Left Sector Confetti -->
+            <polygon points="160,560 164,554 170,558 166,564" fill="#FDE047" />
+            <circle cx="220" cy="520" r="2.8" fill="#F59E0B" />
+            <polygon points="340,580 345,572 352,577 347,585" fill="#FFFFFF" />
+            <circle cx="420" cy="540" r="3.2" fill="#FDA4AF" />
+            <circle cx="510" cy="500" r="2.5" fill="#FDE047" />
+            <!-- Center Sector Confetti -->
+            <polygon points="680,560 686,552 694,558 688,566" fill="#FDE047" />
+            <circle cx="740" cy="520" r="3.5" fill="#FFFFFF" />
+            <polygon points="800,580 808,570 818,576 810,586" fill="#F59E0B" />
+            <circle cx="860" cy="530" r="3.0" fill="#FDE68A" />
+            <polygon points="920,550 926,542 934,548 928,556" fill="#FDA4AF" />
+            <circle cx="990" cy="500" r="2.6" fill="#FFFFFF" />
+            <!-- Right Sector Confetti -->
+            <polygon points="1080,570 1086,562 1094,568 1088,576" fill="#FDE047" />
+            <circle cx="1160" cy="530" r="3.4" fill="#F59E0B" />
+            <polygon points="1240,590 1246,582 1254,588 1248,596" fill="#FFFFFF" />
+            <circle cx="1320" cy="510" r="3.0" fill="#FDE68A" />
+            <circle cx="1400" cy="540" r="2.5" fill="#F59E0B" />
+            <polygon points="1460,560 1465,553 1472,558 1467,565" fill="#FDA4AF" />
+          </g>
+
+          <!-- GROUND BASE SILHOUETTES (Seamless transition into bottom bar) -->
+          <path d="M0 620 Q350 560 800 580 T1600 560 L1600 700 L0 700 Z" fill="url(#nyGroundGrad)" opacity="0.95" />
+          <path d="M0 645 Q500 590 1100 620 T1600 600 L1600 700 L0 700 Z" fill="#040508" opacity="0.98" />
+        </svg>
+      </div>
+
     </div>
 
     <!-- LAYER 4: Scrim & Readability Backdrop (Guarantees WCAG AAA Text Contrast) -->
@@ -1409,8 +1754,23 @@
         gsap.set([
           '#easterRollingStone', '#easterStoneShadow', '#easterGodRays', '#easterSunAura', '#easterSparksGroup',
           '#christmasWiseMenCaravan', '#magiCamel1', '#magiCamel2', '#magiCamel3', '#bethlehemBeam', '#christmasNearTrees', '#christmasFarTrees', '#christmasTreeLights', '.bethlehem-glow',
-          '#passionSacredBacklight', '#passionCenterCross', '#crossThiefLeft', '#crossThiefRight', '#passionEmbersGroup', '#passionMistLayer'
+          '#passionSacredBacklight', '#passionCenterCross', '#crossThiefLeft', '#crossThiefRight', '#passionEmbersGroup', '#passionMistLayer',
+          '#nyMidnightAura', '#nyClockHandMinute', '#nyLastYearText', '#nyOutgoingDustGroup',
+          '#nyNewYearAura', '#nyNewYearText', '#nyFirework1', '#nyFirework2', '#nyFirework3',
+          '#nyConfettiEmbersGroup', '#nyStardustBridge'
         ], { clearProps: 'all' });
+
+        if (theme === 'newyear') {
+          const now = new Date();
+          const yr = now.getFullYear();
+          const mo = now.getMonth() + 1;
+          const outYr = mo >= 7 ? yr : yr - 1;
+          const inYr = mo >= 7 ? yr + 1 : yr;
+          const outEl = document.getElementById('nyLastYearText');
+          const inEl = document.getElementById('nyNewYearText');
+          if (outEl) outEl.textContent = outYr;
+          if (inEl) inEl.textContent = inYr;
+        }
 
         // 3. Initialize GSAP timeline triggered on entry (animates slowly over 4.5 - 5s)
         this.buildTimeline(theme);
@@ -1595,6 +1955,93 @@
               duration: 4.8,
               ease: 'sine.out'
             }, 0.3);
+        } else if (theme === 'newyear') {
+          // ==================================================================
+          // NEW YEAR TIMELINE: Midnight Chime, Outgoing Dissolve & Fireworks
+          // ==================================================================
+          gsap.set('#nyMidnightAura', { scale: 0.3, opacity: 0.15, svgOrigin: '800 240' });
+          gsap.set('#nyClockHandMinute', { rotation: -36, svgOrigin: '800 240' });
+          gsap.set('#nyLastYearText', { opacity: 0.95, scale: 1, svgOrigin: '300 410' });
+          gsap.set('#nyOutgoingDustGroup', { y: 20, opacity: 0.2 });
+          gsap.set('#nyNewYearAura', { scale: 0.35, opacity: 0.15, svgOrigin: '1300 410' });
+          gsap.set('#nyNewYearText', { scale: 0.88, opacity: 0.2, y: 15, svgOrigin: '1300 410' });
+          gsap.set('#nyFirework1', { scale: 0.08, opacity: 0, svgOrigin: '480 130' });
+          gsap.set('#nyFirework2', { scale: 0.08, opacity: 0, svgOrigin: '800 85' });
+          gsap.set('#nyFirework3', { scale: 0.08, opacity: 0, svgOrigin: '1160 140' });
+          gsap.set('#nyConfettiEmbersGroup', { y: 35, opacity: 0.25 });
+          gsap.set('#nyStardustBridge', { opacity: 0.35 });
+
+          tl
+            // 1. Clock minute hand ticks smoothly from 11:55 PM to 12:00 Midnight
+            .to('#nyClockHandMinute', {
+              rotation: 0,
+              duration: 2.2,
+              ease: 'power2.inOut'
+            }, 0)
+            // 2. Midnight chime aura expands at the strike of twelve
+            .to('#nyMidnightAura', {
+              scale: 1.6,
+              opacity: 0.9,
+              duration: 3.5,
+              ease: 'power2.out'
+            }, 1.2)
+            // 3. Outgoing Year 2026 gently softens as stardust lifts from it
+            .to('#nyLastYearText', {
+              opacity: 0.55,
+              duration: 3.0,
+              ease: 'power1.out'
+            }, 1.0)
+            .to('#nyOutgoingDustGroup', {
+              y: -60,
+              opacity: 0.9,
+              duration: 4.2,
+              ease: 'power1.out'
+            }, 1.2)
+            // 4. Grand Fireworks burst in sequence across the midnight sky
+            .to('#nyFirework2', { // Center firework right above the clock tower
+              scale: 1.45,
+              opacity: 1,
+              duration: 2.6,
+              ease: 'power2.out'
+            }, 1.8)
+            .to('#nyFirework1', { // Left firework
+              scale: 1.35,
+              opacity: 0.95,
+              duration: 2.8,
+              ease: 'power2.out'
+            }, 2.1)
+            .to('#nyFirework3', { // Right firework above 2027
+              scale: 1.4,
+              opacity: 1,
+              duration: 2.7,
+              ease: 'power2.out'
+            }, 2.4)
+            // 5. Incoming Year 2027 and its golden aura surge forward in glory
+            .to('#nyNewYearAura', {
+              scale: 1.5,
+              opacity: 1,
+              duration: 3.8,
+              ease: 'power2.out'
+            }, 1.9)
+            .to('#nyNewYearText', {
+              scale: 1.0,
+              opacity: 1,
+              y: 0,
+              duration: 3.2,
+              ease: 'back.out(1.4)'
+            }, 2.0)
+            // 6. Stardust bridge illuminates and confetti ascends across the footer
+            .to('#nyStardustBridge', {
+              opacity: 1,
+              duration: 3.0,
+              ease: 'sine.out'
+            }, 1.5)
+            .to('#nyConfettiEmbersGroup', {
+              y: -80,
+              opacity: 1,
+              duration: 4.8,
+              ease: 'sine.out'
+            }, 1.6);
         }
 
         this.activeTimeline = tl;
