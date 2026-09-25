@@ -549,44 +549,93 @@ class SeasonalManager {
         <span class="seasonal-showcase-ref">— Isaiah 9:6</span>
       `;
     } else if (this.activeSeason === 'newyear') {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      let outgoingYear, incomingYear;
+      if (month === 12 && now.getDate() === 31) {
+        outgoingYear = year;
+        incomingYear = year + 1;
+      } else if (month === 1 && now.getDate() === 1) {
+        incomingYear = year;
+        outgoingYear = year - 1;
+      } else {
+        if (month >= 7) {
+          outgoingYear = year;
+          incomingYear = year + 1;
+        } else {
+          outgoingYear = year - 1;
+          incomingYear = year;
+        }
+      }
+
       container.hidden = false;
       container.innerHTML = `
-        <div class="seasonal-showcase-svg-wrap">
-          <svg class="seasonal-showcase-svg" viewBox="0 0 340 85" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="New Year Celebration Stardust">
-            <defs>
-              <radialGradient id="nyStardustAura" cx="50%" cy="30%" r="50%">
-                <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.75" />
-                <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.30" />
-                <stop offset="100%" stop-color="#000" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-            <circle cx="170" cy="28" r="26" fill="url(#nyStardustAura)" />
-            <g transform="translate(170, 28)">
-              <line x1="0" y1="-20" x2="0" y2="20" stroke="#FDE68A" stroke-width="1.5" stroke-linecap="round" />
-              <line x1="-20" y1="0" x2="20" y2="0" stroke="#FDE68A" stroke-width="1.5" stroke-linecap="round" />
-              <line x1="-14" y1="-14" x2="14" y2="14" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" />
-              <line x1="14" y1="-14" x2="-14" y2="14" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" />
-              <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
-            </g>
-            <g transform="translate(85, 24) scale(0.65)">
-              <circle cx="0" cy="0" r="14" fill="url(#nyStardustAura)" />
-              <line x1="0" y1="-12" x2="0" y2="12" stroke="#FFFFFF" stroke-width="1.2" />
-              <line x1="-12" y1="0" x2="12" y2="0" stroke="#FFFFFF" stroke-width="1.2" />
-            </g>
-            <g transform="translate(255, 24) scale(0.65)">
-              <circle cx="0" cy="0" r="14" fill="url(#nyStardustAura)" />
-              <line x1="0" y1="-12" x2="0" y2="12" stroke="#FFFFFF" stroke-width="1.2" />
-              <line x1="-12" y1="0" x2="12" y2="0" stroke="#FFFFFF" stroke-width="1.2" />
-            </g>
-            <path d="M0 85 L35 85 L35 70 L48 70 L48 85 L95 85 L95 62 L105 52 L115 62 L115 85 L155 85 L165 42 L170 34 L175 42 L185 85 L225 85 L225 64 L235 55 L245 64 L245 85 L290 85 L290 72 L302 72 L302 85 L340 85 Z" fill="#0B0C12" />
-          </svg>
+        <div class="ny-footer-crossover-wrap">
+          <div class="ny-footer-years-row">
+            <div class="ny-footer-year-col out">
+              <span class="ny-footer-col-label">Bidding Farewell</span>
+              <span class="ny-footer-col-digit">${outgoingYear}</span>
+              <span class="ny-footer-col-desc">Faithful In Every Trial</span>
+            </div>
+            
+            <div class="ny-footer-crossover-center">
+              <div class="ny-footer-sparkle-icon">✨</div>
+              <div class="ny-footer-arrow-line">
+                <span class="line-dot"></span>
+                <span class="line-bar"></span>
+                <svg class="line-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+              <span class="ny-footer-crossover-tag">SACRED CROSSOVER</span>
+            </div>
+
+            <div class="ny-footer-year-col in">
+              <span class="ny-footer-col-label">Stepping Into</span>
+              <span class="ny-footer-col-digit">${incomingYear}</span>
+              <span class="ny-footer-col-desc">Walking In Divine Favor</span>
+            </div>
+          </div>
+
+          <div class="seasonal-showcase-svg-wrap ny-footer-skyline-wrap">
+            <svg class="seasonal-showcase-svg" viewBox="0 0 360 80" width="320" height="70" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="New Year Transition Stardust Bridge">
+              <defs>
+                <linearGradient id="nyBridgeGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" stop-color="#A8A29E" stop-opacity="0.3" />
+                  <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.8" />
+                </linearGradient>
+                <radialGradient id="nyRightSunburst" cx="80%" cy="30%" r="50%">
+                  <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.8" />
+                  <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.35" />
+                  <stop offset="100%" stop-color="#000" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+              <path d="M40 75 Q180 15 320 75" stroke="url(#nyBridgeGrad)" stroke-width="1.8" stroke-dasharray="4 4" fill="none" />
+              <circle cx="65" cy="52" r="3" fill="#E2E8F0" opacity="0.7" />
+              <circle cx="95" cy="38" r="2" fill="#E2E8F0" opacity="0.5" />
+              <circle cx="180" cy="22" r="14" fill="rgba(245,158,11,0.2)" />
+              <circle cx="180" cy="22" r="3.5" fill="#FFFFFF" />
+              <line x1="180" y1="10" x2="180" y2="34" stroke="#FDE68A" stroke-width="1.2" />
+              <line x1="168" y1="22" x2="192" y2="22" stroke="#FDE68A" stroke-width="1.2" />
+              <circle cx="285" cy="28" r="24" fill="url(#nyRightSunburst)" />
+              <g transform="translate(285, 28)">
+                <line x1="0" y1="-16" x2="0" y2="16" stroke="#FFFFFF" stroke-width="1.4" />
+                <line x1="-16" y1="0" x2="16" y2="0" stroke="#FFFFFF" stroke-width="1.4" />
+                <line x1="-10" y1="-10" x2="10" y2="10" stroke="#F59E0B" stroke-width="1.1" />
+                <line x1="10" y1="-10" x2="-10" y2="10" stroke="#F59E0B" stroke-width="1.1" />
+                <circle cx="0" cy="0" r="2.5" fill="#FFFFFF" />
+              </g>
+              <path d="M0 80 L35 80 L35 68 L48 68 L48 80 L95 80 L95 62 L105 52 L115 62 L115 80 L155 80 L165 42 L170 34 L175 42 L185 80 L225 80 L225 64 L235 55 L245 64 L245 80 L290 80 L290 72 L302 72 L302 80 L360 80 Z" fill="#0C0E14" />
+            </svg>
+          </div>
         </div>
-        <div class="seasonal-showcase-pill">✨ Grace in the New Year</div>
+
+        <div class="seasonal-showcase-pill">✨ The Sacred Crossover • ${outgoingYear} ➔ ${incomingYear}</div>
         <h3 class="seasonal-showcase-title">Walking in Faith &amp; New Beginnings</h3>
         <blockquote class="seasonal-showcase-quote">
-          “Behold, I make all things new... I will give of the fountain of the water of life freely to him who thirsts.”
+          “Forget the former things; do not dwell on the past. See, I am doing a new thing! Now it springs up; do you not perceive it? I am making a way in the wilderness and streams in the wasteland.”
         </blockquote>
-        <span class="seasonal-showcase-ref">— Revelation 21:5–6</span>
+        <span class="seasonal-showcase-ref">— Isaiah 43:18–19</span>
       `;
     } else if (this.activeSeason === 'passion') {
       container.hidden = false;

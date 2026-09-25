@@ -443,6 +443,162 @@ body[data-season="passion"] .seasonal-showcase-pill {
 }
 
 /* --------------------------------------------------------------------------
+   New Year Footer Showcase: Last Year to New Year Crossover
+   -------------------------------------------------------------------------- */
+.ny-footer-crossover-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ny-footer-years-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto 16px;
+  padding: 14px 24px;
+  border-radius: var(--radius-lg, 12px);
+  background: rgba(15, 17, 24, 0.65);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ny-footer-year-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.ny-footer-col-label {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  font-size: 0.76rem;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 2px;
+}
+
+.ny-footer-col-digit {
+  font-family: var(--font-heading, 'Playfair Display', serif);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.ny-footer-year-col.out .ny-footer-col-digit {
+  color: #CBD5E1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  opacity: 0.85;
+}
+
+.ny-footer-year-col.in .ny-footer-col-digit {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FDE68A 40%, #F59E0B 80%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 18px rgba(245, 158, 11, 0.75));
+  animation: nyColPulse 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes nyColPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6)); }
+  100% { transform: scale(1.04); filter: drop-shadow(0 0 22px rgba(245, 158, 11, 0.9)); }
+}
+
+.ny-footer-col-desc {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+.ny-footer-year-col.out .ny-footer-col-desc {
+  color: rgba(203, 213, 225, 0.65);
+}
+
+.ny-footer-year-col.in .ny-footer-col-desc {
+  color: #FCD34D;
+}
+
+.ny-footer-crossover-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.ny-footer-sparkle-icon {
+  font-size: 1.1rem;
+  animation: nySparkleRotate 6s linear infinite;
+}
+
+@keyframes nySparkleRotate {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(0.9); }
+}
+
+.ny-footer-arrow-line {
+  display: flex;
+  align-items: center;
+  color: #F59E0B;
+  margin: 4px 0 2px;
+}
+
+.ny-footer-arrow-line .line-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #F59E0B;
+}
+
+.ny-footer-arrow-line .line-bar {
+  width: 28px;
+  height: 2px;
+  background: linear-gradient(90deg, #94A3B8, #F59E0B);
+}
+
+.ny-footer-arrow-line .line-chevron {
+  margin-left: -4px;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));
+  animation: nyChevronPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes nyChevronPulse {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(3px); }
+}
+
+.ny-footer-crossover-tag {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: rgba(245, 158, 11, 0.9);
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .ny-footer-years-row {
+    gap: 12px;
+    padding: 10px 14px;
+  }
+  .ny-footer-col-digit {
+    font-size: 1.7rem;
+  }
+  .ny-footer-col-desc {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
    New Year Hero Floating Ceremony (Floating on top of hero, confetting, then disappears)
    -------------------------------------------------------------------------- */
 .ny-hero-confetti-canvas {
