@@ -1047,6 +1047,27 @@
     </div>
   </div>
 
+  <!-- ── Custom Styled Admin Confirmation Modal ── -->
+  <div id="adminConfirmModal" class="admin-confirm-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle">
+    <div class="admin-confirm-card">
+      <div class="admin-confirm-icon-wrap" id="adminConfirmIconWrap">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="admin-confirm-content">
+        <h3 class="admin-confirm-title" id="adminConfirmTitle">Confirm Action</h3>
+        <p class="admin-confirm-msg" id="adminConfirmMsg">Are you sure you want to proceed?</p>
+      </div>
+      <div class="admin-confirm-actions">
+        <button type="button" class="admin-btn admin-btn-outline" id="btnAdminConfirmCancel">Cancel</button>
+        <button type="button" class="admin-btn admin-btn-danger" id="btnAdminConfirmProceed">Confirm</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>

@@ -358,8 +358,13 @@ function setupVerseScheduler() {
     toast(`📅 Verse scheduled for ${dateStr}`);
   });
 
-  document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
-    if (!confirm('Clear all scheduled verses?')) return;
+  document.getElementById('clearQueueBtn')?.addEventListener('click', async () => {
+    const confirmed = await showAdminConfirm({
+      title: 'Clear Scheduled Verses',
+      message: 'Are you sure you want to clear all scheduled daily verses from the queue?',
+      confirmText: 'Clear All'
+    });
+    if (!confirmed) return;
     scheduledDailyVerses.forEach(v => deleteDailyVerse(v.id));
     scheduledDailyVerses.length = 0;
     saveDailyVerses(scheduledDailyVerses);
@@ -561,11 +566,16 @@ function renderSermonsList() {
 
   // Delete
   list.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const all2 = getSermons();
       const s    = all2.find(x => x.id === btn.dataset.id);
       if (!s) return;
-      if (!confirm(`Delete "${s.title}"? This cannot be undone.`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Sermon',
+        message: `Are you sure you want to delete "${s.title}"? This cannot be undone.`,
+        confirmText: 'Delete Sermon'
+      });
+      if (!confirmed) return;
       deleteSermon(s.id);
       renderSermonsList();
       renderDashboardStats();
@@ -1034,10 +1044,16 @@ function renderPreachersList() {
   });
 }
 
-window.removePreacher = idx => {
+window.removePreacher = async idx => {
   const p = preachers[idx];
   if (!p) return;
   const name = p.name;
+  const confirmed = await showAdminConfirm({
+    title: 'Remove Minister',
+    message: `Remove "${name}" from the preachers directory?`,
+    confirmText: 'Remove'
+  });
+  if (!confirmed) return;
   deletePreacher(p.id);
   preachers = getPreachers();
   populateSelects();
@@ -1105,11 +1121,16 @@ function renderEventsList() {
   `).join('');
 
   c.querySelectorAll('.admin-btn-danger').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getEvents().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Delete event "${target.title}"?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Ministry Event',
+        message: `Delete event "${target.title}"? This will remove it from the public site immediately.`,
+        confirmText: 'Delete Event'
+      });
+      if (!confirmed) return;
       deleteEvent(id);
       renderEventsList();
       renderDashboardStats();
@@ -1340,11 +1361,16 @@ function renderLeadershipList() {
 
   // Hook Delete buttons
   c.querySelectorAll('.del-leader-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getLeadershipTeam().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Remove "${target.name}" from the leadership roster?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Remove Team Member',
+        message: `Remove "${target.name}" from the leadership roster?`,
+        confirmText: 'Remove'
+      });
+      if (!confirmed) return;
       deleteLeader(id);
       renderLeadershipList();
       toast(`🗑️ "${target.name}" removed from leadership.`);
@@ -1509,11 +1535,16 @@ function renderConversationsList() {
 
   // Hook Delete buttons
   c.querySelectorAll('.del-conv-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getConversations().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Delete conversation episode "${target.title}"?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Episode',
+        message: `Delete conversation episode "${target.title}"?`,
+        confirmText: 'Delete Episode'
+      });
+      if (!confirmed) return;
       deleteConversation(id);
       renderConversationsList();
       toast(`🗑️ "${target.title}" deleted.`);
@@ -1621,11 +1652,16 @@ function renderPartnersList() {
   `).join('');
 
   c.querySelectorAll('.admin-btn-danger').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getPartners().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Remove "${target.name}" from ministry partners?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Remove Ministry Partner',
+        message: `Remove "${target.name}" from ministry partners?`,
+        confirmText: 'Remove Partner'
+      });
+      if (!confirmed) return;
       deletePartner(id);
       renderPartnersList();
       toast(`🗑️ "${target.name}" removed from partners.`);
@@ -1820,7 +1856,7 @@ function escapeAdminHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-window.deleteReflectionAdmin = (id, btnElement) => {
+window.deleteReflectionAdmin = async (id, btnElement) => {
   const all = getAllReflections();
   const target = all.find(r => r.id === id);
   if (!target) return;
@@ -1851,8 +1887,13 @@ window.deleteReflectionAdmin = (id, btnElement) => {
   }
 
   // Fallback if called without element reference
-  if (!btnElement && !confirm(`Delete reflection by "${target.author || 'this user'}"?`)) {
-    return;
+  if (!btnElement) {
+    const confirmed = await showAdminConfirm({
+      title: 'Delete Reflection',
+      message: `Delete reflection by "${target.author || 'this user'}"?`,
+      confirmText: 'Delete'
+    });
+    if (!confirmed) return;
   }
 
   deleteReflection(id);
@@ -2201,3 +2242,69 @@ function toast(msg, duration = 3500) {
     setTimeout(() => el.remove(), 300);
   }, duration);
 }
+// ── CUSTOM STYLED CONFIRMATION MODAL ──────────────────────────────────────
+export function showAdminConfirm({
+  title = 'Confirm Action',
+  message = 'Are you sure you want to proceed?',
+  confirmText = 'Delete',
+  danger = true
+} = {}) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('adminConfirmModal');
+    if (!modal) {
+      resolve(window.confirm(`${title}\n\n${message}`));
+      return;
+    }
+
+    const titleEl = document.getElementById('adminConfirmTitle');
+    const msgEl = document.getElementById('adminConfirmMsg');
+    const cancelBtn = document.getElementById('btnAdminConfirmCancel');
+    const proceedBtn = document.getElementById('btnAdminConfirmProceed');
+    const iconWrap = document.getElementById('adminConfirmIconWrap');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (proceedBtn) {
+      proceedBtn.textContent = confirmText;
+      if (danger) {
+        proceedBtn.className = 'admin-btn admin-btn-danger';
+        if (iconWrap) {
+          iconWrap.style.background = 'rgba(239, 68, 68, 0.14)';
+          iconWrap.style.color = '#ef4444';
+          iconWrap.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        }
+      } else {
+        proceedBtn.className = 'admin-btn admin-btn-primary';
+        if (iconWrap) {
+          iconWrap.style.background = 'rgba(59, 130, 246, 0.14)';
+          iconWrap.style.color = '#60a5fa';
+          iconWrap.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+        }
+      }
+    }
+
+    function cleanup(res) {
+      modal.style.display = 'none';
+      window.removeEventListener('keydown', onKey);
+      modal.onclick = null;
+      if (cancelBtn) cancelBtn.onclick = null;
+      if (proceedBtn) proceedBtn.onclick = null;
+      resolve(res);
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') cleanup(false);
+      if (e.key === 'Enter') cleanup(true);
+    }
+
+    if (cancelBtn) cancelBtn.onclick = () => cleanup(false);
+    if (proceedBtn) proceedBtn.onclick = () => cleanup(true);
+    modal.onclick = (e) => {
+      if (e.target === modal) cleanup(false);
+    };
+    window.addEventListener('keydown', onKey);
+
+    modal.style.display = 'flex';
+  });
+}
+window.showAdminConfirm = showAdminConfirm;

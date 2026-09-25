@@ -1361,11 +1361,10 @@ select.admin-input option { background: #1e1e24; color: #fff; }
 
 /* ── Ministry Settings Modern Layout ── */
 .admin-settings-wrapper {
-  max-width: 1040px;
-  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 24px;
 }
 
 .admin-settings-hero {
@@ -1374,8 +1373,8 @@ select.admin-input option { background: #1e1e24; color: #fff; }
 
 .admin-settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
 
 .admin-settings-card {
@@ -1458,7 +1457,7 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  margin-top: 10px;
+  margin-top: 6px;
   padding: 18px 24px;
   background: rgba(24, 25, 32, 0.85);
   backdrop-filter: blur(10px);
@@ -1495,10 +1494,13 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   gap: 8px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
   .admin-settings-grid {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 768px) {
   .admin-settings-save-bar {
     flex-direction: column;
     align-items: stretch;
@@ -1508,3 +1510,79 @@ select.admin-input option { background: #1e1e24; color: #fff; }
     justify-content: center;
   }
 }
+
+/* ── Custom Styled Admin Confirmation Modal ── */
+.admin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(8, 10, 14, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalFadeIn 0.18s ease;
+}
+
+.admin-confirm-card {
+  background: #181a22;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(239, 68, 68, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  animation: cardSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-confirm-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.14);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-confirm-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.admin-confirm-msg {
+  font-size: 0.88rem;
+  color: var(--admin-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.admin-confirm-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.admin-confirm-actions button {
+  flex: 1;
+  padding: 11px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  justify-content: center;
+}
+
