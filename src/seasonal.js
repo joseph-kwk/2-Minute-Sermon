@@ -939,6 +939,9 @@ class NewYearCeremony {
 
     const heroSection = document.querySelector('.hero-section') || document.getElementById('mainContent') || document.body;
     const { outgoingYear, incomingYear } = this.getYears();
+    const now = new Date();
+    const isNewYearDay = (now.getMonth() === 0 && now.getDate() === 1);
+    const displayYear = isNewYearDay ? incomingYear : outgoingYear;
 
     // 1. Confetti Canvas over the Hero
     this.canvas = document.createElement('canvas');
@@ -948,19 +951,16 @@ class NewYearCeremony {
     this.ctx = this.canvas.getContext('2d');
     this.resizeCanvas(heroSection);
 
-    // 2. Floating Year Celebration Container
+    // 2. Floating Year Pop-up Container (Just that year, floating on top of hero in confetti style)
     this.container = document.createElement('div');
     this.container.id = 'nyHeroFloatingCeremony';
-    this.container.className = 'ny-hero-floating-ceremony';
+    this.container.className = 'ny-hero-floating-ceremony pop-in';
 
     this.container.innerHTML = `
       <div class="ny-float-aura"></div>
-      <div class="ny-float-badge" id="nyFloatBadge">FAREWELL ${outgoingYear}</div>
       <div class="ny-float-year-box">
-        <span class="ny-float-digit outgoing" id="nyDigitOut">${outgoingYear}</span>
-        <span class="ny-float-digit incoming" id="nyDigitIn">${incomingYear}</span>
+        <span class="ny-float-digit single-year" id="nyFloatingYear">${displayYear}</span>
       </div>
-      <div class="ny-float-subtitle" id="nyFloatSub">Walking in Faith &amp; Grace</div>
     `;
 
     heroSection.appendChild(this.container);
@@ -979,57 +979,36 @@ class NewYearCeremony {
   }
 
   runSequence() {
-    const digitOut = document.getElementById('nyDigitOut');
-    const digitIn = document.getElementById('nyDigitIn');
-    const badge = document.getElementById('nyFloatBadge');
-    const sub = document.getElementById('nyFloatSub');
-    const { incomingYear } = this.getYears();
+    const digit = document.getElementById('nyFloatingYear');
 
-    if (this.isReducedMotion) {
-      if (digitOut) digitOut.style.display = 'none';
-      if (digitIn) {
-        digitIn.classList.add('emerged');
-        digitIn.style.opacity = '1';
-      }
-      if (badge) badge.textContent = `✨ HAPPY NEW YEAR ${incomingYear} ✨`;
-      setTimeout(() => this.dismiss(), 4500);
-      return;
-    }
-
-    // Step 1: At 1.8s, the old year dissolves/vanishes upward
-    setTimeout(() => {
-      if (!this.isActive) return;
-      if (digitOut) digitOut.classList.add('vanishing');
-      if (badge) badge.style.opacity = '0';
-      if (sub) sub.style.opacity = '0';
-    }, 1800);
-
-    // Step 2: At 2.2s, confetti cannons burst across the hero
+    // 1. Confetti cannon burst immediately as the year pops up
     setTimeout(() => {
       if (!this.isActive) return;
       this.launchConfetti();
-    }, 2200);
+    }, 150);
 
-    // Step 3: At 2.4s, incoming new year emerges with golden radiance
+    // 2. Second festive flutter burst at 1.2s
     setTimeout(() => {
       if (!this.isActive) return;
-      if (digitOut) digitOut.style.display = 'none';
-      if (digitIn) digitIn.classList.add('emerged');
-      if (badge) {
-        badge.textContent = `✨ HAPPY NEW YEAR ${incomingYear} ✨`;
-        badge.style.opacity = '1';
-        badge.classList.add('celebration');
-      }
-      if (sub) {
-        sub.textContent = '“Behold, I make all things new.”';
-        sub.style.opacity = '1';
-      }
-    }, 2400);
+      this.launchConfetti();
+    }, 1200);
 
-    // Step 4: At 6.0s, the floating ceremony levitates upward and gently disappears!
+    if (this.isReducedMotion) {
+      setTimeout(() => this.dismiss(), 3500);
+      return;
+    }
+
+    // 3. At 4.0s, the floating year dissolves in confetti stardust and disappears
+    setTimeout(() => {
+      if (!this.isActive) return;
+      if (digit) digit.classList.add('vanishing');
+      if (this.container) this.container.classList.add('disappearing');
+    }, 4000);
+
+    // 4. At 5.2s, completely unmount and remove from DOM
     this.autoDismissTimer = setTimeout(() => {
       if (this.isActive) this.dismiss();
-    }, 6000);
+    }, 5200);
   }
 
   launchConfetti() {
