@@ -1,4 +1,4 @@
-import { getSermons, upsertSermon } from './data/sermons.js';
+import { getSermons, upsertSermon, durationToSeconds } from './data/sermons.js';
 import { getEvents, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
@@ -2360,6 +2360,7 @@ let activeViewMode = 'grid'; // 'grid' or 'list'
 
 function createSermonCardHtml(s, showFavorite = true) {
   const isFav = savedFavorites.includes(s.id);
+  const primaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
@@ -2373,7 +2374,7 @@ function createSermonCardHtml(s, showFavorite = true) {
       </div>
       <div class="sermon-card-content">
         <div class="carousel-badges" style="margin-bottom:8px;">
-          <span class="badge badge-season">${s.primarySeason}</span>
+          <span class="badge badge-topic">${primaryTopic || s.primarySeason || 'Faith'}</span>
         </div>
         <h3 class="sermon-card-title">${s.title}</h3>
         <div class="sermon-card-meta">${s.preacherName} &bull; ${s.scripture}</div>
@@ -2396,6 +2397,7 @@ function createSermonCardHtml(s, showFavorite = true) {
 
 function createSermonListRowHtml(s) {
   const isFav = savedFavorites.includes(s.id);
+  const primaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
   return `
     <div class="sermon-list-row" data-sermon-id="${s.id}">
       <div class="sermon-list-left">
@@ -2410,7 +2412,7 @@ function createSermonListRowHtml(s) {
             <span>&bull;</span>
             <span>${s.scripture}</span>
             <span>&bull;</span>
-            <span class="badge badge-season" style="font-size:0.72rem;padding:2px 8px;">${s.primarySeason}</span>
+            <span class="badge badge-topic" style="font-size:0.72rem;padding:2px 8px;">${primaryTopic || s.primarySeason || 'Faith'}</span>
             <span>&bull;</span>
             <span>⏱️ ${s.duration}</span>
           </div>
@@ -2556,13 +2558,43 @@ function populateDropdownFilterOptions() {
   const adminSea   = document.getElementById('adminSeason');
   const scriptSel  = document.getElementById('filterScripture');
 
-  if (topicSel)
+  if (topicSel) {
+    const prevVal = topicSel.value || 'all';
+    const topicSet = new Set(topics.map(t => t.name));
+    sermons().forEach(s => {
+      let sTopics = [];
+      if (Array.isArray(s.topics)) sTopics = s.topics;
+      else if (typeof s.topics === 'string') sTopics = s.topics.split(',');
+      if (s.category) sTopics = [...sTopics, s.category];
+      if (s.topic) sTopics = [...sTopics, s.topic];
+      sTopics.forEach(t => {
+        const trimmed = String(t || '').trim();
+        if (trimmed) topicSet.add(trimmed);
+      });
+    });
+    const sortedTopics = Array.from(topicSet).sort((a, b) => a.localeCompare(b));
     topicSel.innerHTML = `<option value="all">All Topics</option>` +
-      topics.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+      sortedTopics.map(t => `<option value="${t}">${t}</option>`).join('');
+    if (sortedTopics.includes(prevVal)) {
+      topicSel.value = prevVal;
+    }
+  }
 
-  if (preachSel)
+  if (preachSel) {
+    const prevVal = preachSel.value || 'all';
+    const namesSet = new Set(preachers().map(p => p.name));
+    sermons().forEach(s => {
+      if (s.preacherName && s.preacherName.trim()) {
+        namesSet.add(s.preacherName.trim());
+      }
+    });
+    const sortedPreachers = Array.from(namesSet).sort((a, b) => a.localeCompare(b));
     preachSel.innerHTML = `<option value="all">All Preachers</option>` +
-      preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+      sortedPreachers.map(name => `<option value="${name}">${name}</option>`).join('');
+    if (sortedPreachers.includes(prevVal)) {
+      preachSel.value = prevVal;
+    }
+  }
 
   if (scriptSel) {
     const prevVal = scriptSel.value || 'all';
@@ -2574,8 +2606,12 @@ function populateDropdownFilterOptions() {
     }
   }
 
-  if (adminPre)
+  const adminPreList = document.getElementById('adminPreacherList');
+  if (adminPreList) {
+    adminPreList.innerHTML = preachers().map(p => `<option value="${p.name}"></option>`).join('');
+  } else if (adminPre && adminPre.tagName === 'SELECT') {
     adminPre.innerHTML = preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
 
   if (adminSea)
     adminSea.innerHTML = seasons.filter(s => s.slug !== 'all')
@@ -2651,8 +2687,21 @@ function filterAndRenderSermons() {
       if (sec <= 120) return false;
     }
 
-    if (topic !== 'all' && !s.topics.includes(topic)) return false;
-    if (preacher !== 'all' && s.preacherName !== preacher) return false;
+    if (topic !== 'all') {
+      const topicLower = topic.toLowerCase().trim();
+      let sTopics = [];
+      if (Array.isArray(s.topics)) {
+        sTopics = s.topics.map(t => String(t || '').trim());
+      } else if (typeof s.topics === 'string') {
+        sTopics = s.topics.split(',').map(t => t.trim());
+      }
+      if (s.category) sTopics.push(String(s.category).trim());
+      if (s.topic) sTopics.push(String(s.topic).trim());
+      if (s.sermonType) sTopics.push(String(s.sermonType).trim());
+      const matchesTopic = sTopics.some(t => t.toLowerCase() === topicLower);
+      if (!matchesTopic) return false;
+    }
+    if (preacher !== 'all' && (s.preacherName || '').toLowerCase().trim() !== preacher.toLowerCase().trim()) return false;
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
     if (search) {
       const hit = [s.title, s.preacherName, s.scripture, s.summary, ...(s.transcript || []).map(t => t.text)]
@@ -2713,6 +2762,7 @@ export function openSermonModal(sermonId) {
   if (!modal || !modalBody) return;
 
   const youtubeUrl = s.youtubeUrl || `https://www.youtube.com/watch?v=${s.youtubeEmbedId}`;
+  const modalPrimaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
 
   modalBody.innerHTML = `
     <!-- Thumbnail with YouTube CTA — no iframe, site stays fast -->
@@ -2729,8 +2779,9 @@ export function openSermonModal(sermonId) {
     </div>
 
     <div class="sermon-modal-body-inner">
-      <div class="carousel-badges" style="margin-bottom:12px;">
+      <div class="carousel-badges" style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;">
         <span class="badge badge-season">${s.primarySeason}</span>
+        ${modalPrimaryTopic ? `<span class="badge badge-topic">${modalPrimaryTopic}</span>` : ''}
         <span class="badge badge-scripture">${svgBook} ${s.scripture}</span>
       </div>
       <h2 class="sermon-modal-title">${s.title}</h2>
@@ -3278,27 +3329,44 @@ function setupAdminPortal() {
   // ── Sermon Publisher ──
   document.getElementById('adminQuickPublishForm')?.addEventListener('submit', e => {
     e.preventDefault();
-    const title    = document.getElementById('adminSermonTitle').value;
-    const preacher = document.getElementById('adminPreacher').value;
-    const scripture= document.getElementById('adminScripture').value;
-    const season   = document.getElementById('adminSeason').value;
-    const duration = document.getElementById('adminDuration').value;
-    const raw      = document.getElementById('adminYoutubeUrl').value;
-    const summary  = document.getElementById('adminSummary').value;
+    const title      = document.getElementById('adminSermonTitle').value.trim();
+    const preacher   = document.getElementById('adminPreacher').value;
+    const scripture  = document.getElementById('adminScripture').value.trim();
+    const season     = document.getElementById('adminSeason').value;
+    const duration   = document.getElementById('adminDuration').value.trim();
+    const raw        = document.getElementById('adminYoutubeUrl').value.trim();
+    const summary    = document.getElementById('adminSummary').value.trim();
+    const sermonType = document.getElementById('adminSermonType')?.value || 'Devotional';
+
+    const checkedTopics = [...document.querySelectorAll('input[name="clientSermonTopic"]:checked')].map(c => c.value);
+    const topics     = checkedTopics.length ? checkedTopics : ['Faith'];
 
     let embedId = raw;
     if (raw.includes('v=')) embedId = raw.split('v=')[1].split('&')[0];
     else if (raw.includes('youtu.be/')) embedId = raw.split('youtu.be/')[1].split('?')[0];
 
     const newSermon = {
-      id: `sermon-${Date.now()}`, title,
+      id: `sermon-${Date.now()}`,
+      title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      preacherId: 'p1', preacherName: preacher,
-      scripture, scriptureBook: scripture.split(' ')[0],
-      primarySeason: season, secondarySeasons: [], topics: ['Faith'],
-      duration, durationSec: 120, youtubeUrl: raw, youtubeEmbedId: embedId,
+      preacherId: preachers().find(p => p.name.toLowerCase() === preacher.toLowerCase())?.id || `guest-${Date.now()}`,
+      preacherName: preacher,
+      scripture,
+      scriptureBook: scripture.split(' ')[0],
+      primarySeason: season,
+      secondarySeasons: [],
+      topics,
+      category: topics[0] || 'Faith',
+      sermonType,
+      duration,
+      durationSec: durationToSeconds(duration) || 120,
+      youtubeUrl: raw.startsWith('http') ? raw : `https://www.youtube.com/watch?v=${embedId}`,
+      youtubeEmbedId: embedId,
       thumbnailUrl: `https://img.youtube.com/vi/${embedId}/hqdefault.jpg`,
-      summary, publishDate: getTodayDateStr(), views: 1, featured: true,
+      summary,
+      publishDate: getTodayDateStr(),
+      views: 1,
+      featured: true,
       transcript: [{ time: '0:00', text: summary }, { time: '1:00', text: 'Walk boldly in God\'s promises today.' }]
     };
 
@@ -3309,6 +3377,7 @@ function setupAdminPortal() {
     filterAndRenderSermons();
     populateDropdownFilterOptions();
     e.target.reset();
+    document.querySelectorAll('input[name="clientSermonTopic"]').forEach((c, i) => c.checked = i === 0);
     showToast(`🚀 "${title}" published live!`);
   });
 
@@ -3476,18 +3545,42 @@ function renderSeasonsHub() {
 function renderTopicsHub() {
   const c = document.getElementById('topicsHubGrid');
   if (!c) return;
-  c.innerHTML = topics.map(t => `
+  const allSermons = sermons();
+  c.innerHTML = topics.map(t => {
+    const tLower = t.name.toLowerCase();
+    const count = allSermons.filter(s => {
+      let sTopics = [];
+      if (Array.isArray(s.topics)) sTopics = s.topics;
+      else if (typeof s.topics === 'string') sTopics = s.topics.split(',');
+      if (s.category) sTopics = [...sTopics, s.category];
+      if (s.topic) sTopics = [...sTopics, s.topic];
+      return sTopics.some(x => String(x || '').trim().toLowerCase() === tLower);
+    }).length;
+
+    return `
     <div class="hub-card" onclick="window.filterByTopicName('${t.name}')">
       <h3 style="font-size:1.3rem;margin-bottom:8px;">${t.name}</h3>
       <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;flex-grow:1;">${t.description}</p>
-      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">View ${t.count} Sermons →</span>
-    </div>`).join('');
+      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">View ${count} Sermon${count === 1 ? '' : 's'} →</span>
+    </div>`;
+  }).join('');
   observeNewCards(c);
 }
 window.filterByTopicName = name => {
   switchView('sermons');
+  activeSeasonChip = 'all';
+  activeDurationFilter = 'all';
+  document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+  document.querySelector('.duration-chip[data-duration="all"]')?.classList.add('active');
+  document.getElementById('favFilterChip')?.classList.remove('active');
+  const searchInput = document.getElementById('sermonSearchInput');
+  if (searchInput) searchInput.value = '';
+  renderSeasonChips();
   const s = document.getElementById('filterTopic');
-  if (s) { s.value = name; filterAndRenderSermons(); }
+  if (s) {
+    s.value = name;
+  }
+  filterAndRenderSermons();
 };
 
 function renderPreachersHub() {
@@ -3709,8 +3802,9 @@ export function setupConversationsView() {
       if (activeView !== 'conversations') {
         switchView('conversations');
       }
-      document.querySelectorAll('#conversationFilterBar [data-conv-filter]').forEach(c => c.classList.remove('active'));
-      document.querySelector(`#conversationFilterBar [data-conv-filter="${filter}"]`)?.classList.add('active');
+      document.querySelectorAll('#conversationFilterBar [data-conv-filter]').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-conv-filter') === filter);
+      });
       activeConvFilter = filter;
       renderConversationsHub(activeConvFilter);
     });
@@ -3790,7 +3884,8 @@ export function renderConversationsHub(filter = 'all') {
   } else if (filter === 'conversation') {
     filtered = allEpisodes.filter(c => c.format !== 'plus' && (!c.title || !c.title.toLowerCase().includes('plus')));
   } else if (filter && filter !== 'all') {
-    filtered = allEpisodes.filter(c => c.category === filter);
+    const fNorm = filter.toLowerCase().trim();
+    filtered = allEpisodes.filter(c => (c.category || '').toLowerCase().trim() === fNorm);
   }
 
   if (!filtered.length) {
@@ -4276,20 +4371,6 @@ export function openVideoShareModal(video) {
     };
   }
 
-  // Download Story Card Button
-  const storyBtn = document.getElementById('btnDownloadStoryCard');
-  if (storyBtn) {
-    storyBtn.onclick = () => {
-      generateSermonStoryCard({
-        title: video.title,
-        preacher: video.speaker || video.preacher,
-        scripture: video.topic || video.scripture,
-        duration: video.duration,
-        thumbnailUrl: video.thumbnailUrl,
-        youtubeId: video.youtubeId
-      });
-    };
-  }
 
   // Copy Link Button
   const copyLinkBtn = document.getElementById('btnCopyShareLink');
@@ -4400,175 +4481,4 @@ export function closeSermonShareModal() {
 }
 window.closeSermonShareModal = closeSermonShareModal;
 
-export function generateSermonStoryCard(s) {
-  const canvas = document.getElementById('sermonStoryCanvas');
-  if (!canvas || !s) return;
 
-  const W = 1080;
-  const H = 1920;
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  showToast('🎨 Rendering high-res Story card…');
-
-  // Background Gradient
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-  bgGrad.addColorStop(0, '#090b10');
-  bgGrad.addColorStop(0.5, '#131722');
-  bgGrad.addColorStop(1, '#080a0e');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, W, H);
-
-  // Subtle radial glow behind card
-  const glow = ctx.createRadialGradient(W / 2, 700, 50, W / 2, 700, 650);
-  glow.addColorStop(0, 'rgba(198, 40, 40, 0.28)');
-  glow.addColorStop(0.6, 'rgba(245, 158, 11, 0.12)');
-  glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
-
-  // Load YouTube Thumbnail
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    drawContent(true);
-  };
-  img.onerror = () => {
-    drawContent(false);
-  };
-  img.src = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
-
-  function drawContent(hasImg = true) {
-    // Header Branding
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 34px sans-serif';
-    ctx.fillText('2 - M I N U T E   S E R M O N', W / 2, 160);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-    ctx.font = '500 28px sans-serif';
-    ctx.fillText('SCRIPTURE & ENCOURAGEMENT WORLDWIDE', W / 2, 210);
-
-    // Draw Thumbnail Box
-    const thumbW = 900;
-    const thumbH = 506; // 16:9
-    const thumbX = (W - thumbW) / 2;
-    const thumbY = 280;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.roundRect(thumbX, thumbY, thumbW, thumbH, 28);
-    ctx.clip();
-    if (hasImg) {
-      ctx.drawImage(img, thumbX, thumbY, thumbW, thumbH);
-    } else {
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(thumbX, thumbY, thumbW, thumbH);
-    }
-    // Subtle inner vignette
-    const vig = ctx.createLinearGradient(0, thumbY + 300, 0, thumbY + thumbH);
-    vig.addColorStop(0, 'transparent');
-    vig.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
-    ctx.fillStyle = vig;
-    ctx.fillRect(thumbX, thumbY, thumbW, thumbH);
-    ctx.restore();
-
-    // Red border around thumbnail
-    ctx.save();
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(thumbX, thumbY, thumbW, thumbH, 28);
-    ctx.stroke();
-    ctx.restore();
-
-    // Duration badge on bottom right of thumb
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.beginPath();
-    ctx.roundRect(thumbX + thumbW - 130, thumbY + thumbH - 58, 110, 42, 8);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(s.duration || '2:00', thumbX + thumbW - 75, thumbY + thumbH - 30);
-
-    // Preacher / Speaker Pill
-    const pillY = thumbY + thumbH + 70;
-    ctx.fillStyle = 'rgba(198, 40, 40, 0.2)';
-    ctx.strokeStyle = 'rgba(198, 40, 40, 0.6)';
-    ctx.lineWidth = 2;
-    const speakerRaw = s.preacher || s.speaker || '2-Minute Sermon';
-    const preacherText = `🎙️ ${speakerRaw}`.toUpperCase();
-    ctx.font = 'bold 26px sans-serif';
-    const pW = ctx.measureText(preacherText).width + 50;
-    ctx.beginPath();
-    ctx.roundRect((W - pW) / 2, pillY, pW, 52, 26);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#ff6b6b';
-    ctx.fillText(preacherText, W / 2, pillY + 35);
-
-    // Sermon Title (Multiline wrap)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 54px Georgia, serif';
-    const words = (s.title || '').split(' ');
-    let line = '';
-    let titleY = pillY + 130;
-    const maxLineW = 880;
-
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + ' ';
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxLineW && n > 0) {
-        ctx.fillText(line.trim(), W / 2, titleY);
-        line = words[n] + ' ';
-        titleY += 68;
-      } else {
-        line = testLine;
-      }
-    }
-    ctx.fillText(line.trim(), W / 2, titleY);
-
-    // Scripture / Topic Citation
-    const citation = s.scripture || s.topic;
-    if (citation) {
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'italic 34px Georgia, serif';
-      ctx.fillText(`— ${citation} —`, W / 2, titleY + 75);
-    }
-
-    // Bottom Call to Action Card
-    const ctaY = 1620;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(100, ctaY, W - 200, 160, 24);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 30px sans-serif';
-    ctx.fillText('Experience Spiritual Growth in 2 Minutes', W / 2, ctaY + 65);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '24px sans-serif';
-    ctx.fillText('Watch free at 2minutesermon.org', W / 2, ctaY + 115);
-
-    // Trigger Download
-    setTimeout(() => {
-      try {
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-        const link = document.createElement('a');
-        link.download = `2min-sermon-${(s.title || 'message').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-story.jpg`;
-        link.href = dataUrl;
-        link.click();
-        showToast('📸 Story Graphic downloaded successfully!');
-      } catch (err) {
-        showToast('⚠️ Could not export graphic: ' + err.message);
-      }
-    }, 150);
-  }
-}
-window.generateSermonStoryCard = generateSermonStoryCard;

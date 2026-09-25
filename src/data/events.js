@@ -28,7 +28,7 @@ import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('events', seedEvents);
   subscribeCollection('events', (remoteEvents) => {
-    if (remoteEvents && remoteEvents.length > 0) {
+    if (Array.isArray(remoteEvents)) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteEvents));
         window.dispatchEvent(new CustomEvent('2ms:events:updated', { detail: remoteEvents }));
@@ -44,9 +44,9 @@ if (isFirebaseConfigured()) {
 export function getEvents() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (_) { /* storage unavailable */ }
   return [...seedEvents];

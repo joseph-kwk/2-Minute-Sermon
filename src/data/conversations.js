@@ -90,10 +90,10 @@ if (isFirebaseConfigured()) {
 export function getConversations() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
       const hasPlaceholders = Array.isArray(parsed) && parsed.some(c => c.youtubeEmbedId === 'SJFqqNvTeh8');
-      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (!hasPlaceholders && Array.isArray(parsed)) return parsed;
     }
   } catch (_) {}
   return [...INITIAL_CONVERSATIONS];

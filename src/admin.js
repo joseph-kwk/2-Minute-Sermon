@@ -358,8 +358,13 @@ function setupVerseScheduler() {
     toast(`📅 Verse scheduled for ${dateStr}`);
   });
 
-  document.getElementById('clearQueueBtn')?.addEventListener('click', () => {
-    if (!confirm('Clear all scheduled verses?')) return;
+  document.getElementById('clearQueueBtn')?.addEventListener('click', async () => {
+    const confirmed = await showAdminConfirm({
+      title: 'Clear Scheduled Verses',
+      message: 'Are you sure you want to clear all scheduled daily verses from the queue?',
+      confirmText: 'Clear All'
+    });
+    if (!confirmed) return;
     scheduledDailyVerses.forEach(v => deleteDailyVerse(v.id));
     scheduledDailyVerses.length = 0;
     saveDailyVerses(scheduledDailyVerses);
@@ -466,17 +471,19 @@ function setupSermonPublisher() {
     if (!embedId) { toast('⚠️ Please enter a valid YouTube URL or video ID.'); return; }
     if (topics.length === 0) { toast('⚠️ Please select at least one topic.'); return; }
 
+    const matchedPreacher = preachers.find(p => p.name.toLowerCase() === preacher.toLowerCase());
     const sermon = {
       id: `sermon-${Date.now()}`,
       title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-      preacherId: preachers.find(p => p.name === preacher)?.id || 'p1',
+      preacherId: matchedPreacher ? matchedPreacher.id : `guest-${Date.now()}`,
       preacherName: preacher,
       scripture,
       scriptureBook: scripture.split(' ')[0],
       primarySeason: season,
       secondarySeasons: [],
       topics,
+      category: topics[0] || 'Faith',
       sermonType,
       duration,
       durationSec: durationToSeconds(duration),
@@ -531,6 +538,7 @@ function renderSermonsList() {
           <span>${s.preacherName}</span>
           <span>${s.duration}</span>
           <span class="admin-sermon-type-badge">${s.sermonType || 'Devotional'}</span>
+          ${(s.topics && s.topics.length ? s.topics : [s.category]).filter(Boolean).map(t => `<span class="admin-tag admin-tag-blue" style="font-size:0.68rem;padding:2px 6px;">${t}</span>`).join(' ')}
         </div>
       </div>
       <div class="admin-sermon-actions">
@@ -558,11 +566,16 @@ function renderSermonsList() {
 
   // Delete
   list.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const all2 = getSermons();
       const s    = all2.find(x => x.id === btn.dataset.id);
       if (!s) return;
-      if (!confirm(`Delete "${s.title}"? This cannot be undone.`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Sermon',
+        message: `Are you sure you want to delete "${s.title}"? This cannot be undone.`,
+        confirmText: 'Delete Sermon'
+      });
+      if (!confirmed) return;
       deleteSermon(s.id);
       renderSermonsList();
       renderDashboardStats();
@@ -572,10 +585,14 @@ function renderSermonsList() {
 }
 
 function populateSelects() {
+  const preacherDataList = document.getElementById('adminPreacherList');
   const preacherSel = document.getElementById('adminPreacher');
   const seasonSel   = document.getElementById('adminSeason');
 
-  if (preacherSel) {
+  if (preacherDataList) {
+    const list = getPreachers();
+    preacherDataList.innerHTML = list.map(p => `<option value="${p.name}"></option>`).join('');
+  } else if (preacherSel && preacherSel.tagName === 'SELECT') {
     const list = getPreachers();
     preacherSel.innerHTML = list.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
   }
@@ -1027,10 +1044,16 @@ function renderPreachersList() {
   });
 }
 
-window.removePreacher = idx => {
+window.removePreacher = async idx => {
   const p = preachers[idx];
   if (!p) return;
   const name = p.name;
+  const confirmed = await showAdminConfirm({
+    title: 'Remove Minister',
+    message: `Remove "${name}" from the preachers directory?`,
+    confirmText: 'Remove'
+  });
+  if (!confirmed) return;
   deletePreacher(p.id);
   preachers = getPreachers();
   populateSelects();
@@ -1098,11 +1121,16 @@ function renderEventsList() {
   `).join('');
 
   c.querySelectorAll('.admin-btn-danger').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getEvents().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Delete event "${target.title}"?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Ministry Event',
+        message: `Delete event "${target.title}"? This will remove it from the public site immediately.`,
+        confirmText: 'Delete Event'
+      });
+      if (!confirmed) return;
       deleteEvent(id);
       renderEventsList();
       renderDashboardStats();
@@ -1333,11 +1361,16 @@ function renderLeadershipList() {
 
   // Hook Delete buttons
   c.querySelectorAll('.del-leader-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getLeadershipTeam().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Remove "${target.name}" from the leadership roster?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Remove Team Member',
+        message: `Remove "${target.name}" from the leadership roster?`,
+        confirmText: 'Remove'
+      });
+      if (!confirmed) return;
       deleteLeader(id);
       renderLeadershipList();
       toast(`🗑️ "${target.name}" removed from leadership.`);
@@ -1502,11 +1535,16 @@ function renderConversationsList() {
 
   // Hook Delete buttons
   c.querySelectorAll('.del-conv-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getConversations().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Delete conversation episode "${target.title}"?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Episode',
+        message: `Delete conversation episode "${target.title}"?`,
+        confirmText: 'Delete Episode'
+      });
+      if (!confirmed) return;
       deleteConversation(id);
       renderConversationsList();
       toast(`🗑️ "${target.title}" deleted.`);
@@ -1614,11 +1652,16 @@ function renderPartnersList() {
   `).join('');
 
   c.querySelectorAll('.admin-btn-danger').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getPartners().find(x => x.id === id);
       if (!target) return;
-      if (!confirm(`Remove "${target.name}" from ministry partners?`)) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Remove Ministry Partner',
+        message: `Remove "${target.name}" from ministry partners?`,
+        confirmText: 'Remove Partner'
+      });
+      if (!confirmed) return;
       deletePartner(id);
       renderPartnersList();
       toast(`🗑️ "${target.name}" removed from partners.`);
@@ -1629,25 +1672,38 @@ function renderPartnersList() {
 // ── PRAYER INBOX ──────────────────────────────────────────────────────────
 function renderPrayerInbox() {
   const c = document.getElementById('adminPrayerInboxList');
-  if (!c) return;
-
+  const countEl = document.getElementById('prayerInboxCount');
   const list = getPrayers();
 
+  if (countEl) countEl.textContent = list.length;
+  updatePrayerBadge();
+  if (!c) return;
+
   if (!list.length) {
-    c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px;">No pending prayer requests. 🙌</p>`;
+    c.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 24px; background: rgba(255,255,255,0.02); border-radius: var(--radius); border: 1px dashed var(--admin-border);">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🙌</div>
+        <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px; font-family: var(--font-heading);">No Pending Prayer Requests</h3>
+        <p style="color: var(--admin-muted); font-size: 0.85rem; margin: 0;">All incoming requests have been prayed over and marked complete.</p>
+      </div>`;
     return;
   }
 
   c.innerHTML = list.map((pr) => `
     <div class="admin-prayer-item">
       <div class="admin-prayer-header">
-        <strong>${pr.name} · ${pr.email}</strong>
-        <span class="admin-tag">${pr.urgency}</span>
+        <div>
+          <strong style="color:#fff;font-size:0.92rem;display:block;">${escapeAdminHtml(pr.name || 'Anonymous')}</strong>
+          ${pr.email ? `<span style="font-size:0.75rem;color:var(--admin-muted);">${escapeAdminHtml(pr.email)}</span>` : ''}
+        </div>
+        <span class="admin-tag ${pr.urgency === 'Urgent' ? 'admin-tag-red' : 'admin-tag-blue'}">${escapeAdminHtml(pr.urgency || 'General')}</span>
       </div>
-      <p style="font-size:0.9rem;color:var(--admin-muted);margin-bottom:10px;">"${pr.msg}"</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:0.75rem;color:rgba(255,255,255,0.25);">Submitted: ${pr.date}</span>
-        <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="markPrayed('${pr.id}')">✓ Prayed For</button>
+      <p style="font-size:0.88rem;color:rgba(255,255,255,0.85);line-height:1.55;margin:8px 0 14px;background:rgba(0,0,0,0.22);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);word-break:break-word;">"${escapeAdminHtml(pr.msg || '')}"</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:4px;">
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.35);">📅 Submitted: ${escapeAdminHtml(pr.date || '')}</span>
+        <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="markPrayed('${pr.id}')" style="gap:5px;font-size:0.78rem;padding:5px 12px;">
+          ✓ Mark Prayed
+        </button>
       </div>
     </div>`).join('');
 }
@@ -1813,7 +1869,7 @@ function escapeAdminHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-window.deleteReflectionAdmin = (id, btnElement) => {
+window.deleteReflectionAdmin = async (id, btnElement) => {
   const all = getAllReflections();
   const target = all.find(r => r.id === id);
   if (!target) return;
@@ -1844,8 +1900,13 @@ window.deleteReflectionAdmin = (id, btnElement) => {
   }
 
   // Fallback if called without element reference
-  if (!btnElement && !confirm(`Delete reflection by "${target.author || 'this user'}"?`)) {
-    return;
+  if (!btnElement) {
+    const confirmed = await showAdminConfirm({
+      title: 'Delete Reflection',
+      message: `Delete reflection by "${target.author || 'this user'}"?`,
+      confirmText: 'Delete'
+    });
+    if (!confirmed) return;
   }
 
   deleteReflection(id);
@@ -2194,3 +2255,69 @@ function toast(msg, duration = 3500) {
     setTimeout(() => el.remove(), 300);
   }, duration);
 }
+// ── CUSTOM STYLED CONFIRMATION MODAL ──────────────────────────────────────
+export function showAdminConfirm({
+  title = 'Confirm Action',
+  message = 'Are you sure you want to proceed?',
+  confirmText = 'Delete',
+  danger = true
+} = {}) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('adminConfirmModal');
+    if (!modal) {
+      resolve(window.confirm(`${title}\n\n${message}`));
+      return;
+    }
+
+    const titleEl = document.getElementById('adminConfirmTitle');
+    const msgEl = document.getElementById('adminConfirmMsg');
+    const cancelBtn = document.getElementById('btnAdminConfirmCancel');
+    const proceedBtn = document.getElementById('btnAdminConfirmProceed');
+    const iconWrap = document.getElementById('adminConfirmIconWrap');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (proceedBtn) {
+      proceedBtn.textContent = confirmText;
+      if (danger) {
+        proceedBtn.className = 'admin-btn admin-btn-danger';
+        if (iconWrap) {
+          iconWrap.style.background = 'rgba(239, 68, 68, 0.14)';
+          iconWrap.style.color = '#ef4444';
+          iconWrap.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        }
+      } else {
+        proceedBtn.className = 'admin-btn admin-btn-primary';
+        if (iconWrap) {
+          iconWrap.style.background = 'rgba(59, 130, 246, 0.14)';
+          iconWrap.style.color = '#60a5fa';
+          iconWrap.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+        }
+      }
+    }
+
+    function cleanup(res) {
+      modal.style.display = 'none';
+      window.removeEventListener('keydown', onKey);
+      modal.onclick = null;
+      if (cancelBtn) cancelBtn.onclick = null;
+      if (proceedBtn) proceedBtn.onclick = null;
+      resolve(res);
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') cleanup(false);
+      if (e.key === 'Enter') cleanup(true);
+    }
+
+    if (cancelBtn) cancelBtn.onclick = () => cleanup(false);
+    if (proceedBtn) proceedBtn.onclick = () => cleanup(true);
+    modal.onclick = (e) => {
+      if (e.target === modal) cleanup(false);
+    };
+    window.addEventListener('keydown', onKey);
+
+    modal.style.display = 'flex';
+  });
+}
+window.showAdminConfirm = showAdminConfirm;

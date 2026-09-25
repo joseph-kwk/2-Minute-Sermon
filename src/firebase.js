@@ -6,6 +6,7 @@ import {
   getFirestore, 
   collection, 
   getDocs, 
+  getDoc,
   doc, 
   setDoc, 
   deleteDoc, 
@@ -103,6 +104,13 @@ export async function deleteDocument(collectionName, docId) {
 export async function seedCollectionIfEmpty(collectionName, seedArray) {
   if (!db) return;
   try {
+    const metaRef = doc(db, '_metadata', 'seeds');
+    const metaSnap = await getDoc(metaRef);
+    if (metaSnap.exists() && metaSnap.data()?.[collectionName]) {
+      // Already seeded previously. Do not re-seed even if currently empty (e.g. admin deleted items).
+      return;
+    }
+
     const existing = await fetchCollection(collectionName);
     if (existing && existing.length === 0 && seedArray && seedArray.length > 0) {
       console.log(`🌱 Seeding Firestore collection '${collectionName}'...`);
@@ -111,6 +119,10 @@ export async function seedCollectionIfEmpty(collectionName, seedArray) {
           await saveDocument(collectionName, item.id, item);
         }
       }
+      await setDoc(metaRef, { [collectionName]: true }, { merge: true });
+    } else if (existing && existing.length > 0) {
+      // Collection already contains records; mark as seeded to prevent resurrecting on total deletion
+      await setDoc(metaRef, { [collectionName]: true }, { merge: true });
     }
   } catch (err) {
     console.warn(`Firestore seed error for ${collectionName}:`, err);
