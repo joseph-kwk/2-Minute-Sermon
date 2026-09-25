@@ -1,4 +1,4 @@
-import { getSermons, upsertSermon } from './data/sermons.js';
+import { getSermons, upsertSermon, durationToSeconds } from './data/sermons.js';
 import { getEvents, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
@@ -2360,6 +2360,7 @@ let activeViewMode = 'grid'; // 'grid' or 'list'
 
 function createSermonCardHtml(s, showFavorite = true) {
   const isFav = savedFavorites.includes(s.id);
+  const primaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
@@ -2372,8 +2373,9 @@ function createSermonCardHtml(s, showFavorite = true) {
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
       </div>
       <div class="sermon-card-content">
-        <div class="carousel-badges" style="margin-bottom:8px;">
+        <div class="carousel-badges" style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;">
           <span class="badge badge-season">${s.primarySeason}</span>
+          ${primaryTopic ? `<span class="badge badge-topic">${primaryTopic}</span>` : ''}
         </div>
         <h3 class="sermon-card-title">${s.title}</h3>
         <div class="sermon-card-meta">${s.preacherName} &bull; ${s.scripture}</div>
@@ -2396,6 +2398,7 @@ function createSermonCardHtml(s, showFavorite = true) {
 
 function createSermonListRowHtml(s) {
   const isFav = savedFavorites.includes(s.id);
+  const primaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
   return `
     <div class="sermon-list-row" data-sermon-id="${s.id}">
       <div class="sermon-list-left">
@@ -2411,6 +2414,7 @@ function createSermonListRowHtml(s) {
             <span>${s.scripture}</span>
             <span>&bull;</span>
             <span class="badge badge-season" style="font-size:0.72rem;padding:2px 8px;">${s.primarySeason}</span>
+            ${primaryTopic ? `<span>&bull;</span><span class="badge badge-topic" style="font-size:0.72rem;padding:2px 8px;">${primaryTopic}</span>` : ''}
             <span>&bull;</span>
             <span>⏱️ ${s.duration}</span>
           </div>
@@ -2556,13 +2560,37 @@ function populateDropdownFilterOptions() {
   const adminSea   = document.getElementById('adminSeason');
   const scriptSel  = document.getElementById('filterScripture');
 
-  if (topicSel)
+  if (topicSel) {
+    const prevVal = topicSel.value || 'all';
+    const topicSet = new Set(topics.map(t => t.name));
+    sermons().forEach(s => {
+      let sTopics = [];
+      if (Array.isArray(s.topics)) sTopics = s.topics;
+      else if (typeof s.topics === 'string') sTopics = s.topics.split(',');
+      if (s.category) sTopics = [...sTopics, s.category];
+      if (s.topic) sTopics = [...sTopics, s.topic];
+      sTopics.forEach(t => {
+        const trimmed = String(t || '').trim();
+        if (trimmed) topicSet.add(trimmed);
+      });
+    });
+    const sortedTopics = Array.from(topicSet).sort((a, b) => a.localeCompare(b));
     topicSel.innerHTML = `<option value="all">All Topics</option>` +
-      topics.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+      sortedTopics.map(t => `<option value="${t}">${t}</option>`).join('');
+    if (sortedTopics.includes(prevVal)) {
+      topicSel.value = prevVal;
+    }
+  }
 
-  if (preachSel)
+  if (preachSel) {
+    const prevVal = preachSel.value || 'all';
+    const preacherList = preachers();
     preachSel.innerHTML = `<option value="all">All Preachers</option>` +
-      preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+      preacherList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    if (preacherList.some(p => p.name === prevVal)) {
+      preachSel.value = prevVal;
+    }
+  }
 
   if (scriptSel) {
     const prevVal = scriptSel.value || 'all';
@@ -2651,7 +2679,20 @@ function filterAndRenderSermons() {
       if (sec <= 120) return false;
     }
 
-    if (topic !== 'all' && !s.topics.includes(topic)) return false;
+    if (topic !== 'all') {
+      const topicLower = topic.toLowerCase().trim();
+      let sTopics = [];
+      if (Array.isArray(s.topics)) {
+        sTopics = s.topics.map(t => String(t || '').trim());
+      } else if (typeof s.topics === 'string') {
+        sTopics = s.topics.split(',').map(t => t.trim());
+      }
+      if (s.category) sTopics.push(String(s.category).trim());
+      if (s.topic) sTopics.push(String(s.topic).trim());
+      if (s.sermonType) sTopics.push(String(s.sermonType).trim());
+      const matchesTopic = sTopics.some(t => t.toLowerCase() === topicLower);
+      if (!matchesTopic) return false;
+    }
     if (preacher !== 'all' && s.preacherName !== preacher) return false;
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
     if (search) {
@@ -2713,6 +2754,7 @@ export function openSermonModal(sermonId) {
   if (!modal || !modalBody) return;
 
   const youtubeUrl = s.youtubeUrl || `https://www.youtube.com/watch?v=${s.youtubeEmbedId}`;
+  const modalPrimaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
 
   modalBody.innerHTML = `
     <!-- Thumbnail with YouTube CTA — no iframe, site stays fast -->
@@ -2729,8 +2771,9 @@ export function openSermonModal(sermonId) {
     </div>
 
     <div class="sermon-modal-body-inner">
-      <div class="carousel-badges" style="margin-bottom:12px;">
+      <div class="carousel-badges" style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;">
         <span class="badge badge-season">${s.primarySeason}</span>
+        ${modalPrimaryTopic ? `<span class="badge badge-topic">${modalPrimaryTopic}</span>` : ''}
         <span class="badge badge-scripture">${svgBook} ${s.scripture}</span>
       </div>
       <h2 class="sermon-modal-title">${s.title}</h2>
@@ -3278,27 +3321,44 @@ function setupAdminPortal() {
   // ── Sermon Publisher ──
   document.getElementById('adminQuickPublishForm')?.addEventListener('submit', e => {
     e.preventDefault();
-    const title    = document.getElementById('adminSermonTitle').value;
-    const preacher = document.getElementById('adminPreacher').value;
-    const scripture= document.getElementById('adminScripture').value;
-    const season   = document.getElementById('adminSeason').value;
-    const duration = document.getElementById('adminDuration').value;
-    const raw      = document.getElementById('adminYoutubeUrl').value;
-    const summary  = document.getElementById('adminSummary').value;
+    const title      = document.getElementById('adminSermonTitle').value.trim();
+    const preacher   = document.getElementById('adminPreacher').value;
+    const scripture  = document.getElementById('adminScripture').value.trim();
+    const season     = document.getElementById('adminSeason').value;
+    const duration   = document.getElementById('adminDuration').value.trim();
+    const raw        = document.getElementById('adminYoutubeUrl').value.trim();
+    const summary    = document.getElementById('adminSummary').value.trim();
+    const sermonType = document.getElementById('adminSermonType')?.value || 'Devotional';
+
+    const checkedTopics = [...document.querySelectorAll('input[name="clientSermonTopic"]:checked')].map(c => c.value);
+    const topics     = checkedTopics.length ? checkedTopics : ['Faith'];
 
     let embedId = raw;
     if (raw.includes('v=')) embedId = raw.split('v=')[1].split('&')[0];
     else if (raw.includes('youtu.be/')) embedId = raw.split('youtu.be/')[1].split('?')[0];
 
     const newSermon = {
-      id: `sermon-${Date.now()}`, title,
+      id: `sermon-${Date.now()}`,
+      title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      preacherId: 'p1', preacherName: preacher,
-      scripture, scriptureBook: scripture.split(' ')[0],
-      primarySeason: season, secondarySeasons: [], topics: ['Faith'],
-      duration, durationSec: 120, youtubeUrl: raw, youtubeEmbedId: embedId,
+      preacherId: preachers().find(p => p.name === preacher)?.id || 'p1',
+      preacherName: preacher,
+      scripture,
+      scriptureBook: scripture.split(' ')[0],
+      primarySeason: season,
+      secondarySeasons: [],
+      topics,
+      category: topics[0] || 'Faith',
+      sermonType,
+      duration,
+      durationSec: durationToSeconds(duration) || 120,
+      youtubeUrl: raw.startsWith('http') ? raw : `https://www.youtube.com/watch?v=${embedId}`,
+      youtubeEmbedId: embedId,
       thumbnailUrl: `https://img.youtube.com/vi/${embedId}/hqdefault.jpg`,
-      summary, publishDate: getTodayDateStr(), views: 1, featured: true,
+      summary,
+      publishDate: getTodayDateStr(),
+      views: 1,
+      featured: true,
       transcript: [{ time: '0:00', text: summary }, { time: '1:00', text: 'Walk boldly in God\'s promises today.' }]
     };
 
@@ -3309,6 +3369,7 @@ function setupAdminPortal() {
     filterAndRenderSermons();
     populateDropdownFilterOptions();
     e.target.reset();
+    document.querySelectorAll('input[name="clientSermonTopic"]').forEach((c, i) => c.checked = i === 0);
     showToast(`🚀 "${title}" published live!`);
   });
 
@@ -3476,18 +3537,42 @@ function renderSeasonsHub() {
 function renderTopicsHub() {
   const c = document.getElementById('topicsHubGrid');
   if (!c) return;
-  c.innerHTML = topics.map(t => `
+  const allSermons = sermons();
+  c.innerHTML = topics.map(t => {
+    const tLower = t.name.toLowerCase();
+    const count = allSermons.filter(s => {
+      let sTopics = [];
+      if (Array.isArray(s.topics)) sTopics = s.topics;
+      else if (typeof s.topics === 'string') sTopics = s.topics.split(',');
+      if (s.category) sTopics = [...sTopics, s.category];
+      if (s.topic) sTopics = [...sTopics, s.topic];
+      return sTopics.some(x => String(x || '').trim().toLowerCase() === tLower);
+    }).length;
+
+    return `
     <div class="hub-card" onclick="window.filterByTopicName('${t.name}')">
       <h3 style="font-size:1.3rem;margin-bottom:8px;">${t.name}</h3>
       <p style="font-size:0.9rem;color:#777;margin-bottom:18px;line-height:1.5;flex-grow:1;">${t.description}</p>
-      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">View ${t.count} Sermons →</span>
-    </div>`).join('');
+      <span style="font-weight:700;color:var(--color-sermon-red);font-size:0.88rem;margin-top:auto;">View ${count} Sermon${count === 1 ? '' : 's'} →</span>
+    </div>`;
+  }).join('');
   observeNewCards(c);
 }
 window.filterByTopicName = name => {
   switchView('sermons');
+  activeSeasonChip = 'all';
+  activeDurationFilter = 'all';
+  document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+  document.querySelector('.duration-chip[data-duration="all"]')?.classList.add('active');
+  document.getElementById('favFilterChip')?.classList.remove('active');
+  const searchInput = document.getElementById('sermonSearchInput');
+  if (searchInput) searchInput.value = '';
+  renderSeasonChips();
   const s = document.getElementById('filterTopic');
-  if (s) { s.value = name; filterAndRenderSermons(); }
+  if (s) {
+    s.value = name;
+  }
+  filterAndRenderSermons();
 };
 
 function renderPreachersHub() {
@@ -3709,8 +3794,9 @@ export function setupConversationsView() {
       if (activeView !== 'conversations') {
         switchView('conversations');
       }
-      document.querySelectorAll('#conversationFilterBar [data-conv-filter]').forEach(c => c.classList.remove('active'));
-      document.querySelector(`#conversationFilterBar [data-conv-filter="${filter}"]`)?.classList.add('active');
+      document.querySelectorAll('#conversationFilterBar [data-conv-filter]').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-conv-filter') === filter);
+      });
       activeConvFilter = filter;
       renderConversationsHub(activeConvFilter);
     });
@@ -3790,7 +3876,8 @@ export function renderConversationsHub(filter = 'all') {
   } else if (filter === 'conversation') {
     filtered = allEpisodes.filter(c => c.format !== 'plus' && (!c.title || !c.title.toLowerCase().includes('plus')));
   } else if (filter && filter !== 'all') {
-    filtered = allEpisodes.filter(c => c.category === filter);
+    const fNorm = filter.toLowerCase().trim();
+    filtered = allEpisodes.filter(c => (c.category || '').toLowerCase().trim() === fNorm);
   }
 
   if (!filtered.length) {

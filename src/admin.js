@@ -477,6 +477,7 @@ function setupSermonPublisher() {
       primarySeason: season,
       secondarySeasons: [],
       topics,
+      category: topics[0] || 'Faith',
       sermonType,
       duration,
       durationSec: durationToSeconds(duration),
@@ -531,6 +532,7 @@ function renderSermonsList() {
           <span>${s.preacherName}</span>
           <span>${s.duration}</span>
           <span class="admin-sermon-type-badge">${s.sermonType || 'Devotional'}</span>
+          ${(s.topics && s.topics.length ? s.topics : [s.category]).filter(Boolean).map(t => `<span class="admin-tag admin-tag-blue" style="font-size:0.68rem;padding:2px 6px;">${t}</span>`).join(' ')}
         </div>
       </div>
       <div class="admin-sermon-actions">

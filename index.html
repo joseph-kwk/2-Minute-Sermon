@@ -1033,9 +1033,11 @@
           <button class="chip active" data-conv-filter="all">All Videos (<span id="convTotalCount">3</span>)</button>
           <button class="chip" data-conv-filter="plus">2-Minute PLUS (3–15 min)</button>
           <button class="chip" data-conv-filter="conversation">The Conversation (20+ min)</button>
+          <button class="chip" data-conv-filter="Theology &amp; Christian Walk">Theology &amp; Christian Walk</button>
+          <button class="chip" data-conv-filter="Prayer &amp; Faith">Prayer &amp; Faith</button>
+          <button class="chip" data-conv-filter="Kingdom Teaching">Kingdom Teaching</button>
           <button class="chip" data-conv-filter="Biblical Leadership">Biblical Leadership</button>
-          <button class="chip" data-conv-filter="Spiritual Gifts">Spiritual Gifts</button>
-          <button class="chip" data-conv-filter="Christian Living &amp; Giving">Christian Living &amp; Giving</button>
+          <button class="chip" data-conv-filter="Faith &amp; Culture">Faith &amp; Culture</button>
           <button class="chip" data-conv-filter="Upcoming">Upcoming Panels</button>
         </div>
 
@@ -1272,6 +1274,30 @@
                 <div class="form-group">
                   <label for="adminDuration">Duration (e.g. 1:55)</label>
                   <input type="text" id="adminDuration" value="1:55" required class="text-input">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="adminSermonType">Sermon Type</label>
+                <select id="adminSermonType" class="select-input">
+                  <option value="Devotional" selected>Devotional</option>
+                  <option value="Teaching">Teaching</option>
+                  <option value="Expository">Expository</option>
+                  <option value="Evangelistic">Evangelistic</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Topics / Categories <span style="color:var(--color-mediumgray);font-weight:400;">(select all that apply)</span></label>
+                <div class="client-checkbox-group" id="clientSermonTopicsGroup">
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Faith" checked> Faith</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Hope"> Hope</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Grace"> Grace</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Prayer"> Prayer</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Healing"> Healing</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Forgiveness"> Forgiveness</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Salvation"> Salvation</label>
+                  <label class="client-check-label"><input type="checkbox" name="clientSermonTopic" value="Encouragement"> Encouragement</label>
                 </div>
               </div>
 

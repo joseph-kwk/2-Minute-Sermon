@@ -482,7 +482,11 @@ export function getSermons() {
 
 /** Persist sermons array to localStorage and Firebase if configured. */
 export function saveSermons(arr) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    window.dispatchEvent(new CustomEvent('2ms:sermons:updated', { detail: arr }));
+    window.dispatchEvent(new Event('storage'));
+  } catch (_) {}
 }
 
 /** Add or update a sermon (matched by id). Returns updated array. */
