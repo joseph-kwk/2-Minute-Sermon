@@ -163,10 +163,10 @@ if (isFirebaseConfigured()) {
 export function getPreachers() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
       const hasLegacy = Array.isArray(parsed) && parsed.some(p => p.name === 'Pastor John Doe' || p.name === 'Rev. Sarah Jenkins');
-      if (!hasLegacy && Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (!hasLegacy && Array.isArray(parsed)) return parsed;
     }
   } catch (_) { /* storage unavailable */ }
   return [...seedPreachers];

@@ -771,10 +771,14 @@
 
       <!-- ── Panel: Prayer Inbox ── -->
       <div class="admin-panel" id="panel-prayers">
-        <div class="admin-card" style="max-width:720px;">
-          <h2 class="admin-card-title">Intercessory Prayer Inbox</h2>
-          <p class="admin-card-sub">Review and respond to prayer submissions from site visitors.</p>
-          <div id="adminPrayerInboxList" style="margin-top:16px;display:flex;flex-direction:column;gap:12px;"></div>
+        <div class="admin-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+            <div>
+              <h2 class="admin-card-title" style="margin:0;">Intercessory Prayer Inbox (<span id="prayerInboxCount">0</span>)</h2>
+              <p class="admin-card-sub" style="margin-top:4px;margin-bottom:0;">Review, pray over, and manage prayer requests submitted by visitors worldwide.</p>
+            </div>
+          </div>
+          <div id="adminPrayerInboxList" class="admin-prayers-grid"></div>
         </div>
       </div>
 

@@ -1672,25 +1672,38 @@ function renderPartnersList() {
 // ── PRAYER INBOX ──────────────────────────────────────────────────────────
 function renderPrayerInbox() {
   const c = document.getElementById('adminPrayerInboxList');
-  if (!c) return;
-
+  const countEl = document.getElementById('prayerInboxCount');
   const list = getPrayers();
 
+  if (countEl) countEl.textContent = list.length;
+  updatePrayerBadge();
+  if (!c) return;
+
   if (!list.length) {
-    c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px;">No pending prayer requests. 🙌</p>`;
+    c.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 24px; background: rgba(255,255,255,0.02); border-radius: var(--radius); border: 1px dashed var(--admin-border);">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🙌</div>
+        <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px; font-family: var(--font-heading);">No Pending Prayer Requests</h3>
+        <p style="color: var(--admin-muted); font-size: 0.85rem; margin: 0;">All incoming requests have been prayed over and marked complete.</p>
+      </div>`;
     return;
   }
 
   c.innerHTML = list.map((pr) => `
     <div class="admin-prayer-item">
       <div class="admin-prayer-header">
-        <strong>${pr.name} · ${pr.email}</strong>
-        <span class="admin-tag">${pr.urgency}</span>
+        <div>
+          <strong style="color:#fff;font-size:0.92rem;display:block;">${escapeAdminHtml(pr.name || 'Anonymous')}</strong>
+          ${pr.email ? `<span style="font-size:0.75rem;color:var(--admin-muted);">${escapeAdminHtml(pr.email)}</span>` : ''}
+        </div>
+        <span class="admin-tag ${pr.urgency === 'Urgent' ? 'admin-tag-red' : 'admin-tag-blue'}">${escapeAdminHtml(pr.urgency || 'General')}</span>
       </div>
-      <p style="font-size:0.9rem;color:var(--admin-muted);margin-bottom:10px;">"${pr.msg}"</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:0.75rem;color:rgba(255,255,255,0.25);">Submitted: ${pr.date}</span>
-        <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="markPrayed('${pr.id}')">✓ Prayed For</button>
+      <p style="font-size:0.88rem;color:rgba(255,255,255,0.85);line-height:1.55;margin:8px 0 14px;background:rgba(0,0,0,0.22);padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);word-break:break-word;">"${escapeAdminHtml(pr.msg || '')}"</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:4px;">
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.35);">📅 Submitted: ${escapeAdminHtml(pr.date || '')}</span>
+        <button class="admin-btn admin-btn-sm admin-btn-outline" onclick="markPrayed('${pr.id}')" style="gap:5px;font-size:0.78rem;padding:5px 12px;">
+          ✓ Mark Prayed
+        </button>
       </div>
     </div>`).join('');
 }

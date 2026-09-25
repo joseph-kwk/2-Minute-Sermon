@@ -339,9 +339,9 @@ if (isFirebaseConfigured()) {
 export function getDailyVerses() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (_) { /* storage unavailable */ }
   return [...seedDailyVerses];
