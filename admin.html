@@ -780,95 +780,150 @@
 
       <!-- ── Panel: Ministry Settings ── -->
       <div class="admin-panel" id="panel-settings">
-        <div class="admin-card" style="max-width:720px;">
-          <h2 class="admin-card-title">Ministry Contact & Email Settings</h2>
-          <p class="admin-card-sub">Configure recipient email addresses and form forwarding options for contact inquiries and newsletter subscribers.</p>
+        <div class="admin-settings-wrapper">
+          <div class="admin-settings-hero">
+            <h2 class="admin-card-title">Ministry &amp; Platform Settings</h2>
+            <p class="admin-card-sub">Manage communication routing, media showcases, official social channels, and holiday atmospheres.</p>
+          </div>
 
-          <form id="adminSettingsForm" style="margin-top:24px;">
-            <div class="admin-form-group">
-              <label class="admin-form-label" for="settingContactEmail">Contact Us Recipient Email</label>
-              <input type="email" id="settingContactEmail" class="admin-input" placeholder="info2minutesermon@gmail.com" required>
-              <span class="admin-form-hint">General inquiries and pastor applications will be routed to this email address.</span>
-            </div>
+          <form id="adminSettingsForm">
+            <div class="admin-settings-grid">
 
-            <div class="admin-form-group" style="margin-top:16px;">
-              <label class="admin-form-label" for="settingNewsletterEmail">Newsletter Subscriber Recipient Email</label>
-              <input type="email" id="settingNewsletterEmail" class="admin-input" placeholder="info2minutesermon@gmail.com" required>
-              <span class="admin-form-hint">Daily devotional subscriber alerts are sent to this address.</span>
-            </div>
-
-            <div class="admin-form-group" style="margin-top:16px;">
-              <label class="admin-form-label" for="settingEndpointUrl">Form Forwarding Service Endpoint (Optional)</label>
-              <input type="url" id="settingEndpointUrl" class="admin-input" placeholder="https://formspree.io/f/your_form_id">
-              <span class="admin-form-hint">If using a serverless form service (Formspree, Web3Forms, or custom API), paste your endpoint URL here.</span>
-            </div>
-
-            <div class="admin-form-row" style="margin-top:16px;">
-              <div class="admin-form-group">
-                <label class="admin-form-label" for="settingTimezone">Ministry Primary Timezone</label>
-                <select id="settingTimezone" class="admin-input">
-                  <option value="EST">EST (Eastern Time — Standard)</option>
-                  <option value="CST">CST (Central Time)</option>
-                </select>
-                <span class="admin-form-hint">Appended to event listings and broadcast times.</span>
-              </div>
-              <div class="admin-form-group">
-                <label class="admin-form-label" for="settingPromoVideoUrl">Homepage Cinema Promo Video</label>
-                <input type="text" id="settingPromoVideoUrl" class="admin-input" placeholder="https://www.youtube.com/watch?v=SJFqqNvTeh8">
-                <span class="admin-form-hint">YouTube link or ID for the official overview showcase.</span>
-              </div>
-            </div>
-
-            <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--admin-border);">
-              <h3 style="font-size:1.1rem;margin-bottom:6px;font-family:var(--admin-font);">🌐 Official Social Media Channels</h3>
-              <p class="admin-card-sub" style="margin-bottom:16px;">Set your official social channel URLs. These link directly from the public site navigation &amp; footer.</p>
-
-              <div class="admin-form-row" style="margin-top:12px;">
-                <div class="admin-form-group">
-                  <label class="admin-form-label" for="settingYoutubeUrl">YouTube Channel URL</label>
-                  <input type="url" id="settingYoutubeUrl" class="admin-input" placeholder="https://www.youtube.com/c/2MinuteSermonP">
+              <!-- Card 1: Communication & Inquiries -->
+              <div class="admin-settings-card">
+                <div class="admin-settings-card-header">
+                  <div class="admin-settings-icon icon-email">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                  </div>
+                  <div>
+                    <h3 class="admin-settings-card-title">Communication &amp; Inquiries</h3>
+                    <p class="admin-settings-card-sub">Routing for contact messages and newsletter signups</p>
+                  </div>
                 </div>
+
                 <div class="admin-form-group">
-                  <label class="admin-form-label" for="settingTiktokUrl">TikTok Profile URL</label>
-                  <input type="url" id="settingTiktokUrl" class="admin-input" placeholder="https://www.tiktok.com/@2minutesermon">
+                  <label class="admin-form-label" for="settingContactEmail">Contact Us Recipient Email</label>
+                  <input type="email" id="settingContactEmail" class="admin-input" placeholder="info2minutesermon@gmail.com" required>
+                  <span class="admin-form-hint">General inquiries and pastor applications will be routed to this email address.</span>
+                </div>
+
+                <div class="admin-form-group">
+                  <label class="admin-form-label" for="settingNewsletterEmail">Newsletter Subscriber Alert Email</label>
+                  <input type="email" id="settingNewsletterEmail" class="admin-input" placeholder="info2minutesermon@gmail.com" required>
+                  <span class="admin-form-hint">Daily devotional subscriber alerts are sent to this address.</span>
+                </div>
+
+                <div class="admin-form-group" style="margin-bottom:0;">
+                  <label class="admin-form-label" for="settingEndpointUrl">Form Forwarding Service Endpoint (Optional)</label>
+                  <input type="url" id="settingEndpointUrl" class="admin-input" placeholder="https://formspree.io/f/your_form_id">
+                  <span class="admin-form-hint">If using a serverless form service (Formspree, Web3Forms, or custom API), paste your endpoint URL here.</span>
                 </div>
               </div>
 
-              <div class="admin-form-row" style="margin-top:12px;">
-                <div class="admin-form-group">
-                  <label class="admin-form-label" for="settingFacebookUrl">Facebook Page URL</label>
-                  <input type="url" id="settingFacebookUrl" class="admin-input" placeholder="https://www.facebook.com/2minutesermon">
+              <!-- Card 2: Media & Regional Presence -->
+              <div class="admin-settings-card">
+                <div class="admin-settings-card-header">
+                  <div class="admin-settings-icon icon-media">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                  </div>
+                  <div>
+                    <h3 class="admin-settings-card-title">Media &amp; Regional Presence</h3>
+                    <p class="admin-settings-card-sub">Homepage promo showcase and event timezone</p>
+                  </div>
                 </div>
+
                 <div class="admin-form-group">
-                  <label class="admin-form-label" for="settingInstagramUrl">Instagram Profile URL</label>
-                  <input type="url" id="settingInstagramUrl" class="admin-input" placeholder="https://www.instagram.com/2_minutesermon/">
+                  <label class="admin-form-label" for="settingPromoVideoUrl">Homepage Cinema Showcase Video</label>
+                  <input type="text" id="settingPromoVideoUrl" class="admin-input" placeholder="https://www.youtube.com/watch?v=SJFqqNvTeh8">
+                  <span class="admin-form-hint">YouTube link or ID for the official overview showcase.</span>
+                </div>
+
+                <div class="admin-form-group" style="margin-bottom:0;">
+                  <label class="admin-form-label" for="settingTimezone">Ministry Primary Timezone</label>
+                  <select id="settingTimezone" class="admin-input">
+                    <option value="EST">EST (Eastern Time — Standard)</option>
+                    <option value="CST">CST (Central Time)</option>
+                  </select>
+                  <span class="admin-form-hint">Appended to event listings and broadcast times.</span>
                 </div>
               </div>
-            </div>
 
-            <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--admin-border);">
-              <h3 style="font-size:1.1rem;margin-bottom:6px;font-family:var(--admin-font);display:flex;align-items:center;gap:8px;">
-                <span>✨ Seasonal Ambiance &amp; Holiday Atmosphere</span>
-              </h3>
-              <p class="admin-card-sub" style="margin-bottom:16px;">Control global holiday animations (Christmas snow, New Year gala, Easter dawn) across the entire public site.</p>
+              <!-- Card 3: Seasonal Ambiance & Holiday Atmosphere -->
+              <div class="admin-settings-card">
+                <div class="admin-settings-card-header">
+                  <div class="admin-settings-icon icon-sparkle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                  </div>
+                  <div>
+                    <h3 class="admin-settings-card-title">Seasonal Atmosphere &amp; Ambiance</h3>
+                    <p class="admin-settings-card-sub">Control global holiday animations across the public site</p>
+                  </div>
+                </div>
 
-              <div class="admin-form-group">
-                <label class="admin-form-label" for="settingSeasonalMode">Global Seasonal Atmosphere</label>
-                <select id="settingSeasonalMode" class="admin-input">
-                  <option value="auto">Auto (~10 Days Before Each Holiday — Default)</option>
-                  <option value="christmas">Force Christmas Season (Snow &amp; Nativity Atmosphere) 🎄</option>
-                  <option value="newyear">Force New Year Celebration (Champagne Sparks) ✨</option>
-                  <option value="passion">Force Holy Week &amp; Good Friday (The Passion &amp; Sacrifice) ✝️</option>
-                  <option value="easter">Force Easter Season (Sunrise Dawn &amp; Lilies) 🌅</option>
-                  <option value="off">Force Disabled (No Holiday Effects Worldwide) 🚫</option>
-                </select>
-                <span class="admin-form-hint">When set to "Auto", Christmas activates ~Dec 15–27, New Year ~Dec 22–Jan 3, Holy Week (Palm Sunday–Holy Saturday), and Easter on Easter Sunday. Selecting a force option overrides the dates immediately for all visitors worldwide.</span>
+                <div class="admin-form-group" style="margin-bottom:0;">
+                  <label class="admin-form-label" for="settingSeasonalMode">Global Seasonal Atmosphere Mode</label>
+                  <select id="settingSeasonalMode" class="admin-input">
+                    <option value="auto">Auto (~10 Days Before Each Holiday — Default)</option>
+                    <option value="christmas">Force Christmas Season (Snow &amp; Nativity Atmosphere) 🎄</option>
+                    <option value="newyear">Force New Year Celebration (Champagne Sparks) ✨</option>
+                    <option value="passion">Force Holy Week &amp; Good Friday (The Passion &amp; Sacrifice) ✝️</option>
+                    <option value="easter">Force Easter Season (Sunrise Dawn &amp; Lilies) 🌅</option>
+                    <option value="off">Force Disabled (No Holiday Effects Worldwide) 🚫</option>
+                  </select>
+                  <span class="admin-form-hint" style="margin-top:8px;line-height:1.5;">
+                    When set to <strong>Auto</strong>, Christmas activates ~Dec 15–27, New Year ~Dec 22–Jan 3, Holy Week (Palm Sunday–Holy Saturday), and Easter on Easter Sunday. Selecting a force option overrides the dates immediately for all visitors worldwide.
+                  </span>
+                </div>
               </div>
+
+              <!-- Card 4: Official Social Channels -->
+              <div class="admin-settings-card">
+                <div class="admin-settings-card-header">
+                  <div class="admin-settings-icon icon-social">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  </div>
+                  <div>
+                    <h3 class="admin-settings-card-title">Official Social Media Channels</h3>
+                    <p class="admin-settings-card-sub">Links displayed in public site navigation &amp; footer</p>
+                  </div>
+                </div>
+
+                <div class="admin-form-row">
+                  <div class="admin-form-group">
+                    <label class="admin-form-label" for="settingYoutubeUrl">YouTube Channel URL</label>
+                    <input type="url" id="settingYoutubeUrl" class="admin-input" placeholder="https://www.youtube.com/c/2MinuteSermonP">
+                  </div>
+                  <div class="admin-form-group">
+                    <label class="admin-form-label" for="settingTiktokUrl">TikTok Profile URL</label>
+                    <input type="url" id="settingTiktokUrl" class="admin-input" placeholder="https://www.tiktok.com/@2minutesermon">
+                  </div>
+                </div>
+
+                <div class="admin-form-row" style="margin-bottom:0;">
+                  <div class="admin-form-group">
+                    <label class="admin-form-label" for="settingFacebookUrl">Facebook Page URL</label>
+                    <input type="url" id="settingFacebookUrl" class="admin-input" placeholder="https://www.facebook.com/2minutesermon">
+                  </div>
+                  <div class="admin-form-group">
+                    <label class="admin-form-label" for="settingInstagramUrl">Instagram Profile URL</label>
+                    <input type="url" id="settingInstagramUrl" class="admin-input" placeholder="https://www.instagram.com/2_minutesermon/">
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <button type="submit" class="admin-btn admin-btn-primary" style="padding:12px 24px;margin-top:24px;">
-              💾 Save Ministry Settings
-            </button>
+            <!-- Sleek Save Bar -->
+            <div class="admin-settings-save-bar">
+              <div class="admin-settings-save-info">
+                <span class="save-status-dot"></span>
+                <span>Configured settings persist to cloud storage and sync across all visitors immediately.</span>
+              </div>
+              <button type="submit" class="admin-btn admin-btn-primary admin-btn-save-settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Ministry Settings
+              </button>
+            </div>
           </form>
         </div>
       </div>
