@@ -790,16 +790,17 @@ class SeasonalManager {
 /**
  * --------------------------------------------------------------------------
  * NEW YEAR TRANSITION CEREMONY
- * High-Class Gala Transition (Dec 31 to Jan 1)
- * Animates outgoing year vanishing into stardust, bursts confetti cannons,
- * and reveals the new incoming year with blessings and Jeremiah 29:11.
- * Plays only on the user's first landing during transition days (or via URL preview).
+ * Floating Hero Celebration (Dec 31 to Jan 1)
+ * Floats gently on top of the hero section showing the outgoing year,
+ * dissolves into celestial stardust, launches a radiant confetti shower
+ * over the hero, emerges the incoming new year, and then smoothly disappears!
+ * Triggers on first landing during transition days (or via URL preview).
  * --------------------------------------------------------------------------
  */
 class NewYearCeremony {
   constructor(manager) {
     this.manager = manager;
-    this.overlay = null;
+    this.container = null;
     this.canvas = null;
     this.ctx = null;
     this.confetti = [];
@@ -807,17 +808,16 @@ class NewYearCeremony {
     this.isActive = false;
     this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.autoDismissTimer = null;
-    this.keyHandler = null;
     this.resizeHandler = null;
   }
 
   init() {
     if (!this.shouldTrigger()) return;
 
-    // Gentle 500ms delay after page ready so the visitor is settled before the ceremony begins
+    // 400ms delay after page settles
     setTimeout(() => {
       this.mount();
-    }, 500);
+    }, 400);
   }
 
   shouldTrigger() {
@@ -834,11 +834,10 @@ class NewYearCeremony {
     const day = now.getDate();
     const year = now.getFullYear();
 
-    // Active strictly on the last day of the year (Dec 31) through the first day of the year (Jan 1)
+    // Active strictly on Dec 31 and Jan 1
     const isTransitionDay = (month === 12 && day === 31) || (month === 1 && day === 1);
     if (!isTransitionDay) return false;
 
-    // Scoped storage check: only play once per year per device on first landing
     const incomingYear = (month === 12 && day === 31) ? year + 1 : year;
     const storageKey = `2ms_ny_ceremony_${incomingYear}`;
 
@@ -865,8 +864,8 @@ class NewYearCeremony {
       incomingYear = year;
       outgoingYear = year - 1;
     } else {
-      // Preview or testing during another time of year
-      if (month === 12) {
+      // Testing/preview: if in latter half of year (like 2026), transition 2026 -> 2027
+      if (month >= 7) {
         outgoingYear = year;
         incomingYear = year + 1;
       } else {
@@ -885,135 +884,110 @@ class NewYearCeremony {
   }
 
   mount() {
-    if (this.isActive || document.getElementById('nyCelebrationOverlay')) return;
+    if (this.isActive || document.getElementById('nyHeroFloatingCeremony')) return;
     this.isActive = true;
     this.markSeen();
 
+    const heroSection = document.querySelector('.hero-section') || document.getElementById('mainContent') || document.body;
     const { outgoingYear, incomingYear } = this.getYears();
 
-    // Create Celebration Overlay
-    this.overlay = document.createElement('div');
-    this.overlay.id = 'nyCelebrationOverlay';
-    this.overlay.className = 'ny-ceremony-overlay';
-    this.overlay.setAttribute('role', 'dialog');
-    this.overlay.setAttribute('aria-modal', 'true');
-    this.overlay.setAttribute('aria-label', `New Year ${incomingYear} Celebration`);
+    // 1. Confetti Canvas over the Hero
+    this.canvas = document.createElement('canvas');
+    this.canvas.id = 'nyHeroConfettiCanvas';
+    this.canvas.className = 'ny-hero-confetti-canvas';
+    heroSection.appendChild(this.canvas);
+    this.ctx = this.canvas.getContext('2d');
+    this.resizeCanvas(heroSection);
 
-    this.overlay.innerHTML = `
-      <canvas id="nyConfettiCanvas" class="ny-confetti-canvas"></canvas>
-      <button class="ny-ceremony-close" id="nyCloseBtn" aria-label="Close celebration" title="Skip celebration">&times;</button>
-      
-      <div class="ny-ceremony-stage">
-        <!-- Celestial Gala Backlight Glow -->
-        <div class="ny-ceremony-glow"></div>
+    // 2. Floating Year Celebration Container
+    this.container = document.createElement('div');
+    this.container.id = 'nyHeroFloatingCeremony';
+    this.container.className = 'ny-hero-floating-ceremony';
 
-        <!-- Stage 1: Outgoing Year (Vanishes into Stardust) -->
-        <div class="ny-outgoing-wrap" id="nyOutgoingWrap">
-          <span class="ny-ceremony-eyebrow">Bidding Farewell to</span>
-          <div class="ny-year-number outgoing">${outgoingYear}</div>
-          <p class="ny-ceremony-farewell">“Thank you, Lord, for bringing us through every valley and mountain.”</p>
-        </div>
-
-        <!-- Stage 2: Incoming Year (Emerges with Confetti & Divine Blessing) -->
-        <div class="ny-incoming-wrap" id="nyIncomingWrap">
-          <div class="ny-ceremony-badge">✨ A BLESSED NEW CHAPTER ✨</div>
-          <div class="ny-year-number incoming">${incomingYear}</div>
-          <h2 class="ny-incoming-title">HAPPY NEW YEAR!</h2>
-          <p class="ny-incoming-blessing">Walking in Faith, Grace &amp; Divine Purpose</p>
-          <blockquote class="ny-incoming-scripture">
-            “‘For I know the plans I have for you,’ declares the Lord, ‘plans to prosper you and not to harm you, plans to give you hope and a future.’”
-            <cite>— Jeremiah 29:11</cite>
-          </blockquote>
-          <button class="ny-ceremony-btn" id="nyEnterBtn">Step Into ${incomingYear} in Faith &rarr;</button>
-        </div>
+    this.container.innerHTML = `
+      <div class="ny-float-aura"></div>
+      <div class="ny-float-badge" id="nyFloatBadge">FAREWELL ${outgoingYear}</div>
+      <div class="ny-float-year-box">
+        <span class="ny-float-digit outgoing" id="nyDigitOut">${outgoingYear}</span>
+        <span class="ny-float-digit incoming" id="nyDigitIn">${incomingYear}</span>
       </div>
+      <div class="ny-float-subtitle" id="nyFloatSub">Walking in Faith &amp; Grace</div>
     `;
 
-    document.body.appendChild(this.overlay);
+    heroSection.appendChild(this.container);
 
-    // Confetti canvas setup
-    this.canvas = document.getElementById('nyConfettiCanvas');
-    if (this.canvas) {
-      this.ctx = this.canvas.getContext('2d');
-      this.resizeCanvas();
-    }
-
-    // Interactive dismissal buttons
-    const closeBtn = document.getElementById('nyCloseBtn');
-    if (closeBtn) closeBtn.addEventListener('click', () => this.dismiss());
-
-    const enterBtn = document.getElementById('nyEnterBtn');
-    if (enterBtn) enterBtn.addEventListener('click', () => this.dismiss());
-
-    // Tap on backdrop dismisses
-    this.overlay.addEventListener('click', (e) => {
-      if (e.target === this.overlay) this.dismiss();
-    });
-
-    // Keyboard ESC dismisses
-    this.keyHandler = (e) => {
-      if (e.key === 'Escape') this.dismiss();
-    };
-    window.addEventListener('keydown', this.keyHandler);
-
-    // Canvas resize listener
-    this.resizeHandler = () => this.resizeCanvas();
+    this.resizeHandler = () => this.resizeCanvas(heroSection);
     window.addEventListener('resize', this.resizeHandler);
 
-    // Run choreographed ceremony
     this.runSequence();
   }
 
-  resizeCanvas() {
+  resizeCanvas(heroSection) {
     if (!this.canvas) return;
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    const parent = heroSection || this.canvas.parentElement;
+    this.canvas.width = parent ? parent.clientWidth : window.innerWidth;
+    this.canvas.height = parent ? parent.clientHeight : window.innerHeight;
   }
 
   runSequence() {
-    const outgoingWrap = document.getElementById('nyOutgoingWrap');
-    const incomingWrap = document.getElementById('nyIncomingWrap');
+    const digitOut = document.getElementById('nyDigitOut');
+    const digitIn = document.getElementById('nyDigitIn');
+    const badge = document.getElementById('nyFloatBadge');
+    const sub = document.getElementById('nyFloatSub');
+    const { incomingYear } = this.getYears();
 
     if (this.isReducedMotion) {
-      if (outgoingWrap) outgoingWrap.style.display = 'none';
-      if (incomingWrap) {
-        incomingWrap.classList.add('emerged');
-        incomingWrap.style.opacity = '1';
+      if (digitOut) digitOut.style.display = 'none';
+      if (digitIn) {
+        digitIn.classList.add('emerged');
+        digitIn.style.opacity = '1';
       }
+      if (badge) badge.textContent = `✨ HAPPY NEW YEAR ${incomingYear} ✨`;
+      setTimeout(() => this.dismiss(), 4500);
       return;
     }
 
-    // Step 1: Outgoing year stays steady until 1.8s
-    // Step 2: At 1.8s, outgoing year dissolves upward into stardust
+    // Step 1: At 1.8s, the old year dissolves/vanishes upward
     setTimeout(() => {
       if (!this.isActive) return;
-      if (outgoingWrap) outgoingWrap.classList.add('vanishing');
+      if (digitOut) digitOut.classList.add('vanishing');
+      if (badge) badge.style.opacity = '0';
+      if (sub) sub.style.opacity = '0';
     }, 1800);
 
-    // Step 3: At 2.4s, confetti cannon explodes across the screen
+    // Step 2: At 2.2s, confetti cannons burst across the hero
     setTimeout(() => {
       if (!this.isActive) return;
       this.launchConfetti();
-    }, 2400);
+    }, 2200);
 
-    // Step 4: At 2.7s, incoming year emerges gloriously with golden bloom
+    // Step 3: At 2.4s, incoming new year emerges with golden radiance
     setTimeout(() => {
       if (!this.isActive) return;
-      if (outgoingWrap) outgoingWrap.style.display = 'none';
-      if (incomingWrap) incomingWrap.classList.add('emerged');
-    }, 2700);
+      if (digitOut) digitOut.style.display = 'none';
+      if (digitIn) digitIn.classList.add('emerged');
+      if (badge) {
+        badge.textContent = `✨ HAPPY NEW YEAR ${incomingYear} ✨`;
+        badge.style.opacity = '1';
+        badge.classList.add('celebration');
+      }
+      if (sub) {
+        sub.textContent = '“Behold, I make all things new.”';
+        sub.style.opacity = '1';
+      }
+    }, 2400);
 
-    // Step 5: Auto-dismiss gracefully after 8.5 seconds
+    // Step 4: At 6.0s, the floating ceremony levitates upward and gently disappears!
     this.autoDismissTimer = setTimeout(() => {
       if (this.isActive) this.dismiss();
-    }, 8500);
+    }, 6000);
   }
 
   launchConfetti() {
     if (!this.canvas || !this.ctx) return;
     this.confetti = [];
     const isMobile = window.innerWidth < 768;
-    const count = isMobile ? 65 : 120;
+    const count = isMobile ? 55 : 95;
     const colors = [
       '#F59E0B', '#FBBF24', '#D97706', '#FEF3C7', '#FFFFFF',
       '#8B5CF6', '#EC4899', '#10B981'
@@ -1022,31 +996,46 @@ class NewYearCeremony {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // Dual cannons: Left & Right lower corners aiming towards celestial sky
+    // Dual cannons + center burst
     for (let i = 0; i < count; i++) {
-      const isLeft = i % 2 === 0;
-      const originX = isLeft ? w * 0.14 : w * 0.86;
-      const originY = h * 0.84;
-      const angle = isLeft 
-        ? -Math.PI / 4 - (Math.random() * 0.32)
-        : -3 * Math.PI / 4 + (Math.random() * 0.32);
-      const velocity = Math.random() * 15 + 11;
+      const mode = i % 3;
+      let originX, originY, angle, velocity;
+
+      if (mode === 0) {
+        // Left cannon
+        originX = w * 0.18;
+        originY = h * 0.82;
+        angle = -Math.PI / 4 - (Math.random() * 0.35);
+        velocity = Math.random() * 13 + 9;
+      } else if (mode === 1) {
+        // Right cannon
+        originX = w * 0.82;
+        originY = h * 0.82;
+        angle = -3 * Math.PI / 4 + (Math.random() * 0.35);
+        velocity = Math.random() * 13 + 9;
+      } else {
+        // Center celebratory stardust fountain
+        originX = w * 0.5 + (Math.random() - 0.5) * 60;
+        originY = h * 0.45;
+        angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+        velocity = Math.random() * 10 + 6;
+      }
 
       this.confetti.push({
         x: originX,
         y: originY,
-        vx: Math.cos(angle) * velocity + (Math.random() - 0.5) * 4,
+        vx: Math.cos(angle) * velocity + (Math.random() - 0.5) * 3,
         vy: Math.sin(angle) * velocity,
-        gravity: Math.random() * 0.18 + 0.22,
-        drag: 0.965,
-        width: Math.random() * 9 + 6,
-        height: Math.random() * 14 + 8,
+        gravity: Math.random() * 0.15 + 0.18,
+        drag: 0.97,
+        width: Math.random() * 8 + 5,
+        height: Math.random() * 13 + 7,
         color: colors[Math.floor(Math.random() * colors.length)],
         rotation: Math.random() * 360,
         rotationSpeed: (Math.random() - 0.5) * 11,
         tilt: Math.random() * 10,
         tiltSpeed: Math.random() * 0.12 + 0.06,
-        isRibbon: Math.random() > 0.35,
+        isRibbon: Math.random() > 0.32,
         opacity: 1
       });
     }
@@ -1071,9 +1060,8 @@ class NewYearCeremony {
       p.rotation += p.rotationSpeed;
       p.tilt += p.tiltSpeed;
 
-      // Gentle fade as it descends
-      if (p.y > this.canvas.height * 0.65) {
-        p.opacity -= 0.015;
+      if (p.y > this.canvas.height * 0.7) {
+        p.opacity -= 0.018;
       }
 
       this.ctx.save();
@@ -1104,20 +1092,21 @@ class NewYearCeremony {
     this.isActive = false;
 
     if (this.autoDismissTimer) clearTimeout(this.autoDismissTimer);
-    if (this.keyHandler) window.removeEventListener('keydown', this.keyHandler);
     if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
 
-    if (this.overlay) {
-      this.overlay.classList.add('dismissed');
-      setTimeout(() => {
-        if (this.animFrame) cancelAnimationFrame(this.animFrame);
-        this.overlay?.remove();
-        this.overlay = null;
-        this.canvas = null;
-        this.ctx = null;
-        this.confetti = [];
-      }, 750);
+    if (this.container) {
+      this.container.classList.add('disappearing');
     }
+
+    setTimeout(() => {
+      if (this.animFrame) cancelAnimationFrame(this.animFrame);
+      this.container?.remove();
+      this.canvas?.remove();
+      this.container = null;
+      this.canvas = null;
+      this.ctx = null;
+      this.confetti = [];
+    }, 1100);
   }
 }
 
