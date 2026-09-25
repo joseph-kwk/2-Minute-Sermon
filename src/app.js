@@ -2584,10 +2584,16 @@ function populateDropdownFilterOptions() {
 
   if (preachSel) {
     const prevVal = preachSel.value || 'all';
-    const preacherList = preachers();
+    const namesSet = new Set(preachers().map(p => p.name));
+    sermons().forEach(s => {
+      if (s.preacherName && s.preacherName.trim()) {
+        namesSet.add(s.preacherName.trim());
+      }
+    });
+    const sortedPreachers = Array.from(namesSet).sort((a, b) => a.localeCompare(b));
     preachSel.innerHTML = `<option value="all">All Preachers</option>` +
-      preacherList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-    if (preacherList.some(p => p.name === prevVal)) {
+      sortedPreachers.map(name => `<option value="${name}">${name}</option>`).join('');
+    if (sortedPreachers.includes(prevVal)) {
       preachSel.value = prevVal;
     }
   }
@@ -2602,8 +2608,12 @@ function populateDropdownFilterOptions() {
     }
   }
 
-  if (adminPre)
+  const adminPreList = document.getElementById('adminPreacherList');
+  if (adminPreList) {
+    adminPreList.innerHTML = preachers().map(p => `<option value="${p.name}"></option>`).join('');
+  } else if (adminPre && adminPre.tagName === 'SELECT') {
     adminPre.innerHTML = preachers().map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
 
   if (adminSea)
     adminSea.innerHTML = seasons.filter(s => s.slug !== 'all')
@@ -2693,7 +2703,7 @@ function filterAndRenderSermons() {
       const matchesTopic = sTopics.some(t => t.toLowerCase() === topicLower);
       if (!matchesTopic) return false;
     }
-    if (preacher !== 'all' && s.preacherName !== preacher) return false;
+    if (preacher !== 'all' && (s.preacherName || '').toLowerCase().trim() !== preacher.toLowerCase().trim()) return false;
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
     if (search) {
       const hit = [s.title, s.preacherName, s.scripture, s.summary, ...(s.transcript || []).map(t => t.text)]
@@ -3341,7 +3351,7 @@ function setupAdminPortal() {
       id: `sermon-${Date.now()}`,
       title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      preacherId: preachers().find(p => p.name === preacher)?.id || 'p1',
+      preacherId: preachers().find(p => p.name.toLowerCase() === preacher.toLowerCase())?.id || `guest-${Date.now()}`,
       preacherName: preacher,
       scripture,
       scriptureBook: scripture.split(' ')[0],

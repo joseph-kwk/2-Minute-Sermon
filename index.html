@@ -1257,8 +1257,9 @@
               </div>
               <div class="filters-row">
                 <div class="form-group">
-                  <label for="adminPreacher">Preacher</label>
-                  <select id="adminPreacher" class="select-input" required></select>
+                  <label for="adminPreacher">Preacher <span style="color:var(--color-mediumgray);font-weight:400;">(pick from directory or type guest name)</span></label>
+                  <input type="text" id="adminPreacher" list="adminPreacherList" placeholder="e.g. Pastor Anany Kasongo or Guest Speaker" required class="text-input" autocomplete="off">
+                  <datalist id="adminPreacherList"></datalist>
                 </div>
                 <div class="form-group">
                   <label for="adminScripture">Scripture Ref</label>

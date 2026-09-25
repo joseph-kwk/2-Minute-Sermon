@@ -466,11 +466,12 @@ function setupSermonPublisher() {
     if (!embedId) { toast('⚠️ Please enter a valid YouTube URL or video ID.'); return; }
     if (topics.length === 0) { toast('⚠️ Please select at least one topic.'); return; }
 
+    const matchedPreacher = preachers.find(p => p.name.toLowerCase() === preacher.toLowerCase());
     const sermon = {
       id: `sermon-${Date.now()}`,
       title,
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-      preacherId: preachers.find(p => p.name === preacher)?.id || 'p1',
+      preacherId: matchedPreacher ? matchedPreacher.id : `guest-${Date.now()}`,
       preacherName: preacher,
       scripture,
       scriptureBook: scripture.split(' ')[0],
@@ -574,10 +575,14 @@ function renderSermonsList() {
 }
 
 function populateSelects() {
+  const preacherDataList = document.getElementById('adminPreacherList');
   const preacherSel = document.getElementById('adminPreacher');
   const seasonSel   = document.getElementById('adminSeason');
 
-  if (preacherSel) {
+  if (preacherDataList) {
+    const list = getPreachers();
+    preacherDataList.innerHTML = list.map(p => `<option value="${p.name}"></option>`).join('');
+  } else if (preacherSel && preacherSel.tagName === 'SELECT') {
     const list = getPreachers();
     preacherSel.innerHTML = list.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
   }

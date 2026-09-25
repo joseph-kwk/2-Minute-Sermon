@@ -299,8 +299,9 @@
 
               <div class="admin-form-row">
                 <div class="admin-form-group">
-                  <label>Preacher</label>
-                  <select id="adminPreacher" class="admin-input" required></select>
+                  <label>Preacher <span style="color:var(--admin-muted);font-weight:400;">(pick from directory or type guest name)</span></label>
+                  <input type="text" id="adminPreacher" list="adminPreacherList" placeholder="e.g. Pastor Anany Kasongo or Guest Speaker" class="admin-input" required autocomplete="off">
+                  <datalist id="adminPreacherList"></datalist>
                 </div>
                 <div class="admin-form-group">
                   <label>Duration <span style="color:var(--admin-muted);font-weight:400;">(M:SS)</span></label>
