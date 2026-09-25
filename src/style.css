@@ -4599,14 +4599,14 @@ body[data-active-view="contact"] .newsletter-section {
   background: #334155 !important;
 }
 
-/* ── Balanced 2-Column Utility Row ── */
+/* ── Share Modal Secondary Action ── */
 .share-actions-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  width: 100%;
 }
 
 .share-action-pill {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
