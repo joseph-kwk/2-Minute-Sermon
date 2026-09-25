@@ -2373,9 +2373,8 @@ function createSermonCardHtml(s, showFavorite = true) {
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
       </div>
       <div class="sermon-card-content">
-        <div class="carousel-badges" style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;">
-          <span class="badge badge-season">${s.primarySeason}</span>
-          ${primaryTopic ? `<span class="badge badge-topic">${primaryTopic}</span>` : ''}
+        <div class="carousel-badges" style="margin-bottom:8px;">
+          <span class="badge badge-topic">${primaryTopic || s.primarySeason || 'Faith'}</span>
         </div>
         <h3 class="sermon-card-title">${s.title}</h3>
         <div class="sermon-card-meta">${s.preacherName} &bull; ${s.scripture}</div>
@@ -2413,8 +2412,7 @@ function createSermonListRowHtml(s) {
             <span>&bull;</span>
             <span>${s.scripture}</span>
             <span>&bull;</span>
-            <span class="badge badge-season" style="font-size:0.72rem;padding:2px 8px;">${s.primarySeason}</span>
-            ${primaryTopic ? `<span>&bull;</span><span class="badge badge-topic" style="font-size:0.72rem;padding:2px 8px;">${primaryTopic}</span>` : ''}
+            <span class="badge badge-topic" style="font-size:0.72rem;padding:2px 8px;">${primaryTopic || s.primarySeason || 'Faith'}</span>
             <span>&bull;</span>
             <span>⏱️ ${s.duration}</span>
           </div>
