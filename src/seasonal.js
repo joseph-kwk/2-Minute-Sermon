@@ -51,6 +51,10 @@ class SeasonalManager {
     this.updateHeaderBadge();
     this.updateFooterShowcase();
 
+    // New Year Celebration Ceremony (Dec 31 to Jan 1 first landing)
+    this.newYearCeremony = new NewYearCeremony(this);
+    this.newYearCeremony.init();
+
     // Resize listener
     window.addEventListener('resize', () => this.handleResize());
   }
@@ -502,6 +506,41 @@ class SeasonalManager {
     if (this.activeSeason === 'christmas') {
       container.hidden = false;
       container.innerHTML = `
+        <div class="seasonal-showcase-svg-wrap">
+          <svg class="seasonal-showcase-svg" viewBox="0 0 340 85" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bethlehem Star and Caravans">
+            <defs>
+              <radialGradient id="bethlehemAura" cx="80%" cy="25%" r="45%">
+                <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.8" />
+                <stop offset="35%" stop-color="#F59E0B" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="#000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="270" cy="22" r="24" fill="url(#bethlehemAura)" />
+            <g transform="translate(270, 22)">
+              <line x1="0" y1="-18" x2="0" y2="18" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="-18" y1="0" x2="18" y2="0" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
+              <line x1="-9" y1="-9" x2="9" y2="9" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round" />
+              <line x1="9" y1="-9" x2="-9" y2="9" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round" />
+              <circle cx="0" cy="0" r="2.5" fill="#FFFFFF" />
+            </g>
+            <path d="M0 85 Q75 62 165 72 Q250 82 340 68 L340 85 L0 85 Z" fill="#0C1412" />
+            <!-- Camel 1 (Lead) -->
+            <g transform="translate(180, 52) scale(0.48)">
+              <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
+              <circle cx="34" cy="18" r="4.5" fill="#050907" />
+            </g>
+            <!-- Camel 2 -->
+            <g transform="translate(130, 55) scale(0.44)">
+              <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
+              <circle cx="34" cy="18" r="4.5" fill="#050907" />
+            </g>
+            <!-- Camel 3 -->
+            <g transform="translate(85, 58) scale(0.40)">
+              <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
+              <circle cx="34" cy="18" r="4.5" fill="#050907" />
+            </g>
+          </svg>
+        </div>
         <div class="seasonal-showcase-pill">⭐ Christmas Season of Grace</div>
         <h3 class="seasonal-showcase-title">Joy to the World — Celebrating the Nativity</h3>
         <blockquote class="seasonal-showcase-quote">
@@ -512,6 +551,36 @@ class SeasonalManager {
     } else if (this.activeSeason === 'newyear') {
       container.hidden = false;
       container.innerHTML = `
+        <div class="seasonal-showcase-svg-wrap">
+          <svg class="seasonal-showcase-svg" viewBox="0 0 340 85" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="New Year Celebration Stardust">
+            <defs>
+              <radialGradient id="nyStardustAura" cx="50%" cy="30%" r="50%">
+                <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.75" />
+                <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.30" />
+                <stop offset="100%" stop-color="#000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="170" cy="28" r="26" fill="url(#nyStardustAura)" />
+            <g transform="translate(170, 28)">
+              <line x1="0" y1="-20" x2="0" y2="20" stroke="#FDE68A" stroke-width="1.5" stroke-linecap="round" />
+              <line x1="-20" y1="0" x2="20" y2="0" stroke="#FDE68A" stroke-width="1.5" stroke-linecap="round" />
+              <line x1="-14" y1="-14" x2="14" y2="14" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" />
+              <line x1="14" y1="-14" x2="-14" y2="14" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round" />
+              <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+            </g>
+            <g transform="translate(85, 24) scale(0.65)">
+              <circle cx="0" cy="0" r="14" fill="url(#nyStardustAura)" />
+              <line x1="0" y1="-12" x2="0" y2="12" stroke="#FFFFFF" stroke-width="1.2" />
+              <line x1="-12" y1="0" x2="12" y2="0" stroke="#FFFFFF" stroke-width="1.2" />
+            </g>
+            <g transform="translate(255, 24) scale(0.65)">
+              <circle cx="0" cy="0" r="14" fill="url(#nyStardustAura)" />
+              <line x1="0" y1="-12" x2="0" y2="12" stroke="#FFFFFF" stroke-width="1.2" />
+              <line x1="-12" y1="0" x2="12" y2="0" stroke="#FFFFFF" stroke-width="1.2" />
+            </g>
+            <path d="M0 85 L35 85 L35 70 L48 70 L48 85 L95 85 L95 62 L105 52 L115 62 L115 85 L155 85 L165 42 L170 34 L175 42 L185 85 L225 85 L225 64 L235 55 L245 64 L245 85 L290 85 L290 72 L302 72 L302 85 L340 85 Z" fill="#0B0C12" />
+          </svg>
+        </div>
         <div class="seasonal-showcase-pill">✨ Grace in the New Year</div>
         <h3 class="seasonal-showcase-title">Walking in Faith &amp; New Beginnings</h3>
         <blockquote class="seasonal-showcase-quote">
@@ -522,8 +591,8 @@ class SeasonalManager {
     } else if (this.activeSeason === 'passion') {
       container.hidden = false;
       container.innerHTML = `
-        <div class="calvary-crosses-wrap">
-          <svg class="calvary-crosses-svg" viewBox="0 0 320 90" width="280" height="80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Three Crosses on Calvary Hill">
+        <div class="seasonal-showcase-svg-wrap calvary-crosses-wrap">
+          <svg class="seasonal-showcase-svg calvary-crosses-svg" viewBox="0 0 320 90" width="280" height="80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Three Crosses on Calvary Hill">
             <defs>
               <radialGradient id="crossAura" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stop-color="#DC2626" stop-opacity="0.65" />
@@ -561,6 +630,40 @@ class SeasonalManager {
     } else if (this.activeSeason === 'easter') {
       container.hidden = false;
       container.innerHTML = `
+        <div class="seasonal-showcase-svg-wrap">
+          <svg class="seasonal-showcase-svg" viewBox="0 0 340 85" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="The Empty Tomb of Christ">
+            <defs>
+              <radialGradient id="tombDawnGlow" cx="48%" cy="56%" r="48%">
+                <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+                <stop offset="35%" stop-color="#FDE68A" stop-opacity="0.65" />
+                <stop offset="65%" stop-color="#F59E0B" stop-opacity="0.30" />
+                <stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="easterDawnSky" cx="50%" cy="30%" r="55%">
+                <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.4" />
+                <stop offset="50%" stop-color="#7C3AED" stop-opacity="0.15" />
+                <stop offset="100%" stop-color="#000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="170" cy="35" r="40" fill="url(#easterDawnSky)" />
+            <path d="M0 85 Q70 65 140 70 L140 85 Z" fill="#0F1018" />
+            <g transform="translate(60, 50) scale(0.4)">
+              <rect x="-1" y="0" width="2" height="18" fill="#1C1A28" />
+              <rect x="-5" y="4" width="10" height="2" fill="#1C1A28" />
+              <rect x="19" y="-6" width="3" height="26" fill="#1C1A28" />
+              <rect x="13" y="0" width="15" height="2.5" fill="#1C1A28" />
+              <rect x="39" y="0" width="2" height="18" fill="#1C1A28" />
+              <rect x="35" y="4" width="10" height="2" fill="#1C1A28" />
+            </g>
+            <path d="M110 85 Q160 38 240 50 Q290 58 340 85 L340 85 L110 85 Z" fill="#11131E" />
+            <path d="M165 60 L130 30 M165 60 L145 20 M165 60 L170 15 M165 60 L195 20 M165 60 L210 32" stroke="#FDE68A" stroke-width="1.2" stroke-opacity="0.6" stroke-dasharray="2 3" />
+            <ellipse cx="172" cy="62" rx="16" ry="20" fill="url(#tombDawnGlow)" />
+            <ellipse cx="172" cy="63" rx="13" ry="17" fill="#FFFBEB" />
+            <path d="M166 69 Q172 67 178 69" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" />
+            <ellipse cx="198" cy="64" rx="14" ry="18" fill="#1E2130" stroke="#2D3247" stroke-width="1.5" />
+            <ellipse cx="196" cy="63" rx="10" ry="14" fill="#282D42" />
+          </svg>
+        </div>
         <div class="seasonal-showcase-pill">✝️ Holy Easter Resurrection</div>
         <h3 class="seasonal-showcase-title">He is Risen — Victory Over the Grave</h3>
         <blockquote class="seasonal-showcase-quote">
@@ -672,12 +775,349 @@ class SeasonalManager {
     if (banner) {
       banner.remove();
     }
+    if (this.newYearCeremony) {
+      this.newYearCeremony.dismiss();
+    }
     const showcase = document.getElementById('seasonalFooterShowcase');
     if (showcase) {
       showcase.hidden = true;
       showcase.innerHTML = '';
     }
     document.body.removeAttribute('data-season');
+  }
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * NEW YEAR TRANSITION CEREMONY
+ * High-Class Gala Transition (Dec 31 to Jan 1)
+ * Animates outgoing year vanishing into stardust, bursts confetti cannons,
+ * and reveals the new incoming year with blessings and Jeremiah 29:11.
+ * Plays only on the user's first landing during transition days (or via URL preview).
+ * --------------------------------------------------------------------------
+ */
+class NewYearCeremony {
+  constructor(manager) {
+    this.manager = manager;
+    this.overlay = null;
+    this.canvas = null;
+    this.ctx = null;
+    this.confetti = [];
+    this.animFrame = null;
+    this.isActive = false;
+    this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.autoDismissTimer = null;
+    this.keyHandler = null;
+    this.resizeHandler = null;
+  }
+
+  init() {
+    if (!this.shouldTrigger()) return;
+
+    // Gentle 500ms delay after page ready so the visitor is settled before the ceremony begins
+    setTimeout(() => {
+      this.mount();
+    }, 500);
+  }
+
+  shouldTrigger() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const forcePreview = urlParams.get('ceremony') === '1' ||
+                         urlParams.get('ny_ceremony') === '1' ||
+                         urlParams.get('test_ny') === '1' ||
+                         (urlParams.get('season') === 'newyear' && urlParams.get('welcome') === '1');
+
+    if (forcePreview) return true;
+
+    const now = new Date();
+    const month = now.getMonth() + 1; // 1-12
+    const day = now.getDate();
+    const year = now.getFullYear();
+
+    // Active strictly on the last day of the year (Dec 31) through the first day of the year (Jan 1)
+    const isTransitionDay = (month === 12 && day === 31) || (month === 1 && day === 1);
+    if (!isTransitionDay) return false;
+
+    // Scoped storage check: only play once per year per device on first landing
+    const incomingYear = (month === 12 && day === 31) ? year + 1 : year;
+    const storageKey = `2ms_ny_ceremony_${incomingYear}`;
+
+    try {
+      if (localStorage.getItem(storageKey) === 'seen') {
+        return false;
+      }
+    } catch (_) {}
+
+    return true;
+  }
+
+  getYears() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const year = now.getFullYear();
+
+    let outgoingYear, incomingYear;
+    if (month === 12 && day === 31) {
+      outgoingYear = year;
+      incomingYear = year + 1;
+    } else if (month === 1 && day === 1) {
+      incomingYear = year;
+      outgoingYear = year - 1;
+    } else {
+      // Preview or testing during another time of year
+      if (month === 12) {
+        outgoingYear = year;
+        incomingYear = year + 1;
+      } else {
+        outgoingYear = year - 1;
+        incomingYear = year;
+      }
+    }
+    return { outgoingYear, incomingYear };
+  }
+
+  markSeen() {
+    const { incomingYear } = this.getYears();
+    try {
+      localStorage.setItem(`2ms_ny_ceremony_${incomingYear}`, 'seen');
+    } catch (_) {}
+  }
+
+  mount() {
+    if (this.isActive || document.getElementById('nyCelebrationOverlay')) return;
+    this.isActive = true;
+    this.markSeen();
+
+    const { outgoingYear, incomingYear } = this.getYears();
+
+    // Create Celebration Overlay
+    this.overlay = document.createElement('div');
+    this.overlay.id = 'nyCelebrationOverlay';
+    this.overlay.className = 'ny-ceremony-overlay';
+    this.overlay.setAttribute('role', 'dialog');
+    this.overlay.setAttribute('aria-modal', 'true');
+    this.overlay.setAttribute('aria-label', `New Year ${incomingYear} Celebration`);
+
+    this.overlay.innerHTML = `
+      <canvas id="nyConfettiCanvas" class="ny-confetti-canvas"></canvas>
+      <button class="ny-ceremony-close" id="nyCloseBtn" aria-label="Close celebration" title="Skip celebration">&times;</button>
+      
+      <div class="ny-ceremony-stage">
+        <!-- Celestial Gala Backlight Glow -->
+        <div class="ny-ceremony-glow"></div>
+
+        <!-- Stage 1: Outgoing Year (Vanishes into Stardust) -->
+        <div class="ny-outgoing-wrap" id="nyOutgoingWrap">
+          <span class="ny-ceremony-eyebrow">Bidding Farewell to</span>
+          <div class="ny-year-number outgoing">${outgoingYear}</div>
+          <p class="ny-ceremony-farewell">“Thank you, Lord, for bringing us through every valley and mountain.”</p>
+        </div>
+
+        <!-- Stage 2: Incoming Year (Emerges with Confetti & Divine Blessing) -->
+        <div class="ny-incoming-wrap" id="nyIncomingWrap">
+          <div class="ny-ceremony-badge">✨ A BLESSED NEW CHAPTER ✨</div>
+          <div class="ny-year-number incoming">${incomingYear}</div>
+          <h2 class="ny-incoming-title">HAPPY NEW YEAR!</h2>
+          <p class="ny-incoming-blessing">Walking in Faith, Grace &amp; Divine Purpose</p>
+          <blockquote class="ny-incoming-scripture">
+            “‘For I know the plans I have for you,’ declares the Lord, ‘plans to prosper you and not to harm you, plans to give you hope and a future.’”
+            <cite>— Jeremiah 29:11</cite>
+          </blockquote>
+          <button class="ny-ceremony-btn" id="nyEnterBtn">Step Into ${incomingYear} in Faith &rarr;</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(this.overlay);
+
+    // Confetti canvas setup
+    this.canvas = document.getElementById('nyConfettiCanvas');
+    if (this.canvas) {
+      this.ctx = this.canvas.getContext('2d');
+      this.resizeCanvas();
+    }
+
+    // Interactive dismissal buttons
+    const closeBtn = document.getElementById('nyCloseBtn');
+    if (closeBtn) closeBtn.addEventListener('click', () => this.dismiss());
+
+    const enterBtn = document.getElementById('nyEnterBtn');
+    if (enterBtn) enterBtn.addEventListener('click', () => this.dismiss());
+
+    // Tap on backdrop dismisses
+    this.overlay.addEventListener('click', (e) => {
+      if (e.target === this.overlay) this.dismiss();
+    });
+
+    // Keyboard ESC dismisses
+    this.keyHandler = (e) => {
+      if (e.key === 'Escape') this.dismiss();
+    };
+    window.addEventListener('keydown', this.keyHandler);
+
+    // Canvas resize listener
+    this.resizeHandler = () => this.resizeCanvas();
+    window.addEventListener('resize', this.resizeHandler);
+
+    // Run choreographed ceremony
+    this.runSequence();
+  }
+
+  resizeCanvas() {
+    if (!this.canvas) return;
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  }
+
+  runSequence() {
+    const outgoingWrap = document.getElementById('nyOutgoingWrap');
+    const incomingWrap = document.getElementById('nyIncomingWrap');
+
+    if (this.isReducedMotion) {
+      if (outgoingWrap) outgoingWrap.style.display = 'none';
+      if (incomingWrap) {
+        incomingWrap.classList.add('emerged');
+        incomingWrap.style.opacity = '1';
+      }
+      return;
+    }
+
+    // Step 1: Outgoing year stays steady until 1.8s
+    // Step 2: At 1.8s, outgoing year dissolves upward into stardust
+    setTimeout(() => {
+      if (!this.isActive) return;
+      if (outgoingWrap) outgoingWrap.classList.add('vanishing');
+    }, 1800);
+
+    // Step 3: At 2.4s, confetti cannon explodes across the screen
+    setTimeout(() => {
+      if (!this.isActive) return;
+      this.launchConfetti();
+    }, 2400);
+
+    // Step 4: At 2.7s, incoming year emerges gloriously with golden bloom
+    setTimeout(() => {
+      if (!this.isActive) return;
+      if (outgoingWrap) outgoingWrap.style.display = 'none';
+      if (incomingWrap) incomingWrap.classList.add('emerged');
+    }, 2700);
+
+    // Step 5: Auto-dismiss gracefully after 8.5 seconds
+    this.autoDismissTimer = setTimeout(() => {
+      if (this.isActive) this.dismiss();
+    }, 8500);
+  }
+
+  launchConfetti() {
+    if (!this.canvas || !this.ctx) return;
+    this.confetti = [];
+    const isMobile = window.innerWidth < 768;
+    const count = isMobile ? 65 : 120;
+    const colors = [
+      '#F59E0B', '#FBBF24', '#D97706', '#FEF3C7', '#FFFFFF',
+      '#8B5CF6', '#EC4899', '#10B981'
+    ];
+
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    // Dual cannons: Left & Right lower corners aiming towards celestial sky
+    for (let i = 0; i < count; i++) {
+      const isLeft = i % 2 === 0;
+      const originX = isLeft ? w * 0.14 : w * 0.86;
+      const originY = h * 0.84;
+      const angle = isLeft 
+        ? -Math.PI / 4 - (Math.random() * 0.32)
+        : -3 * Math.PI / 4 + (Math.random() * 0.32);
+      const velocity = Math.random() * 15 + 11;
+
+      this.confetti.push({
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * velocity + (Math.random() - 0.5) * 4,
+        vy: Math.sin(angle) * velocity,
+        gravity: Math.random() * 0.18 + 0.22,
+        drag: 0.965,
+        width: Math.random() * 9 + 6,
+        height: Math.random() * 14 + 8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 11,
+        tilt: Math.random() * 10,
+        tiltSpeed: Math.random() * 0.12 + 0.06,
+        isRibbon: Math.random() > 0.35,
+        opacity: 1
+      });
+    }
+
+    this.animateConfetti();
+  }
+
+  animateConfetti() {
+    if (!this.isActive || !this.ctx || !this.canvas) return;
+
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    let activeCount = 0;
+
+    for (let p of this.confetti) {
+      if (p.opacity <= 0) continue;
+      activeCount++;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= p.drag;
+      p.vy += p.gravity;
+      p.rotation += p.rotationSpeed;
+      p.tilt += p.tiltSpeed;
+
+      // Gentle fade as it descends
+      if (p.y > this.canvas.height * 0.65) {
+        p.opacity -= 0.015;
+      }
+
+      this.ctx.save();
+      this.ctx.translate(p.x, p.y);
+      this.ctx.rotate((p.rotation * Math.PI) / 180);
+      this.ctx.globalAlpha = Math.max(0, p.opacity);
+      this.ctx.fillStyle = p.color;
+
+      if (p.isRibbon) {
+        const ribbonWidth = p.width * Math.cos(p.tilt);
+        this.ctx.fillRect(-ribbonWidth / 2, -p.height / 2, ribbonWidth, p.height);
+      } else {
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, p.width * 0.45, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      this.ctx.restore();
+    }
+
+    if (activeCount > 0) {
+      this.animFrame = requestAnimationFrame(() => this.animateConfetti());
+    }
+  }
+
+  dismiss() {
+    if (!this.isActive) return;
+    this.isActive = false;
+
+    if (this.autoDismissTimer) clearTimeout(this.autoDismissTimer);
+    if (this.keyHandler) window.removeEventListener('keydown', this.keyHandler);
+    if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
+
+    if (this.overlay) {
+      this.overlay.classList.add('dismissed');
+      setTimeout(() => {
+        if (this.animFrame) cancelAnimationFrame(this.animFrame);
+        this.overlay?.remove();
+        this.overlay = null;
+        this.canvas = null;
+        this.ctx = null;
+        this.confetti = [];
+      }, 750);
+    }
   }
 }
 
