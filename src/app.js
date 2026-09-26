@@ -4433,7 +4433,7 @@ export function openVideoShareModal(video) {
   // Header dynamic labels
   const headingEl = document.getElementById('shareModalHeading');
   if (headingEl) {
-    headingEl.textContent = video.heading || 'Share Video';
+    headingEl.textContent = video.heading || 'Share';
   }
 
   // Card preview
@@ -4558,25 +4558,6 @@ export function openVideoShareModal(video) {
         }, 2000);
       }).catch(() => {
         showToast('🔗 Video link copied!');
-      });
-    };
-  }
-
-  // Copy Formatted Message Button for Chat / SMS
-  const copyMsgBtn = document.getElementById('btnCopyFormattedMsg');
-  if (copyMsgBtn) {
-    copyMsgBtn.onclick = () => {
-      navigator.clipboard.writeText(formattedMsg).then(() => {
-        copyMsgBtn.classList.add('copied');
-        const span = copyMsgBtn.querySelector('span');
-        if (span) span.textContent = '✓ Message & Video Link Copied!';
-        showToast('📋 Message & video link copied for chat/SMS!');
-        setTimeout(() => {
-          copyMsgBtn.classList.remove('copied');
-          if (span) span.textContent = 'Copy Text & Video Link for Messages';
-        }, 2200);
-      }).catch(() => {
-        showToast('📋 Message copied to clipboard!');
       });
     };
   }
