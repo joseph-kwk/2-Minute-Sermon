@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPartnersManager();
   setupEventsManager();
   setupReflectionsManager();
+  setupWrittenPrayersAdmin();
   setupSettingsPanel();
   setupBackupPanel();
   setupSubscribersManager();
@@ -271,19 +272,19 @@ function setupQuickActions() {
 }
 
 const PANEL_TITLES = {
-  dashboard:     'Dashboard',
-  'daily-verse': 'Daily Verse Queue',
-  reflections:   'Community Reflections Moderation',
-  sermons:       'Sermon Publisher',
-  preachers:     'Preachers Manager',
-  events:        'Events Manager',
-  leadership:    'Leadership & Team',
-  conversations: 'The Conversation',
-  partners:      'Ministry Partners',
-  subscribers:   'Newsletter Subscribers',
-  prayers:       'Prayer Inbox',
-  settings:      'Ministry Settings',
-  backup:        'Export & Backup'
+  dashboard:           'Dashboard',
+  'daily-verse':       'Daily Verse Queue',
+  reflections:         'Community Reflections Moderation',
+  sermons:             'Sermon Publisher',
+  preachers:           'Preachers Manager',
+  events:              'Events Manager',
+  leadership:          'Leadership & Team',
+  conversations:       'The Conversation',
+  partners:            'Ministry Partners',
+  subscribers:         'Newsletter Subscribers',
+  prayers:             'Prayers & Requests',
+  settings:            'Ministry Settings',
+  backup:              'Export & Backup'
 };
 
 function switchPanel(panelId) {
@@ -299,6 +300,9 @@ function switchPanel(panelId) {
     renderReflectionsList();
   } else if (panelId === 'dashboard') {
     renderDashboardStats();
+  } else if (panelId === 'prayers') {
+    renderPrayerInbox();
+    renderAdminWrittenPrayers();
   }
 }
 
@@ -319,8 +323,11 @@ function renderDashboardStats() {
 }
 
 function updatePrayerBadge() {
+  const count = getPrayers().length;
   const b = document.getElementById('prayerBadge');
-  if (b) b.textContent = getPrayers().length;
+  if (b) b.textContent = count;
+  const sub = document.getElementById('prayerInboxSubBadge');
+  if (sub) sub.textContent = count;
 }
 
 // ── DAILY VERSE SCHEDULER ─────────────────────────────────────────────────
@@ -1716,7 +1723,90 @@ window.markPrayed = (id) => {
   toast('✓ Prayer marked as prayed for!');
 };
 
-// ── COMMUNITY REFLECTIONS MODERATION ─────────────────────────────────────────
+// ── WRITTEN PRAYERS (shared store with public site) ───────────────────────────
+const WP_KEY_ADMIN = '2ms_written_prayers';
+const WP_DEFAULT_ADMIN = [
+  { id: 'wp-default-1', title: 'Prayer for Peace in Anxiety', body: 'Lord Jesus, when my heart is overwhelmed, lead me to the Rock that is higher than I. Quiet my racing thoughts with Your divine peace that surpasses all understanding. Let Your presence be my anchor today. Amen.' },
+  { id: 'wp-default-2', title: 'Prayer for Guidance & Wisdom', body: 'Father, grant me discerning eyes and an attentive spirit as I make decisions today. Align my steps with Your holy will and let Your Word be a lamp to my feet and a light to my path. Amen.' }
+];
+
+function getWrittenPrayersAdmin() {
+  try {
+    const raw = localStorage.getItem(WP_KEY_ADMIN);
+    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length) return p; }
+  } catch (_) {}
+  return [...WP_DEFAULT_ADMIN];
+}
+function saveWrittenPrayersAdmin(list) {
+  try {
+    localStorage.setItem(WP_KEY_ADMIN, JSON.stringify(list));
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('2ms:written_prayers:updated', { detail: list }));
+  } catch (_) {}
+}
+
+window.switchPrayerSubtab = (tab) => {
+  const inboxEl = document.getElementById('subtab-prayer-inbox');
+  const writtenEl = document.getElementById('subtab-written-prayers');
+  const btnInbox = document.getElementById('btnSubtabPrayerInbox');
+  const btnWritten = document.getElementById('btnSubtabWrittenPrayers');
+  if (tab === 'inbox') {
+    if (inboxEl) inboxEl.style.display = 'block';
+    if (writtenEl) writtenEl.style.display = 'none';
+    btnInbox?.classList.add('active');
+    btnWritten?.classList.remove('active');
+    renderPrayerInbox();
+  } else {
+    if (inboxEl) inboxEl.style.display = 'none';
+    if (writtenEl) writtenEl.style.display = 'block';
+    btnInbox?.classList.remove('active');
+    btnWritten?.classList.add('active');
+    renderAdminWrittenPrayers();
+  }
+};
+
+function setupWrittenPrayersAdmin() {
+  renderAdminWrittenPrayers();
+  document.getElementById('adminWrittenPrayerForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = (document.getElementById('wpAdminTitle')?.value || '').trim();
+    const body  = (document.getElementById('wpAdminBody')?.value  || '').trim();
+    if (!title || !body) { toast('⚠️ Fill in both fields.'); return; }
+    const list = getWrittenPrayersAdmin();
+    list.unshift({ id: `wp-${Date.now()}`, title, body });
+    saveWrittenPrayersAdmin(list);
+    e.target.reset();
+    renderAdminWrittenPrayers();
+    toast('✅ Written prayer published!');
+  });
+}
+
+function renderAdminWrittenPrayers() {
+  const c = document.getElementById('adminWrittenPrayersList');
+  if (!c) return;
+  const list = getWrittenPrayersAdmin();
+  if (!list.length) {
+    c.innerHTML = `<p style="color:var(--admin-muted);text-align:center;padding:20px 0;">No written prayers yet. Add one above.</p>`;
+    return;
+  }
+  c.innerHTML = list.map(p => `
+    <div class="admin-prayer-item" data-wp-id="${p.id}" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;">
+      <div class="admin-prayer-header">
+        <strong style="color:#fff;font-size:0.92rem;">${escapeAdminHtml(p.title)}</strong>
+        <button class="admin-btn admin-btn-sm" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);" onclick="deleteWrittenPrayerAdmin('${p.id}')">🗑 Remove</button>
+      </div>
+      <p style="font-size:0.84rem;color:rgba(255,255,255,0.75);line-height:1.6;margin:8px 0 0;">${escapeAdminHtml(p.body)}</p>
+    </div>`).join('');
+}
+
+window.deleteWrittenPrayerAdmin = (id) => {
+  const list = getWrittenPrayersAdmin().filter(p => p.id !== id);
+  saveWrittenPrayersAdmin(list);
+  renderAdminWrittenPrayers();
+  toast('Written prayer removed.');
+};
+
+
 function setupReflectionsManager() {
   const searchInput = document.getElementById('adminReflectionsSearch');
   const dateFilter = document.getElementById('adminReflectionsDateFilter');

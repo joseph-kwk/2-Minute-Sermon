@@ -1,6 +1,6 @@
 const STORAGE_KEY = '2ms_sermons';
 const VERSION_KEY = '2ms_sermons_ver';
-const CURRENT_SEED_VERSION = '2ms_v2.2_real_yt';
+const CURRENT_SEED_VERSION = '2ms_v2.3_accurate_topics';
 
 // ── Seed data (curated real videos from @2MinuteSermonP YouTube channel) ─────
 const seedSermons = [
@@ -41,7 +41,7 @@ const seedSermons = [
     scriptureBook: "Ephesians",
     primarySeason: "Easter",
     secondarySeasons: ["Lent"],
-    topics: ["Grace", "Salvation", "Faith"],
+    topics: ["Grace", "Salvation", "Forgiveness", "Faith"],
     sermonType: "Teaching",
     duration: "2:03",
     durationSec: 123,
@@ -122,7 +122,7 @@ const seedSermons = [
     scriptureBook: "Joel",
     primarySeason: "Lent",
     secondarySeasons: ["Easter"],
-    topics: ["Healing", "Grace", "Hope"],
+    topics: ["Healing", "Grace", "Hope", "Forgiveness"],
     sermonType: "Devotional",
     duration: "2:40",
     durationSec: 160,
@@ -258,7 +258,7 @@ const seedSermons = [
     scriptureBook: "Galatians",
     primarySeason: "Lent",
     secondarySeasons: ["Easter", "Holy Week"],
-    topics: ["Grace", "Salvation", "Faith"],
+    topics: ["Forgiveness", "Grace", "Salvation", "Faith"],
     sermonType: "Teaching",
     duration: "2:35",
     durationSec: 155,
@@ -313,7 +313,7 @@ const seedSermons = [
     scriptureBook: "Matthew",
     primarySeason: "Christmas",
     secondarySeasons: ["Advent"],
-    topics: ["Faith", "Salvation", "Encouragement"],
+    topics: ["Salvation", "Forgiveness", "Faith", "Encouragement"],
     sermonType: "Devotional",
     duration: "2:40",
     durationSec: 160,
@@ -423,7 +423,7 @@ const seedSermons = [
     scriptureBook: "Jeremiah",
     primarySeason: "Ordinary Time",
     secondarySeasons: ["Pentecost"],
-    topics: ["Faith", "Hope", "Prayer"],
+    topics: ["Healing", "Faith", "Hope", "Prayer"],
     sermonType: "Devotional",
     duration: "2:19",
     durationSec: 139,

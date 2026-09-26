@@ -791,16 +791,8 @@
 
           <div class="written-prayers-container" id="writtenPrayersSection">
             <h2 class="card-title">Written Prayers for Your Day</h2>
-            <div class="written-prayer-card">
-              <h3>Prayer for Peace in Anxiety</h3>
-              <p>"Lord Jesus, when my heart is overwhelmed, lead me to the Rock that is higher than I. Quiet my racing thoughts with Your divine presence..."</p>
-              <button class="btn btn-sm btn-outline copy-prayer-btn">Copy Prayer</button>
-            </div>
-            <div class="written-prayer-card">
-              <h3>Prayer for Guidance & Wisdom</h3>
-              <p>"Father, grant me discerning eyes and an attentive spirit as I make decisions today. Align my steps with Your holy will..."</p>
-              <button class="btn btn-sm btn-outline copy-prayer-btn">Copy Prayer</button>
-            </div>
+            <!-- Dynamically rendered by renderWrittenPrayers() in app.js -->
+            <div id="writtenPrayersList"></div>
           </div>
         </div>
       </div>
@@ -1187,7 +1179,10 @@
             🎙️ Preachers Manager
           </button>
           <button class="admin-tab-btn" data-admintab="prayer-inbox">
-            🙏 Prayer Inbox (<span id="adminPendingBadge">2</span>)
+            🙏 Prayer Inbox (<span id="adminPendingBadge">0</span>)
+          </button>
+          <button class="admin-tab-btn" data-admintab="written-prayers">
+            ✍️ Written Prayers
           </button>
           <button class="admin-tab-btn" data-admintab="cms-backup">
             📦 CMS Export / Backup
@@ -1381,6 +1376,30 @@
           </div>
         </div>
 
+        </div>
+
+        <!-- Admin Tab 4b: Written Prayers Manager -->
+        <div class="admin-tab-content" id="admintab-written-prayers">
+          <div class="admin-card" style="max-width:800px; margin:0 auto;">
+            <h2 class="card-title">Written Prayers Manager</h2>
+            <p class="card-subtitle">Publish and manage curated written prayers shown on the public Prayers page.</p>
+
+            <form id="adminWrittenPrayerForm" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+              <div class="form-group">
+                <label for="wpTitle" class="form-label">Prayer Title</label>
+                <input type="text" id="wpTitle" class="input-field" placeholder="e.g. Prayer for Peace in Anxiety" required>
+              </div>
+              <div class="form-group">
+                <label for="wpBody" class="form-label">Prayer Text</label>
+                <textarea id="wpBody" class="input-field" rows="4" placeholder="Write the full prayer here..." required style="resize:vertical;"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">✨ Publish Written Prayer</button>
+            </form>
+
+            <div id="adminWrittenPrayersList" style="display:flex;flex-direction:column;gap:12px;"></div>
+          </div>
+        </div>
+
         <!-- Admin Tab 5: CMS Export & Backup -->
         <div class="admin-tab-content" id="admintab-cms-backup">
           <div class="admin-card" style="max-width:800px; margin:0 auto; text-align:center;">
@@ -1524,20 +1543,23 @@
   <!-- Sermon Share & Visual Card Modal -->
   <div class="modal-backdrop" id="sermonShareModal" hidden>
     <div class="modal-dialog modal-share-dialog">
-      <button class="modal-close-btn" id="closeSermonShareBtn" aria-label="Close share modal">✕</button>
-      
-      <div class="share-modal-content">
-        <div class="share-modal-header">
-          <h2 class="share-modal-title" id="shareModalHeading">Share Video</h2>
+      <div class="share-modal-header">
+        <div class="share-header-left">
+          <span class="share-badge-tag">Share Blessing</span>
+          <h2 class="share-modal-title" id="shareModalHeading">Share Sermon</h2>
         </div>
+        <button class="modal-close-btn" id="closeSermonShareBtn" aria-label="Close share modal">✕</button>
+      </div>
 
-        <!-- Simple, Elegant Media Card -->
+      <div class="share-modal-body">
+        <!-- Modern YouTube-style Video Preview Card -->
         <div class="share-preview-card" id="sharePreviewCard">
           <div class="share-preview-thumb-wrap">
             <img id="shareModalThumb" src="" alt="Video Thumbnail" class="share-preview-thumb">
-            <div class="share-preview-play-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 19 12 7 20 7 4"></polygon></svg>
-            </div>
+            <span class="share-preview-yt-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>YouTube</span>
+            </span>
             <span class="share-preview-duration" id="shareModalDuration">2:00</span>
           </div>
           <div class="share-preview-info">
@@ -1547,40 +1569,70 @@
               <span class="share-preview-dot" id="shareModalDot">•</span>
               <span class="share-preview-topic" id="shareModalScripture">Scripture</span>
             </div>
+            <div class="share-preview-badge-sub">⚡ Native playable video player in iMessage, WhatsApp &amp; SMS</div>
           </div>
+        </div>
+
+        <!-- Link Type Selector: YouTube vs Web -->
+        <div class="share-link-type-row">
+          <button type="button" class="share-type-pill active" id="btnShareTypeYoutube" data-type="youtube">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <span>YouTube Link (Rich Player)</span>
+          </button>
+          <button type="button" class="share-type-pill" id="btnShareTypeWeb" data-type="web">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>Website Link</span>
+          </button>
+        </div>
+
+        <!-- 1-Click Link Copy Bar -->
+        <div class="share-link-box">
+          <input type="text" id="shareModalLinkInput" class="share-link-input" readonly spellcheck="false">
+          <button type="button" class="btn btn-primary btn-copy-link" id="btnCopyShareLink">
+            <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span class="copy-text">Copy</span>
+          </button>
         </div>
 
         <!-- Social Share App Row -->
         <div class="share-social-grid">
-          <button type="button" class="share-platform-btn btn-share-whatsapp" id="btnShareWhatsapp" title="Share via WhatsApp">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.47c-.16 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.17 1.77 2.7 4.28 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.11-.23-.17-.48-.3z"/></svg>
+          <button type="button" class="share-app-btn share-app-whatsapp" id="btnShareWhatsapp" title="Share via WhatsApp">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.47c-.16 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.17 1.77 2.7 4.28 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.11-.23-.17-.48-.3z"/></svg>
+            </div>
             <span>WhatsApp</span>
           </button>
-          <button type="button" class="share-platform-btn btn-share-facebook" id="btnShareFacebook" title="Share on Facebook">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          <button type="button" class="share-app-btn share-app-x" id="btnShareX" title="Post on X">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </div>
+            <span>X</span>
+          </button>
+          <button type="button" class="share-app-btn share-app-facebook" id="btnShareFacebook" title="Share on Facebook">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </div>
             <span>Facebook</span>
           </button>
-          <button type="button" class="share-platform-btn btn-share-instagram" id="btnShareInstagram" title="Share on Instagram">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-            <span>Instagram</span>
+          <button type="button" class="share-app-btn share-app-email" id="btnShareEmail" title="Send via Email">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <span>Email</span>
           </button>
-          <button type="button" class="share-platform-btn btn-share-native" id="btnShareNative" title="Device Share Options">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <button type="button" class="share-app-btn share-app-native" id="btnShareNative" title="Device Share Options">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </div>
             <span>More</span>
           </button>
         </div>
 
-        <!-- 1-Click Link Copy -->
-        <div class="share-link-box">
-          <input type="text" id="shareModalLinkInput" class="share-link-input" readonly spellcheck="false">
-          <button type="button" class="btn btn-primary btn-sm btn-copy-link" id="btnCopyShareLink">Copy Link</button>
-        </div>
-
-        <!-- Secondary Action: Copy Full Message for Chat / SMS -->
+        <!-- 1-Click Copy Full Message for SMS / Chat -->
         <div class="share-actions-row">
-          <button type="button" class="share-action-pill" id="btnCopyFormattedMsg" title="Copy text with emoji & link for chat">
+          <button type="button" class="btn-copy-full-msg" id="btnCopyFormattedMsg" title="Copy full message with title, scripture and video link">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>Copy Formatted Message</span>
+            <span>Copy Text &amp; Video Link for Messages</span>
           </button>
         </div>
       </div>

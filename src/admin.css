@@ -312,6 +312,41 @@ html, body { height: 100%; font-family: var(--font-body); }
   color: #ff8a80;
 }
 
+/* ── In-Panel Sub-Tabs (e.g. Prayers Inbox vs Written) ── */
+.admin-subtabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: 14px;
+}
+.admin-subtab-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition);
+  font-family: var(--font-body);
+}
+.admin-subtab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.admin-subtab-btn.active {
+  background: var(--admin-red-light);
+  color: #fff;
+  border-color: var(--admin-red);
+  box-shadow: 0 0 14px var(--admin-red-glow);
+}
+
 /* ── Main Content ── */
 .admin-main {
   display: flex;

@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSermonFilters();
   setupDailyVerse();
   setupPrayerForm();
+  setupAdminWrittenPrayers();
   setupNewsletterForm();
   setupGeneralContactForm();
   setupAdminPortal();
@@ -113,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAboutTeamRoster();
   renderAboutPartners();
   updateFooterSocialLinks();
+  renderWrittenPrayers();
 
   // ─── Real-time Cloud Data Sync Listeners ─────────────────────────────────
   const refreshAllUI = () => {
@@ -2358,9 +2360,27 @@ function updateFavoritesCountBadge() {
 let activeDurationFilter = 'all'; // 'all', 'under1', '1to2', 'over2', 'favorites'
 let activeViewMode = 'grid'; // 'grid' or 'list'
 
+function getSermonDisplayTopic(s) {
+  const activeTopic = document.getElementById('filterTopic')?.value?.toLowerCase();
+  const knownTopicNames = topics.map(t => t.name.toLowerCase());
+  
+  if (Array.isArray(s.topics) && s.topics.length) {
+    if (activeTopic && activeTopic !== 'all') {
+      const match = s.topics.find(t => t.toLowerCase() === activeTopic);
+      if (match) return match;
+    }
+    const validTopic = s.topics.find(t => knownTopicNames.includes(t.toLowerCase()));
+    if (validTopic) return validTopic;
+    return s.topics[0];
+  }
+  if (s.category && knownTopicNames.includes(s.category.toLowerCase())) return s.category;
+  if (s.topic && knownTopicNames.includes(s.topic.toLowerCase())) return s.topic;
+  return 'Faith';
+}
+
 function createSermonCardHtml(s, showFavorite = true) {
   const isFav = savedFavorites.includes(s.id);
-  const primaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
+  const cardTopic = getSermonDisplayTopic(s);
   return `
     <div class="sermon-card">
       <div class="sermon-thumb-wrap">
@@ -2368,17 +2388,17 @@ function createSermonCardHtml(s, showFavorite = true) {
         <button class="sermon-card-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Favorite sermon">
           ★
         </button>` : ''}
-        <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-thumb-img" loading="lazy"
+        <img src="${s.thumbnailUrl}" alt="${escapeHtml(s.title)}" class="sermon-thumb-img" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
         <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
       </div>
       <div class="sermon-card-content">
         <div class="carousel-badges" style="margin-bottom:8px;">
-          <span class="badge badge-topic">${primaryTopic || s.primarySeason || 'Faith'}</span>
+          <span class="badge badge-topic">${escapeHtml(cardTopic)}</span>
         </div>
-        <h3 class="sermon-card-title">${s.title}</h3>
-        <div class="sermon-card-meta">${s.preacherName} &bull; ${s.scripture}</div>
-        <p class="sermon-card-summary">${s.summary}</p>
+        <h3 class="sermon-card-title">${escapeHtml(s.title)}</h3>
+        <div class="sermon-card-meta">${escapeHtml(s.preacherName)} &bull; ${escapeHtml(s.scripture)}</div>
+        <p class="sermon-card-summary">${escapeHtml(s.summary)}</p>
         <div class="sermon-card-footer">
           <button class="btn btn-primary btn-sm" onclick="window.openSermonModal('${s.id}')">
             ${svgPlay} Watch
@@ -2397,40 +2417,43 @@ function createSermonCardHtml(s, showFavorite = true) {
 
 function createSermonListRowHtml(s) {
   const isFav = savedFavorites.includes(s.id);
-  const primaryTopic = (Array.isArray(s.topics) && s.topics.length) ? s.topics[0] : (s.category || s.topic || '');
+  const cardTopic = getSermonDisplayTopic(s);
+  const snippetText = s.summary ? (s.summary.length > 90 ? s.summary.slice(0, 90).trim() + '…' : s.summary) : '';
   return `
     <div class="sermon-list-row" data-sermon-id="${s.id}">
-      <div class="sermon-list-left">
-        <button class="sermon-list-play-btn" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen now while you browse" aria-label="Listen to sermon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </button>
-        <img src="${s.thumbnailUrl}" alt="${s.title}" class="sermon-list-thumb" loading="lazy" onerror="this.src='/assets/logo.png'">
-        <div class="sermon-list-info">
-          <h4 class="sermon-list-title" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="View Details">${s.title}</h4>
-          <div class="sermon-list-meta">
-            <span><strong>${s.preacherName}</strong></span>
-            <span>&bull;</span>
-            <span>${s.scripture}</span>
-            <span>&bull;</span>
-            <span class="badge badge-topic" style="font-size:0.72rem;padding:2px 8px;">${primaryTopic || s.primarySeason || 'Faith'}</span>
-            <span>&bull;</span>
-            <span>⏱️ ${s.duration}</span>
-          </div>
+      <div class="sermon-list-thumb-wrap">
+        <img src="${s.thumbnailUrl}" alt="${escapeHtml(s.title)}" class="sermon-list-thumb" loading="lazy"
+          onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='/assets/logo.png';}"
+        >
+        <span class="sermon-list-duration-badge">${s.duration}</span>
+      </div>
+      <div class="sermon-list-info">
+        <div class="sermon-list-chips">
+          <span class="badge badge-topic" style="font-size:0.7rem;padding:2px 9px;">${escapeHtml(cardTopic)}</span>
         </div>
+        <h4 class="sermon-list-title" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="View Details">${escapeHtml(s.title)}</h4>
+        <div class="sermon-list-meta">
+          <span><strong>${escapeHtml(s.preacherName)}</strong></span>
+          <span class="list-meta-sep">·</span>
+          <span>${escapeHtml(s.scripture)}</span>
+        </div>
+        ${snippetText ? `<p class="sermon-list-snippet">${escapeHtml(snippetText)}</p>` : ''}
       </div>
       <div class="sermon-list-actions">
-        <button class="sermon-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}">
+        <button class="sermon-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Save sermon">
           ★
         </button>
-        <button class="btn btn-outline btn-sm" onclick="window.openSermonModal('${s.id}')">
-          Watch
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')">
-          🎧 Listen
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.shareSermon('${s.id}')" title="Share Sermon">
-          ${svgShare} Share
-        </button>
+        <div class="sermon-list-btns">
+          <button class="btn btn-primary btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')">
+            🎧 Listen
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="window.openSermonModal('${s.id}')">
+            ${svgPlay} Watch
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.shareSermon('${s.id}')" title="Share Sermon">
+            ${svgShare}
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -2560,22 +2583,10 @@ function populateDropdownFilterOptions() {
 
   if (topicSel) {
     const prevVal = topicSel.value || 'all';
-    const topicSet = new Set(topics.map(t => t.name));
-    sermons().forEach(s => {
-      let sTopics = [];
-      if (Array.isArray(s.topics)) sTopics = s.topics;
-      else if (typeof s.topics === 'string') sTopics = s.topics.split(',');
-      if (s.category) sTopics = [...sTopics, s.category];
-      if (s.topic) sTopics = [...sTopics, s.topic];
-      sTopics.forEach(t => {
-        const trimmed = String(t || '').trim();
-        if (trimmed) topicSet.add(trimmed);
-      });
-    });
-    const sortedTopics = Array.from(topicSet).sort((a, b) => a.localeCompare(b));
+    const canonicalTopics = topics.map(t => t.name).sort((a, b) => a.localeCompare(b));
     topicSel.innerHTML = `<option value="all">All Topics</option>` +
-      sortedTopics.map(t => `<option value="${t}">${t}</option>`).join('');
-    if (sortedTopics.includes(prevVal)) {
+      canonicalTopics.map(t => `<option value="${t}">${t}</option>`).join('');
+    if (canonicalTopics.includes(prevVal)) {
       topicSel.value = prevVal;
     }
   }
@@ -2677,14 +2688,14 @@ function filterAndRenderSermons() {
     if (activeDurationFilter === 'favorites') {
       if (!savedFavorites.includes(s.id)) return false;
     } else if (activeDurationFilter === 'under1') {
-      const sec = s.durationSec || 120;
-      if (sec >= 60) return false;
+      const sec = s.durationSec ?? 120;
+      if (sec >= 60) return false;                          // strictly under 1 min
     } else if (activeDurationFilter === '1to2') {
-      const sec = s.durationSec || 120;
-      if (sec < 60 || sec > 120) return false;
+      const sec = s.durationSec ?? 120;
+      if (sec < 60 || sec > 120) return false;              // 1:00 – 2:00 inclusive
     } else if (activeDurationFilter === 'over2') {
-      const sec = s.durationSec || 120;
-      if (sec <= 120) return false;
+      const sec = s.durationSec ?? 120;
+      if (sec < 121) return false;                          // anything above 2:00
     }
 
     if (topic !== 'all') {
@@ -2695,17 +2706,27 @@ function filterAndRenderSermons() {
       } else if (typeof s.topics === 'string') {
         sTopics = s.topics.split(',').map(t => t.trim());
       }
+      // Note: intentionally NOT including s.sermonType — it is not a topic.
       if (s.category) sTopics.push(String(s.category).trim());
-      if (s.topic) sTopics.push(String(s.topic).trim());
-      if (s.sermonType) sTopics.push(String(s.sermonType).trim());
+      if (s.topic)    sTopics.push(String(s.topic).trim());
       const matchesTopic = sTopics.some(t => t.toLowerCase() === topicLower);
       if (!matchesTopic) return false;
     }
-    if (preacher !== 'all' && (s.preacherName || '').toLowerCase().trim() !== preacher.toLowerCase().trim()) return false;
+    if (preacher !== 'all') {
+      const pNorm = (s.preacherName || '').toLowerCase().trim();
+      const fNorm = preacher.toLowerCase().trim();
+      // Support both exact match and preacher name containing filter value
+      if (pNorm !== fNorm && !pNorm.includes(fNorm)) return false;
+    }
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
     if (search) {
-      const hit = [s.title, s.preacherName, s.scripture, s.summary, ...(s.transcript || []).map(t => t.text)]
-        .some(str => str.toLowerCase().includes(search));
+      const fields = [
+        s.title, s.preacherName, s.scripture, s.summary,
+        s.primarySeason, s.scriptureBook,
+        ...(Array.isArray(s.topics) ? s.topics : []),
+        ...(s.transcript || []).map(t => t.text)
+      ];
+      const hit = fields.some(str => str && str.toLowerCase().includes(search));
       if (!hit) return false;
     }
     return true;
@@ -3027,20 +3048,143 @@ function setupPrayerForm() {
     showToast('🙏 Your prayer request has been received with love.');
   });
 
-  document.querySelectorAll('.copy-prayer-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const card = e.target.closest('.written-prayer-card');
-      const text = card ? card.querySelector('p')?.textContent : '';
-      const title = card ? card.querySelector('h3')?.textContent : '';
-      if (text) {
-        navigator.clipboard.writeText(`${title ? `${title}\n\n` : ''}${text}`);
-        showToast('📋 Written prayer copied to clipboard!');
-      } else {
-        showToast('📋 Written prayer copied!');
-      }
-    });
+  // Copy written prayers — event-delegated so it works with dynamically rendered cards
+  document.getElementById('writtenPrayersList')?.addEventListener('click', handleCopyPrayerClick);
+}
+
+// ─── WRITTEN PRAYERS STORE ────────────────────────────────────────────────────
+const WP_KEY = '2ms_written_prayers';
+const WP_DEFAULT = [
+  {
+    id: 'wp-default-1',
+    title: 'Prayer for Peace in Anxiety',
+    body: 'Lord Jesus, when my heart is overwhelmed, lead me to the Rock that is higher than I. Quiet my racing thoughts with Your divine peace that surpasses all understanding. Let Your presence be my anchor today. Amen.'
+  },
+  {
+    id: 'wp-default-2',
+    title: 'Prayer for Guidance & Wisdom',
+    body: 'Father, grant me discerning eyes and an attentive spirit as I make decisions today. Align my steps with Your holy will and let Your Word be a lamp to my feet and a light to my path. Amen.'
+  }
+];
+
+function getWrittenPrayers() {
+  try {
+    const raw = localStorage.getItem(WP_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (_) {}
+  return [...WP_DEFAULT];
+}
+
+function saveWrittenPrayers(list) {
+  try { localStorage.setItem(WP_KEY, JSON.stringify(list)); } catch (_) {}
+}
+
+function addWrittenPrayer({ title, body }) {
+  const list = getWrittenPrayers();
+  list.unshift({ id: `wp-${Date.now()}`, title: title.trim(), body: body.trim() });
+  saveWrittenPrayers(list);
+  return list;
+}
+
+function deleteWrittenPrayer(id) {
+  const list = getWrittenPrayers().filter(p => p.id !== id);
+  saveWrittenPrayers(list);
+  return list;
+}
+
+// ─── PUBLIC: render written prayers on the prayers page ──────────────────────
+function renderWrittenPrayers() {
+  const container = document.getElementById('writtenPrayersList');
+  if (!container) return;
+  const list = getWrittenPrayers();
+  if (!list.length) {
+    container.innerHTML = `<p style="color:#888;text-align:center;padding:24px 0;">No written prayers published yet.</p>`;
+    return;
+  }
+  container.innerHTML = list.map(p => `
+    <div class="written-prayer-card" data-wp-id="${p.id}">
+      <h3>${escapeHtml(p.title)}</h3>
+      <p>${escapeHtml(p.body)}</p>
+      <button class="btn btn-sm btn-outline copy-prayer-btn">Copy Prayer</button>
+    </div>`).join('');
+}
+
+function handleCopyPrayerClick(e) {
+  const btn = e.target.closest('.copy-prayer-btn');
+  if (!btn) return;
+  const card = btn.closest('.written-prayer-card');
+  const title = card?.querySelector('h3')?.textContent || '';
+  const text  = card?.querySelector('p')?.textContent  || '';
+  if (text) {
+    navigator.clipboard.writeText(`${title ? title + '\n\n' : ''}${text}`)
+      .then(() => showToast('📋 Written prayer copied to clipboard!'))
+      .catch(() => showToast('📋 Written prayer copied!'));
+  }
+}
+
+// Also delegate copy from admin preview
+document.body.addEventListener('click', (e) => {
+  const btn = e.target.closest('#writtenPrayersList .copy-prayer-btn, #adminWrittenPrayersList .copy-prayer-btn');
+  if (btn) handleCopyPrayerClick(e);
+});
+
+// ─── ADMIN: written prayers tab setup ────────────────────────────────────────
+function setupAdminWrittenPrayers() {
+  renderAdminWrittenPrayers();
+
+  document.getElementById('adminWrittenPrayerForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = (document.getElementById('wpTitle')?.value || '').trim();
+    const body  = (document.getElementById('wpBody')?.value  || '').trim();
+    if (!title || !body) { showToast('⚠️ Please fill in both fields.'); return; }
+    addWrittenPrayer({ title, body });
+    e.target.reset();
+    renderAdminWrittenPrayers();
+    renderWrittenPrayers();
+    showToast('✅ Written prayer published!');
   });
 }
+
+function renderAdminWrittenPrayers() {
+  const c = document.getElementById('adminWrittenPrayersList');
+  if (!c) return;
+  const list = getWrittenPrayers();
+  if (!list.length) {
+    c.innerHTML = `<p style="color:#888;text-align:center;padding:20px 0;">No written prayers yet. Add one above.</p>`;
+    return;
+  }
+  c.innerHTML = list.map(p => `
+    <div class="admin-prayer-item" data-wp-id="${p.id}">
+      <div class="admin-prayer-item-header">
+        <strong>${escapeHtml(p.title)}</strong>
+        <button class="btn btn-sm btn-outline" style="color:var(--color-sermon-red);border-color:var(--color-sermon-red);"
+          onclick="window.deleteAdminWrittenPrayer('${p.id}')">🗑 Remove</button>
+      </div>
+      <p style="font-size:0.88rem;color:#444;margin:8px 0 0;line-height:1.55;">${escapeHtml(p.body)}</p>
+    </div>`).join('');
+}
+
+window.deleteAdminWrittenPrayer = (id) => {
+  deleteWrittenPrayer(id);
+  renderAdminWrittenPrayers();
+  renderWrittenPrayers();
+  showToast('Written prayer removed.');
+};
+
+// Real-time synchronization between Admin and Public site for Written Prayers
+window.addEventListener('storage', (e) => {
+  if (e.key === WP_KEY) {
+    renderWrittenPrayers();
+  }
+});
+window.addEventListener('2ms:written_prayers:updated', () => {
+  renderWrittenPrayers();
+});
+
+
 
 import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 
@@ -4318,16 +4462,48 @@ export function openVideoShareModal(video) {
     }
   }
 
+  // Active Link State: Default to YouTube link for modern rich inline previews
+  let activeShareUrl = video.directVideoUrl || video.url;
   const linkInput = document.getElementById('shareModalLinkInput');
-  if (linkInput) linkInput.value = video.url || window.location.href;
+  if (linkInput) linkInput.value = activeShareUrl;
 
-  const formattedMsg = video.formattedMessage || `🎙️ "${video.title}"\n▶️ Watch on 2-Minute Sermon:\n${video.url}\n\n▶️ Direct Video:\n${video.directVideoUrl || video.url}`;
+  const btnShareTypeYt  = document.getElementById('btnShareTypeYoutube');
+  const btnShareTypeWeb = document.getElementById('btnShareTypeWeb');
+  if (btnShareTypeYt && btnShareTypeWeb) {
+    btnShareTypeYt.classList.add('active');
+    btnShareTypeWeb.classList.remove('active');
 
-  // WhatsApp
+    btnShareTypeYt.onclick = () => {
+      activeShareUrl = video.directVideoUrl || video.url;
+      if (linkInput) linkInput.value = activeShareUrl;
+      btnShareTypeYt.classList.add('active');
+      btnShareTypeWeb.classList.remove('active');
+    };
+
+    btnShareTypeWeb.onclick = () => {
+      activeShareUrl = video.url;
+      if (linkInput) linkInput.value = activeShareUrl;
+      btnShareTypeWeb.classList.add('active');
+      btnShareTypeYt.classList.remove('active');
+    };
+  }
+
+  const formattedMsg = video.formattedMessage || `🎙️ "${video.title}"\n▶️ Watch: ${activeShareUrl}\n\nMore at: https://2minutesermon.org`;
+
+  // WhatsApp (Native playable link in chat)
   const waBtn = document.getElementById('btnShareWhatsapp');
   if (waBtn) {
     waBtn.onclick = () => {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(formattedMsg)}`, '_blank');
+    };
+  }
+
+  // X (Twitter)
+  const xBtn = document.getElementById('btnShareX');
+  if (xBtn) {
+    xBtn.onclick = () => {
+      const tweetText = `🎙️ "${video.title}" — ${video.speaker || ''}`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(video.directVideoUrl || video.url)}`, '_blank');
     };
   }
 
@@ -4340,17 +4516,12 @@ export function openVideoShareModal(video) {
     };
   }
 
-  // Instagram
-  const igBtn = document.getElementById('btnShareInstagram');
-  if (igBtn) {
-    igBtn.onclick = () => {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(formattedMsg);
-      }
-      showToast('📸 Link & caption copied! Opening Instagram…');
-      setTimeout(() => {
-        window.open('https://www.instagram.com/', '_blank');
-      }, 350);
+  // Email
+  const emailBtn = document.getElementById('btnShareEmail');
+  if (emailBtn) {
+    emailBtn.onclick = () => {
+      const subject = `"${video.title}" | 2-Minute Sermon`;
+      window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(formattedMsg)}`, '_blank');
     };
   }
 
@@ -4362,31 +4533,51 @@ export function openVideoShareModal(video) {
         navigator.share({
           title: `"${video.title}" | 2-Minute Sermon`,
           text: `🎙️ "${video.title}" — ${video.speaker || video.preacher || ''}`,
-          url: video.url
+          url: activeShareUrl
         }).catch(() => {});
       } else {
         navigator.clipboard.writeText(formattedMsg);
-        showToast('📋 Video details copied to clipboard!');
+        showToast('📋 Message details copied to clipboard!');
       }
     };
   }
 
-
-  // Copy Link Button
+  // Copy Link Button with Smooth State Animation
   const copyLinkBtn = document.getElementById('btnCopyShareLink');
   if (copyLinkBtn) {
     copyLinkBtn.onclick = () => {
-      navigator.clipboard.writeText(video.url);
-      showToast('🔗 Video link copied to clipboard!');
+      const copyVal = activeShareUrl || linkInput?.value || window.location.href;
+      navigator.clipboard.writeText(copyVal).then(() => {
+        copyLinkBtn.classList.add('copied');
+        const textSpan = copyLinkBtn.querySelector('.copy-text');
+        if (textSpan) textSpan.textContent = '✓ Copied!';
+        showToast('🔗 Video link copied to clipboard!');
+        setTimeout(() => {
+          copyLinkBtn.classList.remove('copied');
+          if (textSpan) textSpan.textContent = 'Copy';
+        }, 2000);
+      }).catch(() => {
+        showToast('🔗 Video link copied!');
+      });
     };
   }
 
-  // Copy Formatted Message Button
+  // Copy Formatted Message Button for Chat / SMS
   const copyMsgBtn = document.getElementById('btnCopyFormattedMsg');
   if (copyMsgBtn) {
     copyMsgBtn.onclick = () => {
-      navigator.clipboard.writeText(formattedMsg);
-      showToast('📋 Formatted video message copied for chat/SMS!');
+      navigator.clipboard.writeText(formattedMsg).then(() => {
+        copyMsgBtn.classList.add('copied');
+        const span = copyMsgBtn.querySelector('span');
+        if (span) span.textContent = '✓ Message & Video Link Copied!';
+        showToast('📋 Message & video link copied for chat/SMS!');
+        setTimeout(() => {
+          copyMsgBtn.classList.remove('copied');
+          if (span) span.textContent = 'Copy Text & Video Link for Messages';
+        }, 2200);
+      }).catch(() => {
+        showToast('📋 Message copied to clipboard!');
+      });
     };
   }
 
@@ -4405,6 +4596,41 @@ window.openVideoShareModal = openVideoShareModal;
 export function shareSermon(arg1, arg2) {
   // Support both shareSermon(id) and legacy shareSermon(title, id)
   const targetId = (arg2 !== undefined && arg2 !== null && arg2 !== '') ? arg2 : arg1;
+  const sermonList = sermons() || [];
+  if (!sermonList.length) return;
+
+  const targetStr = String(targetId || '').trim();
+  const s = sermonList.find(item => 
+    String(item.id) === targetStr ||
+    String(item.id).toLowerCase() === targetStr.toLowerCase() ||
+    String(item.id) === `sermon-${targetStr}` ||
+    `sermon-${item.id}` === targetStr ||
+    item.slug === targetStr ||
+    item.title === targetStr ||
+    item.title.toLowerCase() === targetStr.toLowerCase()
+  ) || sermonList[0];
+
+  if (!s) return;
+
+  const ytId = s.youtubeEmbedId || s.youtubeId;
+  const ytDirectUrl = ytId ? `https://youtu.be/${ytId}` : (s.youtubeUrl || `${window.location.origin}/#${s.id}`);
+  const preacher = s.preacher || s.preacherName || '2-Minute Sermon';
+
+  // Mobile-first: If on mobile and native navigator.share is supported, trigger native OS sheet directly!
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+  if (isMobile && navigator.share) {
+    navigator.share({
+      title: `"${s.title}" | 2-Minute Sermon`,
+      text: `🎙️ "${s.title}" — ${preacher}${s.scripture ? ` (${s.scripture})` : ''}`,
+      url: ytDirectUrl
+    }).catch(err => {
+      if (err && err.name !== 'AbortError') {
+        openSermonShareModal(targetId);
+      }
+    });
+    return;
+  }
+
   openSermonShareModal(targetId);
 }
 window.shareSermon = shareSermon;
@@ -4428,22 +4654,25 @@ export function openSermonShareModal(sermonId) {
 
   const cleanId = String(s.id).startsWith('sermon-') ? s.id : `sermon-${s.id}`;
   const url = `${window.location.origin}/#${cleanId}`;
-  const ytDirectUrl = s.youtubeId ? `https://youtu.be/${s.youtubeId}` : (s.youtubeUrl || url);
-  const thumb = s.thumbnailUrl || (s.youtubeId ? `https://img.youtube.com/vi/${s.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
+  const ytId = s.youtubeEmbedId || s.youtubeId;
+  const ytDirectUrl = ytId ? `https://youtu.be/${ytId}` : (s.youtubeUrl || url);
+  const thumb = s.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '/assets/logo.png');
+  const preacher = s.preacher || s.preacherName || '2-Minute Sermon';
+  const scripture = s.scripture || '';
 
   openVideoShareModal({
     badge: 'Spiritual Blessing',
     heading: 'Share Sermon',
     sub: 'Spread this 2-minute message with friends, family, and fellowship groups.',
     title: s.title,
-    speaker: s.preacher || s.preacherName || '2-Minute Sermon',
-    topic: s.scripture ? `📖 ${s.scripture}` : (s.primarySeason || 'Daily Encouragement'),
+    speaker: preacher,
+    topic: scripture ? `📖 ${scripture}` : (s.primarySeason || 'Daily Encouragement'),
     duration: s.duration || '2:00',
     thumbnailUrl: thumb,
-    youtubeId: s.youtubeId || s.youtubeEmbedId,
+    youtubeId: ytId,
     url: url,
     directVideoUrl: ytDirectUrl,
-    formattedMessage: `🎙️ "${s.title}" — ${s.preacher || s.preacherName || '2-Minute Sermon'}\n📖 Scripture: ${s.scripture || 'Daily Word'}\n▶️ Watch on 2-Minute Sermon:\n${url}\n\n▶️ Direct Video:\n${ytDirectUrl}`
+    formattedMessage: `🎙️ "${s.title}" — ${preacher}${scripture ? `\n📖 Scripture: ${scripture}` : ''}\n▶️ Watch: ${ytDirectUrl}\n\nMore at: https://2minutesermon.org`
   });
 }
 window.openSermonShareModal = openSermonShareModal;
