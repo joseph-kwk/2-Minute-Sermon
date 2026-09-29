@@ -28,11 +28,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('reflections', INITIAL_REFLECTIONS);
   subscribeCollection('reflections', (remoteList) => {
     if (remoteList && remoteList.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteList));
-        window.dispatchEvent(new CustomEvent('2ms:reflections:updated', { detail: remoteList }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveReflections(remoteList);
     }
   });
 }

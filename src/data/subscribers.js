@@ -18,11 +18,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('subscribers', INITIAL_SUBSCRIBERS);
   subscribeCollection('subscribers', (remoteList) => {
     if (remoteList && remoteList.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteList));
-        window.dispatchEvent(new CustomEvent('2ms:subscribers:updated', { detail: remoteList }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveSubscribers(remoteList);
     }
   });
 }

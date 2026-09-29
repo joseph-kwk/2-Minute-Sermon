@@ -78,11 +78,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('conversations', INITIAL_CONVERSATIONS);
   subscribeCollection('conversations', (remoteConversations) => {
     if (remoteConversations && remoteConversations.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteConversations));
-        window.dispatchEvent(new CustomEvent('2ms:conversations:updated', { detail: remoteConversations }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveConversations(remoteConversations);
     }
   });
 }

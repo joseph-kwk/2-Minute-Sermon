@@ -449,11 +449,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('sermons', seedSermons);
   subscribeCollection('sermons', (remoteSermons) => {
     if (remoteSermons && remoteSermons.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteSermons));
-        window.dispatchEvent(new CustomEvent('2ms:sermons:updated', { detail: remoteSermons }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveSermons(remoteSermons);
     }
   });
 }
@@ -484,6 +480,7 @@ export function getSermons() {
 export function saveSermons(arr) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    localStorage.setItem(VERSION_KEY, CURRENT_SEED_VERSION);
     window.dispatchEvent(new CustomEvent('2ms:sermons:updated', { detail: arr }));
     window.dispatchEvent(new Event('storage'));
   } catch (_) {}

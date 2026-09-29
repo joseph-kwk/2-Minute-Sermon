@@ -22,11 +22,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('partners', INITIAL_PARTNERS);
   subscribeCollection('partners', (remotePartners) => {
     if (remotePartners && remotePartners.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remotePartners));
-        window.dispatchEvent(new CustomEvent('2ms:partners:updated', { detail: remotePartners }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      savePartners(remotePartners);
     }
   });
 }

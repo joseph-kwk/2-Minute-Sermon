@@ -29,11 +29,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('events', seedEvents);
   subscribeCollection('events', (remoteEvents) => {
     if (Array.isArray(remoteEvents)) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteEvents));
-        window.dispatchEvent(new CustomEvent('2ms:events:updated', { detail: remoteEvents }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveEvents(remoteEvents);
     }
   });
 }

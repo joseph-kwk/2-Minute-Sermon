@@ -150,11 +150,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('preachers', seedPreachers);
   subscribeCollection('preachers', (remotePreachers) => {
     if (remotePreachers && remotePreachers.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remotePreachers));
-        window.dispatchEvent(new CustomEvent('2ms:preachers:updated', { detail: remotePreachers }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      savePreachers(remotePreachers);
     }
   });
 }

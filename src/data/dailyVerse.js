@@ -326,11 +326,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('dailyVerses', seedDailyVerses);
   subscribeCollection('dailyVerses', (remoteVerses) => {
     if (remoteVerses && Array.isArray(remoteVerses)) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteVerses));
-        window.dispatchEvent(new CustomEvent('2ms:verses:updated', { detail: remoteVerses }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveDailyVerses(remoteVerses);
     }
   });
 }
@@ -371,7 +367,7 @@ export function upsertDailyVerse(verse) {
 /** Delete a daily verse from localStorage and Firebase */
 export function deleteDailyVerse(id) {
   const all = getDailyVerses().filter(v => v.id !== id);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch (_) {}
+  saveDailyVerses(all);
   if (isFirebaseConfigured()) {
     deleteDocument('dailyVerses', id);
   }

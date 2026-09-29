@@ -124,11 +124,7 @@ if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('leadership', INITIAL_LEADERSHIP);
   subscribeCollection('leadership', (remoteTeam) => {
     if (remoteTeam && remoteTeam.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteTeam));
-        window.dispatchEvent(new CustomEvent('2ms:leadership:updated', { detail: remoteTeam }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      saveLeadershipTeam(remoteTeam);
     }
   });
 }
