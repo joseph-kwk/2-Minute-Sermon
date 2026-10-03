@@ -321,12 +321,18 @@ export const seedDailyVerses = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('dailyVerses', seedDailyVerses);
   subscribeCollection('dailyVerses', (remoteVerses) => {
     if (remoteVerses && Array.isArray(remoteVerses)) {
-      saveDailyVerses(remoteVerses);
+      const filtered = _pendingDeletes.size > 0
+        ? remoteVerses.filter(v => !_pendingDeletes.has(v.id))
+        : remoteVerses;
+      saveDailyVerses(filtered);
     }
   });
 }
@@ -354,6 +360,7 @@ export function saveDailyVerses(arr) {
 
 /** Add or update a scheduled daily verse */
 export function upsertDailyVerse(verse) {
+  _pendingDeletes.delete(verse.id);
   const all = getDailyVerses();
   const idx = all.findIndex(v => v.id === verse.id || v.publishDate === verse.publishDate);
   if (idx >= 0) all[idx] = verse; else all.push(verse);
@@ -366,10 +373,17 @@ export function upsertDailyVerse(verse) {
 
 /** Delete a daily verse from localStorage and Firebase */
 export function deleteDailyVerse(id) {
+  _pendingDeletes.add(id);
   const all = getDailyVerses().filter(v => v.id !== id);
   saveDailyVerses(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('dailyVerses', id);
+    deleteDocument('dailyVerses', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }

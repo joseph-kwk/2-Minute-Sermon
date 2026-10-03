@@ -472,7 +472,7 @@ export function getSermons() {
     if (raw && currentVer === CURRENT_SEED_VERSION) {
       const parsed = JSON.parse(raw);
       const hasPlaceholders = Array.isArray(parsed) && parsed.some(s => LEGACY_PLACEHOLDER_IDS.includes(s.youtubeEmbedId));
-      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length >= seedSermons.length) {
+      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
     }

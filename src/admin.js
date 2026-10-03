@@ -6,23 +6,39 @@ import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.j
 import { getPreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse, getLocalDateStr } from './data/dailyVerse.js';
-import { getLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
-import { getPartners, upsertPartner, deletePartner } from './data/partners.js';
-import { getConversations, upsertConversation, deleteConversation } from './data/conversations.js';
+import { getLeadershipTeam, upsertLeader, deleteLeader, saveLeadershipTeam } from './data/leadership.js';
+import { getPartners, upsertPartner, deletePartner, savePartners } from './data/partners.js';
+import { getConversations, upsertConversation, deleteConversation, saveConversations } from './data/conversations.js';
 import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
 import { getAllReflections, deleteReflection, saveReflections } from './data/reflections.js';
 import { getPrayers, savePrayers, deletePrayer } from './data/prayers.js';
+import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
-// Data arrays are read from localStorage — persistent across all reloads
 let preachers = getPreachers();
-const scheduledDailyVerses = getDailyVerses();
-
 
 const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
 const SESSION_KEY     = '2ms_steward_authenticated';
 let authenticated   = false;
 let activePanel     = 'dashboard';
+
+// ── Real-time Cloud Data Sync Refresh for Admin ─────────────────────────
+export function refreshAdminView() {
+  preachers = getPreachers();
+  populateSelects();
+  renderDashboardStats();
+  renderSermonsList();
+  renderVerseQueue();
+  renderPreachersList();
+  renderLeadershipList();
+  renderConversationsList();
+  renderPartnersList();
+  renderEventsList();
+  renderPrayerInbox();
+  renderAdminWrittenPrayers();
+  renderReflectionsList();
+  renderSubscribersList();
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,22 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore authenticated session if active in current browser tab
   checkExistingSession();
 
-  // ── Real-time Cloud Data Sync Listeners for Admin ─────────────────────────
-  const refreshAdminView = () => {
-    preachers = getPreachers();
-    populateSelects();
-    renderDashboardStats();
-    renderSermonsList();
-    renderVerseQueue();
-    renderPreachersList();
-    renderLeadershipList();
-    renderConversationsList();
-    renderPartnersList();
-    renderEventsList();
-    renderPrayerInbox();
-    renderReflectionsList();
-  };
-
   window.addEventListener('storage', refreshAdminView);
   window.addEventListener('2ms:sermons:updated', refreshAdminView);
   window.addEventListener('2ms:preachers:updated', refreshAdminView);
@@ -70,8 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:verses:updated', refreshAdminView);
   window.addEventListener('2ms:events:updated', refreshAdminView);
   window.addEventListener('2ms:leadership:updated', refreshAdminView);
+  window.addEventListener('2ms:partners:updated', refreshAdminView);
   window.addEventListener('2ms:reflections:updated', refreshAdminView);
   window.addEventListener('2ms:prayers:updated', refreshAdminView);
+  window.addEventListener('2ms:subscribers:updated', refreshAdminView);
+  window.addEventListener('2ms:written_prayers:updated', refreshAdminView);
 });
 
 // ── Topbar date ──────────────────────────────────────────────────────────
@@ -89,13 +92,7 @@ function checkExistingSession() {
     if (overlay && dash) {
       overlay.hidden = true;
       dash.hidden    = false;
-      renderDashboardStats();
-      renderSermonsList();
-      renderVerseQueue();
-      renderPreachersList();
-      renderEventsList();
-      renderPrayerInbox();
-      renderReflectionsList();
+      refreshAdminView();
     }
   }
 }
@@ -134,12 +131,7 @@ function setupAuth() {
         overlay.hidden = true;
         dash.hidden    = false;
         dash.style.animation = 'fadeIn 0.3s ease';
-        renderDashboardStats();
-        renderSermonsList();
-        renderVerseQueue();
-        renderPreachersList();
-        renderEventsList();
-        renderPrayerInbox();
+        refreshAdminView();
         toast('✅ Welcome to The Steward');
       }, 280);
     } else {
@@ -296,13 +288,21 @@ function switchPanel(panelId) {
   const titleEl = document.getElementById('adminTopbarTitle');
   if (titleEl) titleEl.textContent = PANEL_TITLES[panelId] || panelId;
 
-  if (panelId === 'reflections') {
-    renderReflectionsList();
-  } else if (panelId === 'dashboard') {
-    renderDashboardStats();
-  } else if (panelId === 'prayers') {
-    renderPrayerInbox();
-    renderAdminWrittenPrayers();
+  const PANEL_RENDERERS = {
+    dashboard: () => renderDashboardStats(),
+    'daily-verse': () => renderVerseQueue(),
+    reflections: () => renderReflectionsList(),
+    sermons: () => { populateSelects(); renderSermonsList(); },
+    preachers: () => renderPreachersList(),
+    events: () => renderEventsList(),
+    leadership: () => renderLeadershipList(),
+    conversations: () => renderConversationsList(),
+    partners: () => renderPartnersList(),
+    subscribers: () => renderSubscribersList(),
+    prayers: () => { renderPrayerInbox(); renderAdminWrittenPrayers(); }
+  };
+  if (PANEL_RENDERERS[panelId]) {
+    PANEL_RENDERERS[panelId]();
   }
 }
 
@@ -310,8 +310,8 @@ function switchPanel(panelId) {
 function renderDashboardStats() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('statSermons',   getSermons().length);
-  set('statVerses',    scheduledDailyVerses.length);
-  set('statPreachers', preachers.length);
+  set('statVerses',    getDailyVerses().length);
+  set('statPreachers', getPreachers().length);
   set('statEvents',    getEvents().length);
   const allPrayers = getPrayers();
   set('statPrayers',   allPrayers.length);
@@ -350,12 +350,6 @@ function setupVerseScheduler() {
     const book     = parts.join(' ') || bookChap;
 
     const entry = { id:`dv-${dateStr}`, publishDate:dateStr, verseText, book, chapter, verse, reflection, tags:['Scheduled'] };
-    const idx   = scheduledDailyVerses.findIndex(v => v.publishDate === dateStr);
-    if (idx >= 0) scheduledDailyVerses[idx] = entry;
-    else {
-      scheduledDailyVerses.push(entry);
-      scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
-    }
     upsertDailyVerse(entry);
 
     e.target.reset();
@@ -366,15 +360,18 @@ function setupVerseScheduler() {
   });
 
   document.getElementById('clearQueueBtn')?.addEventListener('click', async () => {
+    const queue = getDailyVerses();
+    if (!queue.length) {
+      toast('Queue is already empty.');
+      return;
+    }
     const confirmed = await showAdminConfirm({
       title: 'Clear Scheduled Verses',
-      message: 'Are you sure you want to clear all scheduled daily verses from the queue?',
+      message: `Are you sure you want to clear all ${queue.length} scheduled daily verses from the queue?`,
       confirmText: 'Clear All'
     });
     if (!confirmed) return;
-    scheduledDailyVerses.forEach(v => deleteDailyVerse(v.id));
-    scheduledDailyVerses.length = 0;
-    saveDailyVerses(scheduledDailyVerses);
+    queue.forEach(v => deleteDailyVerse(v.id));
     renderVerseQueue();
     renderDashboardStats();
     toast('Queue cleared.');
@@ -384,7 +381,8 @@ function setupVerseScheduler() {
 function renderVerseQueue() {
   const c = document.getElementById('adminVerseQueueList');
   const countEl = document.getElementById('verseQueueCount');
-  if (countEl) countEl.textContent = scheduledDailyVerses.length;
+  const queue = getDailyVerses();
+  if (countEl) countEl.textContent = queue.length;
 
   // Update live status banner
   const statusEl = document.getElementById('adminTodayVerseStatus');
@@ -402,31 +400,36 @@ function renderVerseQueue() {
 
   if (!c) return;
 
-  if (!scheduledDailyVerses.length) {
+  if (!queue.length) {
     c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px 0;">No custom verses scheduled yet.<br><small style="color:rgba(255,255,255,0.2);">Live site is automatically serving the daily evergreen devotional rotation.</small></p>`;
     return;
   }
 
-  c.innerHTML = scheduledDailyVerses.map((v, idx) => `
+  c.innerHTML = queue.map(v => `
     <div class="admin-list-item">
       <div class="admin-list-item-header">
         <strong style="color:var(--admin-gold);">${v.publishDate}</strong>
         <span class="admin-tag admin-tag-blue">${v.book} ${v.chapter}:${v.verse}</span>
       </div>
-      <p style="margin:4px 0;">"${v.verseText}"</p>
+      <p style="margin:4px 0;">"${escapeAdminHtml(v.verseText)}"</p>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${v.reflection.substring(0,55)}…</span>
-        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removeVerse(${idx})">✕ Remove</button>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${escapeAdminHtml((v.reflection || '').substring(0,55))}…</span>
+        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removeVerse('${v.id}')">✕ Remove</button>
       </div>
     </div>`).join('');
 }
 
-window.removeVerse = idx => {
-  const removed = scheduledDailyVerses.splice(idx, 1)[0];
-  if (removed && removed.id) {
-    deleteDailyVerse(removed.id);
-  }
-  saveDailyVerses(scheduledDailyVerses);
+window.removeVerse = async id => {
+  const all = getDailyVerses();
+  const target = all.find(v => v.id === id);
+  if (!target) return;
+  const confirmed = await showAdminConfirm({
+    title: 'Remove Scheduled Verse',
+    message: `Remove verse scheduled for ${target.publishDate} (${target.book} ${target.chapter}:${target.verse})?`,
+    confirmText: 'Remove Verse'
+  });
+  if (!confirmed) return;
+  deleteDailyVerse(id);
   renderVerseQueue();
   renderDashboardStats();
   toast('Verse removed from queue.');
@@ -993,20 +996,21 @@ function setupPreachersManager() {
 function renderPreachersList() {
   const c = document.getElementById('adminPreachersList');
   const countEl = document.getElementById('preachersCount');
-  if (countEl) countEl.textContent = preachers.length;
+  const allPreachers = getPreachers();
+  if (countEl) countEl.textContent = allPreachers.length;
   if (!c) return;
 
-  c.innerHTML = preachers.map((p, idx) => `
+  c.innerHTML = allPreachers.map(p => `
     <div class="admin-list-item admin-preacher-item">
-      <img src="${p.photoUrl}" alt="${p.name}"
+      <img src="${p.photoUrl}" alt="${escapeAdminHtml(p.name)}"
            onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=88'">
       <div class="admin-preacher-info">
-        <strong>${p.name}</strong>
-        <span>${p.denomination} · ${p.country}</span>
+        <strong>${escapeAdminHtml(p.name)}</strong>
+        <span>${escapeAdminHtml(p.denomination || '')} · ${escapeAdminHtml(p.country || '')}</span>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="admin-btn admin-btn-sm admin-btn-outline edit-preacher-btn" data-id="${p.id}" title="Edit minister details & photo">✏️ Edit</button>
-        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher(${idx})" title="Remove minister">✕</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher('${p.id}')" title="Remove minister">✕</button>
       </div>
     </div>`).join('');
 
@@ -1014,7 +1018,7 @@ function renderPreachersList() {
   c.querySelectorAll('.edit-preacher-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      const p = preachers.find(item => item.id === id);
+      const p = getPreachers().find(item => item.id === id);
       if (!p) return;
 
       const editIdInput = document.getElementById('editPreacherId');
@@ -1051,8 +1055,8 @@ function renderPreachersList() {
   });
 }
 
-window.removePreacher = async idx => {
-  const p = preachers[idx];
+window.removePreacher = async id => {
+  const p = getPreachers().find(item => item.id === id);
   if (!p) return;
   const name = p.name;
   const confirmed = await showAdminConfirm({
@@ -1062,7 +1066,6 @@ window.removePreacher = async idx => {
   });
   if (!confirmed) return;
   deletePreacher(p.id);
-  preachers = getPreachers();
   populateSelects();
   renderPreachersList();
   renderDashboardStats();
@@ -2012,12 +2015,16 @@ function setupBackupPanel() {
     try {
       const data = {
         exportedAt: new Date().toISOString(),
-        version: '1.0',
-        scheduledDailyVerses,
+        version: '1.2',
+        scheduledDailyVerses: getDailyVerses(),
         sermons: getSermons(),
-        preachers,
+        preachers: getPreachers(),
         events: getEvents(),
-        pendingPrayers,
+        leadership: getLeadershipTeam(),
+        conversations: getConversations(),
+        partners: getPartners(),
+        subscribers: getSubscribers(),
+        pendingPrayers: getPrayers(),
         reflections: getAllReflections()
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2034,6 +2041,7 @@ function setupBackupPanel() {
       if (label) label.textContent = `Last exported: ${new Date().toLocaleTimeString()}`;
       toast('📥 CMS backup downloaded!');
     } catch (err) {
+      console.error('Backup export error:', err);
       toast('⚠️ Failed to export backup. Please check browser permissions.');
     }
   });
@@ -2066,21 +2074,33 @@ function setupBackupPanel() {
         }
 
         if (Array.isArray(parsed.preachers) && parsed.preachers.length) {
-          // Persist each preacher individually so storage + event bus stays in sync
           parsed.preachers.forEach(p => upsertPreacher(p));
-          preachers = getPreachers();
           restoredItems.push(`${parsed.preachers.length} ministers`);
         }
 
         if (Array.isArray(parsed.scheduledDailyVerses) && parsed.scheduledDailyVerses.length) {
-          scheduledDailyVerses.length = 0;
-          scheduledDailyVerses.push(...parsed.scheduledDailyVerses);
+          saveDailyVerses(parsed.scheduledDailyVerses);
           restoredItems.push(`${parsed.scheduledDailyVerses.length} verses`);
         }
 
         if (Array.isArray(parsed.events) && parsed.events.length) {
           saveEvents(parsed.events);
           restoredItems.push(`${parsed.events.length} events`);
+        }
+
+        if (Array.isArray(parsed.leadership) && parsed.leadership.length) {
+          saveLeadershipTeam(parsed.leadership);
+          restoredItems.push(`${parsed.leadership.length} leaders`);
+        }
+
+        if (Array.isArray(parsed.conversations) && parsed.conversations.length) {
+          saveConversations(parsed.conversations);
+          restoredItems.push(`${parsed.conversations.length} episodes`);
+        }
+
+        if (Array.isArray(parsed.partners) && parsed.partners.length) {
+          savePartners(parsed.partners);
+          restoredItems.push(`${parsed.partners.length} partners`);
         }
 
         if (Array.isArray(parsed.pendingPrayers) && parsed.pendingPrayers.length) {
@@ -2098,14 +2118,8 @@ function setupBackupPanel() {
           return;
         }
 
-        // Re-render all views
-        renderDashboardStats();
-        renderSermonsList();
-        renderPreachersList();
-        renderEventsList();
-        renderVerseQueue();
-        renderPrayerInbox();
-        populateSelects();
+        // Re-render all views cleanly
+        refreshAdminView();
 
         toast(`✅ Successfully restored: ${restoredItems.join(', ')}!`);
       } catch (err) {
@@ -2122,7 +2136,7 @@ function setupBackupPanel() {
   });
 }
 
-import { isFirebaseConfigured, saveDocument, seedCollectionIfEmpty } from './firebase.js';
+import { saveDocument, seedCollectionIfEmpty } from './firebase.js';
 
 // ── MINISTRY SETTINGS ─────────────────────────────────────────────────────
 const SETTINGS_KEY = '2ms_settings';
@@ -2275,42 +2289,42 @@ function setupSettingsPanel() {
 }
 
 // ── NEWSLETTER SUBSCRIBERS MANAGER ────────────────────────────────────────
-function setupSubscribersManager() {
+export function renderSubscribersList() {
   const c = document.getElementById('adminSubscribersList');
   const countEl = document.getElementById('subscribersCount');
-  const exportBtn = document.getElementById('btnExportSubscribersCsv');
+  const list = getSubscribers();
+  if (countEl) countEl.textContent = list.length;
+  if (!c) return;
 
-  const render = () => {
-    const list = getSubscribers();
-    if (countEl) countEl.textContent = list.length;
-    if (!c) return;
+  if (!list.length) {
+    c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No subscribers recorded yet.</p>';
+    return;
+  }
 
-    if (!list.length) {
-      c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No subscribers recorded yet.</p>';
-      return;
-    }
-
-    c.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-        <thead>
-          <tr style="text-align:left;border-bottom:1px solid var(--admin-border);color:var(--admin-muted);">
-            <th style="padding:8px 6px;">Email</th>
-            <th style="padding:8px 6px;">Subscribed</th>
-            <th style="padding:8px 6px;">Source</th>
+  c.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+      <thead>
+        <tr style="text-align:left;border-bottom:1px solid var(--admin-border);color:var(--admin-muted);">
+          <th style="padding:8px 6px;">Email</th>
+          <th style="padding:8px 6px;">Subscribed</th>
+          <th style="padding:8px 6px;">Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${list.map(s => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:8px 6px;color:#fff;font-weight:600;">${escapeAdminHtml(s.email)}</td>
+            <td style="padding:8px 6px;color:var(--admin-muted);font-size:0.78rem;">${s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : 'Active'}</td>
+            <td style="padding:8px 6px;"><span class="admin-tag" style="font-size:0.68rem;">${escapeAdminHtml(s.source || 'Website')}</span></td>
           </tr>
-        </thead>
-        <tbody>
-          ${list.map(s => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-              <td style="padding:8px 6px;color:#fff;font-weight:600;">${s.email}</td>
-              <td style="padding:8px 6px;color:var(--admin-muted);font-size:0.78rem;">${s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : 'Active'}</td>
-              <td style="padding:8px 6px;"><span class="admin-tag" style="font-size:0.68rem;">${s.source || 'Website'}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-  };
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function setupSubscribersManager() {
+  const exportBtn = document.getElementById('btnExportSubscribersCsv');
 
   exportBtn?.addEventListener('click', () => {
     const csvContent = exportSubscribersToCsv();
@@ -2324,12 +2338,12 @@ function setupSubscribersManager() {
     a.href = url;
     a.download = `2ms_newsletter_subscribers_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    a.remove();
     URL.revokeObjectURL(url);
     toast('📥 Subscriber CSV exported successfully!');
   });
 
-  render();
-  window.addEventListener('2ms:subscribers:updated', render);
+  renderSubscribersList();
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────

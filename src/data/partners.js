@@ -1,7 +1,7 @@
 // Ministry Partners Store
 // Persisted in localStorage ('2ms_partners') and synced via Firestore when configured.
 
-import { isFirebaseConfigured, saveDocument, subscribeCollection, seedCollectionIfEmpty } from '../firebase.js';
+import { isFirebaseConfigured, saveDocument, deleteDocument, subscribeCollection, seedCollectionIfEmpty } from '../firebase.js';
 
 export const INITIAL_PARTNERS = [
   {
@@ -17,12 +17,18 @@ export const INITIAL_PARTNERS = [
 
 const STORAGE_KEY = '2ms_partners';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+
 // ── Real-time Firestore Sync ─────────────────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('partners', INITIAL_PARTNERS);
   subscribeCollection('partners', (remotePartners) => {
-    if (remotePartners && remotePartners.length > 0) {
-      savePartners(remotePartners);
+    if (Array.isArray(remotePartners)) {
+      const filtered = _pendingDeletes.size > 0
+        ? remotePartners.filter(p => !_pendingDeletes.has(p.id))
+        : remotePartners;
+      savePartners(filtered);
     }
   });
 }
@@ -47,6 +53,7 @@ export function savePartners(partners) {
 }
 
 export function upsertPartner(partner) {
+  _pendingDeletes.delete(partner.id);
   const partners = getPartners();
   const index = partners.findIndex(p => p.id === partner.id);
   if (index >= 0) {
@@ -61,9 +68,17 @@ export function upsertPartner(partner) {
 }
 
 export function deletePartner(id) {
+  _pendingDeletes.add(id);
   const partners = getPartners().filter(p => p.id !== id);
   savePartners(partners);
   if (isFirebaseConfigured()) {
-    deleteDocument('partners', id);
+    deleteDocument('partners', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
 }
+

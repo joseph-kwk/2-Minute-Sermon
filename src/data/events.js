@@ -24,12 +24,18 @@ const seedEvents = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('events', seedEvents);
   subscribeCollection('events', (remoteEvents) => {
     if (Array.isArray(remoteEvents)) {
-      saveEvents(remoteEvents);
+      const filtered = _pendingDeletes.size > 0
+        ? remoteEvents.filter(e => !_pendingDeletes.has(e.id))
+        : remoteEvents;
+      saveEvents(filtered);
     }
   });
 }
@@ -59,6 +65,7 @@ export function saveEvents(arr) {
 
 /** Add or update an event (matched by id). Returns updated array. */
 export function upsertEvent(event) {
+  _pendingDeletes.delete(event.id);
   const all = getEvents();
   const idx = all.findIndex(e => e.id === event.id);
   if (idx >= 0) all[idx] = event; else all.unshift(event);
@@ -71,10 +78,17 @@ export function upsertEvent(event) {
 
 /** Remove an event by id. Returns updated array. */
 export function deleteEvent(id) {
+  _pendingDeletes.add(id);
   const all = getEvents().filter(e => e.id !== id);
   saveEvents(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('events', id);
+    deleteDocument('events', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }

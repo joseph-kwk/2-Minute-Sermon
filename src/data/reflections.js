@@ -24,11 +24,17 @@ export const INITIAL_REFLECTIONS = [
 
 const STORAGE_KEY = '2ms_reflections';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('reflections', INITIAL_REFLECTIONS);
   subscribeCollection('reflections', (remoteList) => {
-    if (remoteList && remoteList.length > 0) {
-      saveReflections(remoteList);
+    if (Array.isArray(remoteList)) {
+      const filtered = _pendingDeletes.size > 0
+        ? remoteList.filter(r => !_pendingDeletes.has(r.id))
+        : remoteList;
+      saveReflections(filtered);
     }
   });
 }
@@ -78,6 +84,7 @@ export function addReflection({ verseDate, author, content }) {
     likes: 0
   };
 
+  _pendingDeletes.delete(newRef.id);
   list.unshift(newRef);
   saveReflections(list);
 
@@ -110,9 +117,16 @@ export function toggleLikeReflection(id) {
 }
 
 export function deleteReflection(id) {
+  _pendingDeletes.add(id);
   const list = getAllReflections().filter(r => r.id !== id);
   saveReflections(list);
   if (isFirebaseConfigured()) {
-    deleteDocument('reflections', id);
+    deleteDocument('reflections', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
 }
