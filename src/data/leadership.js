@@ -119,12 +119,19 @@ export const INITIAL_LEADERSHIP = [
 
 const STORAGE_KEY = '2ms_leadership';
 
+// IDs pending deletion — filter these out of any incoming Firestore snapshot
+// until Firestore confirms the delete (prevents ghost re-appearance).
+const _pendingDeletes = new Set();
+
 // ── Real-time Firestore Sync ─────────────────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('leadership', INITIAL_LEADERSHIP);
   subscribeCollection('leadership', (remoteTeam) => {
     if (remoteTeam && remoteTeam.length > 0) {
-      saveLeadershipTeam(remoteTeam);
+      const filtered = _pendingDeletes.size > 0
+        ? remoteTeam.filter(m => !_pendingDeletes.has(m.id))
+        : remoteTeam;
+      if (filtered.length > 0) saveLeadershipTeam(filtered);
     }
   });
 }
@@ -149,6 +156,7 @@ export function saveLeadershipTeam(team) {
 }
 
 export function upsertLeader(leader) {
+  _pendingDeletes.delete(leader.id); // re-adding clears any pending delete
   const team = getLeadershipTeam();
   const index = team.findIndex(m => m.id === leader.id);
   if (index >= 0) {
@@ -163,9 +171,16 @@ export function upsertLeader(leader) {
 }
 
 export function deleteLeader(id) {
+  _pendingDeletes.add(id);
   const team = getLeadershipTeam().filter(m => m.id !== id);
   saveLeadershipTeam(team);
   if (isFirebaseConfigured()) {
-    deleteDocument('leadership', id);
+    deleteDocument('leadership', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
 }

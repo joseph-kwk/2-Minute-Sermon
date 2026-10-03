@@ -444,12 +444,18 @@ const seedSermons = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('sermons', seedSermons);
   subscribeCollection('sermons', (remoteSermons) => {
     if (remoteSermons && remoteSermons.length > 0) {
-      saveSermons(remoteSermons);
+      const filtered = _pendingDeletes.size > 0
+        ? remoteSermons.filter(s => !_pendingDeletes.has(s.id))
+        : remoteSermons;
+      if (filtered.length > 0) saveSermons(filtered);
     }
   });
 }
@@ -488,6 +494,7 @@ export function saveSermons(arr) {
 
 /** Add or update a sermon (matched by id). Returns updated array. */
 export function upsertSermon(sermon) {
+  _pendingDeletes.delete(sermon.id);
   const all = getSermons();
   const idx = all.findIndex(s => s.id === sermon.id);
   if (idx >= 0) all[idx] = sermon; else all.unshift(sermon);
@@ -500,10 +507,17 @@ export function upsertSermon(sermon) {
 
 /** Remove a sermon by id. Returns updated array. */
 export function deleteSermon(id) {
+  _pendingDeletes.add(id);
   const all = getSermons().filter(s => s.id !== id);
   saveSermons(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('sermons', id);
+    deleteDocument('sermons', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }

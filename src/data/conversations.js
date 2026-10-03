@@ -73,12 +73,17 @@ export const INITIAL_CONVERSATIONS = [
 
 const STORAGE_KEY = '2ms_conversations';
 
+const _pendingDeletes = new Set();
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('conversations', INITIAL_CONVERSATIONS);
   subscribeCollection('conversations', (remoteConversations) => {
     if (remoteConversations && remoteConversations.length > 0) {
-      saveConversations(remoteConversations);
+      const filtered = _pendingDeletes.size > 0
+        ? remoteConversations.filter(c => !_pendingDeletes.has(c.id))
+        : remoteConversations;
+      if (filtered.length > 0) saveConversations(filtered);
     }
   });
 }
@@ -104,6 +109,7 @@ export function saveConversations(list) {
 }
 
 export function upsertConversation(item) {
+  _pendingDeletes.delete(item.id);
   const list = getConversations();
   const index = list.findIndex(c => c.id === item.id);
   if (index >= 0) {
@@ -118,9 +124,16 @@ export function upsertConversation(item) {
 }
 
 export function deleteConversation(id) {
+  _pendingDeletes.add(id);
   const list = getConversations().filter(c => c.id !== id);
   saveConversations(list);
   if (isFirebaseConfigured()) {
-    deleteDocument('conversations', id);
+    deleteDocument('conversations', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
 }

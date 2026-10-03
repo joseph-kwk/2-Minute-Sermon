@@ -145,12 +145,18 @@ const seedPreachers = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('preachers', seedPreachers);
   subscribeCollection('preachers', (remotePreachers) => {
     if (remotePreachers && remotePreachers.length > 0) {
-      savePreachers(remotePreachers);
+      const filtered = _pendingDeletes.size > 0
+        ? remotePreachers.filter(p => !_pendingDeletes.has(p.id))
+        : remotePreachers;
+      if (filtered.length > 0) savePreachers(filtered);
     }
   });
 }
@@ -179,6 +185,7 @@ export function savePreachers(arr) {
 
 /** Add or update a preacher profile and sync to Firebase */
 export function upsertPreacher(preacher) {
+  _pendingDeletes.delete(preacher.id);
   const all = getPreachers();
   const idx = all.findIndex(p => p.id === preacher.id);
   if (idx >= 0) all[idx] = preacher; else all.push(preacher);
@@ -191,10 +198,17 @@ export function upsertPreacher(preacher) {
 
 /** Delete a preacher profile and sync to Firebase */
 export function deletePreacher(id) {
+  _pendingDeletes.add(id);
   const all = getPreachers().filter(p => p.id !== id);
   savePreachers(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('preachers', id);
+    deleteDocument('preachers', id).then(() => {
+      _pendingDeletes.delete(id);
+    }).catch(() => {
+      _pendingDeletes.delete(id);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }
