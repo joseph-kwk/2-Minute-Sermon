@@ -481,23 +481,18 @@ if (isFirebaseConfigured()) {
 
 // ── localStorage & Firebase CMS store ────────────────────────────────────────
 
-const LEGACY_PLACEHOLDER_IDS = ['5qap5aO4i9A', '2Vv-BfVoq4g', '3JZ_D3ELwOQ', 'L_LUpnjgPso', 'e-ORhEE9VVg', 'fJ9rUzIMcZQ'];
-
-/** Read sermons from localStorage; seeds from static data on first run or auto-upgrades when new seed sermons are released. */
+/** Read sermons from localStorage; seeds from static data on first run. */
 export function getSermons() {
   try {
-    const currentVer = localStorage.getItem(VERSION_KEY);
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw && currentVer === CURRENT_SEED_VERSION) {
+    if (raw) {
       const parsed = JSON.parse(raw);
-      const hasPlaceholders = Array.isArray(parsed) && parsed.some(s => LEGACY_PLACEHOLDER_IDS.includes(s.youtubeEmbedId));
-      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
     }
   } catch (_) { /* storage unavailable */ }
   saveSermons(seedSermons);
-  try { localStorage.setItem(VERSION_KEY, CURRENT_SEED_VERSION); } catch (_) {}
   return [...seedSermons];
 }
 
