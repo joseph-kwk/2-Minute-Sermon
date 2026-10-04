@@ -3983,7 +3983,7 @@ export function renderConversationsHub(filter = 'all') {
           </div>
           <div class="conv-featured-body">
             <div class="conv-badge-row">
-              ${featured.format === 'plus' ? '<span class="conv-category-badge" style="background:#0f172a;color:#f8fafc;font-weight:700;border:1px solid rgba(255,255,255,0.2);">2-MIN PLUS • 3–15 MIN</span>' : ''}
+              ${featured.format === 'plus' ? '<span class="conv-category-badge" style="background:#0f172a;color:#f8fafc;font-weight:700;border:1px solid rgba(255,255,255,0.2);">2-MIN PLUS • 3–50 MIN</span>' : ''}
               <span class="conv-category-badge">${featured.category}</span>
               <span class="conv-status-badge">${featured.status}</span>
               <span style="font-size:0.8rem;color:var(--color-mediumgray);">Published: ${featured.publishDate}</span>
