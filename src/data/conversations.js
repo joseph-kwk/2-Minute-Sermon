@@ -74,16 +74,26 @@ export const INITIAL_CONVERSATIONS = [
 const STORAGE_KEY = '2ms_conversations';
 
 const _pendingDeletes = new Set();
+const _pendingUpserts = new Map();
 
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('conversations', INITIAL_CONVERSATIONS);
   subscribeCollection('conversations', (remoteConversations) => {
     if (remoteConversations && remoteConversations.length > 0) {
-      const filtered = _pendingDeletes.size > 0
+      let merged = _pendingDeletes.size > 0
         ? remoteConversations.filter(c => !_pendingDeletes.has(c.id))
-        : remoteConversations;
-      if (filtered.length > 0) saveConversations(filtered);
+        : [...remoteConversations];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((item, id) => {
+          if (merged.some(c => c.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.unshift(item);
+          }
+        });
+      }
+      if (merged.length > 0) saveConversations(merged);
     }
   });
 }
@@ -110,6 +120,10 @@ export function saveConversations(list) {
 
 export function upsertConversation(item) {
   _pendingDeletes.delete(item.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(item.id, item);
+    setTimeout(() => _pendingUpserts.delete(item.id), 30000);
+  }
   const list = getConversations();
   const index = list.findIndex(c => c.id === item.id);
   if (index >= 0) {

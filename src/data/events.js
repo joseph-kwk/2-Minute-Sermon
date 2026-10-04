@@ -79,17 +79,14 @@ export function upsertEvent(event) {
   _pendingDeletes.delete(event.id);
   if (isFirebaseConfigured()) {
     _pendingUpserts.set(event.id, event);
+    setTimeout(() => _pendingUpserts.delete(event.id), 30000);
   }
   const all = getEvents();
   const idx = all.findIndex(e => e.id === event.id);
   if (idx >= 0) all[idx] = event; else all.unshift(event);
   saveEvents(all);
   if (isFirebaseConfigured()) {
-    saveDocument('events', event.id, event).then(() => {
-      _pendingUpserts.delete(event.id);
-    }).catch(() => {
-      _pendingUpserts.delete(event.id);
-    });
+    saveDocument('events', event.id, event);
   }
   return all;
 }

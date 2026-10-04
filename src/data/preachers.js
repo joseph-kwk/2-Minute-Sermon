@@ -199,17 +199,14 @@ export function upsertPreacher(preacher) {
   _pendingDeletes.delete(preacher.id);
   if (isFirebaseConfigured()) {
     _pendingUpserts.set(preacher.id, preacher);
+    setTimeout(() => _pendingUpserts.delete(preacher.id), 30000);
   }
   const all = getPreachers();
   const idx = all.findIndex(p => p.id === preacher.id);
   if (idx >= 0) all[idx] = preacher; else all.push(preacher);
   savePreachers(all);
   if (isFirebaseConfigured()) {
-    saveDocument('preachers', preacher.id, preacher).then(() => {
-      _pendingUpserts.delete(preacher.id);
-    }).catch(() => {
-      _pendingUpserts.delete(preacher.id);
-    });
+    saveDocument('preachers', preacher.id, preacher);
   }
   return all;
 }

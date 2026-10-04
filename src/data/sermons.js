@@ -514,22 +514,17 @@ export function saveSermons(arr) {
 /** Add or update a sermon (matched by id). Returns updated array. */
 export function upsertSermon(sermon) {
   _pendingDeletes.delete(sermon.id);
-  // Track this sermon as pending until Firestore confirms it
+  // Track this sermon as pending until Firestore snapshot confirms it has it
   if (isFirebaseConfigured()) {
     _pendingUpserts.set(sermon.id, sermon);
+    setTimeout(() => _pendingUpserts.delete(sermon.id), 30000);
   }
   const all = getSermons();
   const idx = all.findIndex(s => s.id === sermon.id);
   if (idx >= 0) all[idx] = sermon; else all.unshift(sermon);
   saveSermons(all);
   if (isFirebaseConfigured()) {
-    saveDocument('sermons', sermon.id, sermon).then(() => {
-      // Firestore confirmed — the next snapshot will include this doc, stop protecting it
-      _pendingUpserts.delete(sermon.id);
-    }).catch(() => {
-      // Save failed; keep it in localStorage but stop blocking
-      _pendingUpserts.delete(sermon.id);
-    });
+    saveDocument('sermons', sermon.id, sermon);
   }
   return all;
 }

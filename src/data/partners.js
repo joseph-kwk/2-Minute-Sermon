@@ -67,6 +67,7 @@ export function upsertPartner(partner) {
   _pendingDeletes.delete(partner.id);
   if (isFirebaseConfigured()) {
     _pendingUpserts.set(partner.id, partner);
+    setTimeout(() => _pendingUpserts.delete(partner.id), 30000);
   }
   const partners = getPartners();
   const index = partners.findIndex(p => p.id === partner.id);
@@ -77,11 +78,7 @@ export function upsertPartner(partner) {
   }
   savePartners(partners);
   if (isFirebaseConfigured()) {
-    saveDocument('partners', partner.id, partner).then(() => {
-      _pendingUpserts.delete(partner.id);
-    }).catch(() => {
-      _pendingUpserts.delete(partner.id);
-    });
+    saveDocument('partners', partner.id, partner);
   }
 }
 

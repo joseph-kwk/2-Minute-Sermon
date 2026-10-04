@@ -170,6 +170,7 @@ export function upsertLeader(leader) {
   _pendingDeletes.delete(leader.id); // re-adding clears any pending delete
   if (isFirebaseConfigured()) {
     _pendingUpserts.set(leader.id, leader);
+    setTimeout(() => _pendingUpserts.delete(leader.id), 30000);
   }
   const team = getLeadershipTeam();
   const index = team.findIndex(m => m.id === leader.id);
@@ -180,11 +181,7 @@ export function upsertLeader(leader) {
   }
   saveLeadershipTeam(team);
   if (isFirebaseConfigured()) {
-    saveDocument('leadership', leader.id, leader).then(() => {
-      _pendingUpserts.delete(leader.id);
-    }).catch(() => {
-      _pendingUpserts.delete(leader.id);
-    });
+    saveDocument('leadership', leader.id, leader);
   }
 }
 

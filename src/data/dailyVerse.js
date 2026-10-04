@@ -374,17 +374,14 @@ export function upsertDailyVerse(verse) {
   _pendingDeletes.delete(verse.id);
   if (isFirebaseConfigured()) {
     _pendingUpserts.set(verse.id, verse);
+    setTimeout(() => _pendingUpserts.delete(verse.id), 30000);
   }
   const all = getDailyVerses();
   const idx = all.findIndex(v => v.id === verse.id || v.publishDate === verse.publishDate);
   if (idx >= 0) all[idx] = verse; else all.push(verse);
   saveDailyVerses(all);
   if (isFirebaseConfigured()) {
-    saveDocument('dailyVerses', verse.id, verse).then(() => {
-      _pendingUpserts.delete(verse.id);
-    }).catch(() => {
-      _pendingUpserts.delete(verse.id);
-    });
+    saveDocument('dailyVerses', verse.id, verse);
   }
   return all;
 }

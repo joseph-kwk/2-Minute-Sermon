@@ -3485,9 +3485,11 @@ function setupAdminPortal() {
     const checkedTopics = [...document.querySelectorAll('input[name="clientSermonTopic"]:checked')].map(c => c.value);
     const topics     = checkedTopics.length ? checkedTopics : ['Faith'];
 
-    let embedId = raw;
-    if (raw.includes('v=')) embedId = raw.split('v=')[1].split('&')[0];
-    else if (raw.includes('youtu.be/')) embedId = raw.split('youtu.be/')[1].split('?')[0];
+    const embedId = extractVideoId(raw) || (raw.length === 11 ? raw : '');
+    if (!embedId) {
+      showToast('⚠️ Please enter a valid YouTube URL or video ID.');
+      return;
+    }
 
     const newSermon = {
       id: `sermon-${Date.now()}`,
@@ -3504,7 +3506,7 @@ function setupAdminPortal() {
       sermonType,
       duration,
       durationSec: durationToSeconds(duration) || 120,
-      youtubeUrl: raw.startsWith('http') ? raw : `https://www.youtube.com/watch?v=${embedId}`,
+      youtubeUrl: `https://www.youtube.com/watch?v=${embedId}`,
       youtubeEmbedId: embedId,
       thumbnailUrl: `https://img.youtube.com/vi/${embedId}/hqdefault.jpg`,
       summary,
