@@ -90,11 +90,16 @@ html, body { height: 100%; font-family: var(--font-body); }
 .admin-auth-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+}
+.admin-auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 .admin-auth-input {
   width: 100%;
-  padding: 15px 18px;
+  padding: 15px 46px 15px 18px;
   border-radius: 12px;
   border: 1.5px solid var(--admin-border);
   background: rgba(255, 255, 255, 0.04);
@@ -110,6 +115,78 @@ html, body { height: 100%; font-family: var(--font-body); }
   background: rgba(255, 255, 255, 0.07);
 }
 .admin-auth-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+.admin-auth-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color var(--transition), background var(--transition);
+}
+.admin-auth-eye-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-caps-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  animation: fadeIn 0.2s ease;
+}
+.admin-caps-warning[hidden] {
+  display: none !important;
+}
+
+.admin-auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2px 4px;
+}
+.admin-auth-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition);
+}
+.admin-auth-remember:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+.admin-auth-remember input[type="checkbox"] {
+  accent-color: var(--admin-red);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.admin-auth-error {
+  min-height: 20px;
+  font-size: 0.85rem;
+  color: #ff6b6b;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.4;
+}
+
 .admin-auth-form .admin-btn {
   padding: 15px 24px;
   font-size: 1rem;
@@ -122,7 +199,7 @@ html, body { height: 100%; font-family: var(--font-body); }
   margin-top: 4px;
 }
 .admin-auth-hint {
-  margin-top: 30px;
+  margin-top: 26px;
   font-size: 0.82rem;
   color: rgba(255, 255, 255, 0.40);
   line-height: 1.4;

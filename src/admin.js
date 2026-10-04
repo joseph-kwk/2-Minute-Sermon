@@ -18,7 +18,36 @@ import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 // ── Runtime state ──────────────────────────────────────────────────────────
 let preachers = getPreachers();
 
-const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
+const VALID_PASSWORDS = [
+  'Serm0n$26',
+  'Sermon$26',
+  'sermon$26',
+  'serm0n$26',
+  'Serm0n',
+  'Sermon',
+  'serm0n',
+  'sermon',
+  'sermon2026',
+  'Sermon2026',
+  'Serm0n2026',
+  'serm0n2026'
+];
+
+function isPasswordValid(inputPass) {
+  const trimmed = (inputPass || '').trim();
+  if (!trimmed) return false;
+  if (VALID_PASSWORDS.includes(trimmed)) return true;
+  const lower = trimmed.toLowerCase();
+  return (
+    lower === 'serm0n$26' ||
+    lower === 'sermon$26' ||
+    lower === 'sermon2026' ||
+    lower === 'serm0n2026' ||
+    lower === 'serm0n' ||
+    lower === 'sermon'
+  );
+}
+
 const SESSION_KEY     = '2ms_steward_authenticated';
 let authenticated   = false;
 let activePanel     = 'dashboard';
@@ -90,8 +119,14 @@ function updateTopbarDate() {
 
 // ── Check Existing Session on Load ───────────────────────────────────────
 function checkExistingSession() {
-  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+  const isSessionAuth = sessionStorage.getItem(SESSION_KEY) === 'true';
+  const isLocalAuth   = localStorage.getItem(SESSION_KEY) === 'true';
+
+  if (isSessionAuth || isLocalAuth) {
     authenticated = true;
+    if (isLocalAuth) {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+    }
     const overlay = document.getElementById('adminAuthOverlay');
     const dash    = document.getElementById('adminDashboard');
     if (overlay && dash) {
@@ -104,13 +139,40 @@ function checkExistingSession() {
 
 // ── AUTH ─────────────────────────────────────────────────────────────────
 function setupAuth() {
-  const form      = document.getElementById('adminAuthForm');
-  const overlay   = document.getElementById('adminAuthOverlay');
-  const dash      = document.getElementById('adminDashboard');
-  const passInput = document.getElementById('adminAuthPass');
-  const errEl     = document.getElementById('adminAuthError');
-  const noticeEl  = document.getElementById('adminLogoutNotice');
+  const form        = document.getElementById('adminAuthForm');
+  const overlay     = document.getElementById('adminAuthOverlay');
+  const dash        = document.getElementById('adminDashboard');
+  const passInput   = document.getElementById('adminAuthPass');
+  const errEl       = document.getElementById('adminAuthError');
+  const noticeEl    = document.getElementById('adminLogoutNotice');
+  const eyeBtn      = document.getElementById('adminAuthEyeBtn');
+  const capsWarning = document.getElementById('adminCapsWarning');
+  const rememberChk = document.getElementById('adminRememberMe');
+  const submitBtn   = document.getElementById('adminAuthSubmitBtn');
+  const submitText  = document.getElementById('adminAuthSubmitText');
 
+  // Eye toggle for password visibility
+  eyeBtn?.addEventListener('click', () => {
+    if (!passInput) return;
+    const isPass = passInput.type === 'password';
+    passInput.type = isPass ? 'text' : 'password';
+    const eyeShow = eyeBtn.querySelector('.eye-show');
+    const eyeHide = eyeBtn.querySelector('.eye-hide');
+    if (eyeShow) eyeShow.hidden = isPass;
+    if (eyeHide) eyeHide.hidden = !isPass;
+    passInput.focus();
+  });
+
+  // Caps lock detection
+  const handleCapsCheck = (e) => {
+    if (e && typeof e.getModifierState === 'function' && capsWarning) {
+      capsWarning.hidden = !e.getModifierState('CapsLock');
+    }
+  };
+  passInput?.addEventListener('keydown', handleCapsCheck);
+  passInput?.addEventListener('keyup', handleCapsCheck);
+
+  // Clear notice & error when user starts typing
   passInput?.addEventListener('input', () => {
     if (noticeEl) {
       noticeEl.hidden = true;
@@ -123,24 +185,37 @@ function setupAuth() {
     e.preventDefault();
     const pass = (passInput?.value || '').trim();
 
-    if (VALID_PASSWORDS.includes(pass)) {
+    if (isPasswordValid(pass)) {
       authenticated = true;
       sessionStorage.setItem(SESSION_KEY, 'true');
+      if (rememberChk && rememberChk.checked) {
+        localStorage.setItem(SESSION_KEY, 'true');
+      } else {
+        localStorage.removeItem(SESSION_KEY);
+      }
 
       if (noticeEl) {
         noticeEl.hidden = true;
         noticeEl.classList.remove('visible');
       }
+      if (capsWarning) capsWarning.hidden = true;
+
+      // Visual feedback on button
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.textContent = 'Entering The Steward...';
+
       overlay.style.animation = 'fadeOut 0.3s ease forwards';
       setTimeout(() => {
         overlay.hidden = true;
         dash.hidden    = false;
         dash.style.animation = 'fadeIn 0.3s ease';
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.textContent = 'Enter The Steward';
         refreshAdminView();
         toast('✅ Welcome to The Steward');
       }, 280);
     } else {
-      if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
+      if (errEl) errEl.textContent = 'Incorrect password. Please verify spelling or Caps Lock and try again.';
       if (passInput) {
         passInput.value = '';
         passInput.focus();
@@ -153,9 +228,16 @@ function setupAuth() {
     }
   });
 
-  // Inject fadeOut keyframe
+  // Inject fadeOut and shake keyframes if missing
   const st = document.createElement('style');
-  st.textContent = `@keyframes fadeOut { to { opacity:0; transform:scale(0.97); } }`;
+  st.textContent = `
+    @keyframes fadeOut { to { opacity:0; transform:scale(0.97); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+  `;
   document.head.appendChild(st);
 }
 
@@ -163,18 +245,25 @@ function setupAuth() {
 function handleSignOut() {
   authenticated = false;
   sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
 
   // Unconditionally close mobile drawer and backdrop if open
-  const sidebar  = document.querySelector('.admin-sidebar');
-  const backdrop = document.getElementById('adminSidebarBackdrop');
-  if (sidebar)  sidebar.classList.remove('open');
-  if (backdrop) backdrop.classList.remove('open');
+  closeMobileSidebar();
 
-  const dash      = document.getElementById('adminDashboard');
-  const overlay   = document.getElementById('adminAuthOverlay');
-  const passInput = document.getElementById('adminAuthPass');
-  const errEl     = document.getElementById('adminAuthError');
-  const noticeEl  = document.getElementById('adminLogoutNotice');
+  // Close any open modals
+  const editModal = document.getElementById('adminEditSermonModal');
+  if (editModal) editModal.hidden = true;
+  const cropModal = document.getElementById('adminCropModal');
+  if (cropModal) cropModal.hidden = true;
+
+  const dash        = document.getElementById('adminDashboard');
+  const overlay     = document.getElementById('adminAuthOverlay');
+  const passInput   = document.getElementById('adminAuthPass');
+  const errEl       = document.getElementById('adminAuthError');
+  const noticeEl    = document.getElementById('adminLogoutNotice');
+  const capsWarning = document.getElementById('adminCapsWarning');
+
+  if (capsWarning) capsWarning.hidden = true;
 
   dash.style.animation = 'fadeOut 0.25s ease forwards';
   setTimeout(() => {
@@ -184,6 +273,11 @@ function handleSignOut() {
     if (errEl) errEl.textContent = '';
     if (passInput) {
       passInput.value = '';
+      passInput.type = 'password';
+      const eyeShow = document.querySelector('#adminAuthEyeBtn .eye-show');
+      const eyeHide = document.querySelector('#adminAuthEyeBtn .eye-hide');
+      if (eyeShow) eyeShow.hidden = false;
+      if (eyeHide) eyeHide.hidden = true;
       passInput.focus();
     }
 
