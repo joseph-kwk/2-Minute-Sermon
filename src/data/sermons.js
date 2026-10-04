@@ -446,16 +446,35 @@ import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument
 
 // IDs pending deletion — filter from incoming Firestore snapshots until confirmed
 const _pendingDeletes = new Set();
+// Sermons locally upserted but not yet confirmed by Firestore — kept in sync
+const _pendingUpserts = new Map(); // id → sermon object
 
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('sermons', seedSermons);
   subscribeCollection('sermons', (remoteSermons) => {
     if (remoteSermons && remoteSermons.length > 0) {
-      const filtered = _pendingDeletes.size > 0
+      // Remove deleted items
+      let merged = _pendingDeletes.size > 0
         ? remoteSermons.filter(s => !_pendingDeletes.has(s.id))
-        : remoteSermons;
-      if (filtered.length > 0) saveSermons(filtered);
+        : [...remoteSermons];
+
+      // Merge locally-pending upserts: if Firestore doesn't have them yet,
+      // inject them so they aren't lost between optimistic write & Firestore confirm
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((sermon, id) => {
+          const alreadyInRemote = merged.some(s => s.id === id);
+          if (alreadyInRemote) {
+            // Firestore now has it — stop tracking
+            _pendingUpserts.delete(id);
+          } else {
+            // Firestore doesn't have it yet — inject our local copy
+            merged.unshift(sermon);
+          }
+        });
+      }
+
+      if (merged.length > 0) saveSermons(merged);
     }
   });
 }
@@ -495,12 +514,22 @@ export function saveSermons(arr) {
 /** Add or update a sermon (matched by id). Returns updated array. */
 export function upsertSermon(sermon) {
   _pendingDeletes.delete(sermon.id);
+  // Track this sermon as pending until Firestore confirms it
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(sermon.id, sermon);
+  }
   const all = getSermons();
   const idx = all.findIndex(s => s.id === sermon.id);
   if (idx >= 0) all[idx] = sermon; else all.unshift(sermon);
   saveSermons(all);
   if (isFirebaseConfigured()) {
-    saveDocument('sermons', sermon.id, sermon);
+    saveDocument('sermons', sermon.id, sermon).then(() => {
+      // Firestore confirmed — the next snapshot will include this doc, stop protecting it
+      _pendingUpserts.delete(sermon.id);
+    }).catch(() => {
+      // Save failed; keep it in localStorage but stop blocking
+      _pendingUpserts.delete(sermon.id);
+    });
   }
   return all;
 }

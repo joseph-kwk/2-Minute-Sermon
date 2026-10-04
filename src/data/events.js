@@ -26,16 +26,27 @@ import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument
 
 // IDs pending deletion — filter from incoming Firestore snapshots until confirmed
 const _pendingDeletes = new Set();
+// Events locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → event object
 
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('events', seedEvents);
   subscribeCollection('events', (remoteEvents) => {
     if (Array.isArray(remoteEvents)) {
-      const filtered = _pendingDeletes.size > 0
+      let merged = _pendingDeletes.size > 0
         ? remoteEvents.filter(e => !_pendingDeletes.has(e.id))
-        : remoteEvents;
-      saveEvents(filtered);
+        : [...remoteEvents];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((event, id) => {
+          if (merged.some(e => e.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.unshift(event);
+          }
+        });
+      }
+      saveEvents(merged);
     }
   });
 }
@@ -66,12 +77,19 @@ export function saveEvents(arr) {
 /** Add or update an event (matched by id). Returns updated array. */
 export function upsertEvent(event) {
   _pendingDeletes.delete(event.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(event.id, event);
+  }
   const all = getEvents();
   const idx = all.findIndex(e => e.id === event.id);
   if (idx >= 0) all[idx] = event; else all.unshift(event);
   saveEvents(all);
   if (isFirebaseConfigured()) {
-    saveDocument('events', event.id, event);
+    saveDocument('events', event.id, event).then(() => {
+      _pendingUpserts.delete(event.id);
+    }).catch(() => {
+      _pendingUpserts.delete(event.id);
+    });
   }
   return all;
 }

@@ -19,16 +19,27 @@ const STORAGE_KEY = '2ms_partners';
 
 // IDs pending deletion — filter from incoming Firestore snapshots until confirmed
 const _pendingDeletes = new Set();
+// Partners locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → partner object
 
 // ── Real-time Firestore Sync ─────────────────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('partners', INITIAL_PARTNERS);
   subscribeCollection('partners', (remotePartners) => {
     if (Array.isArray(remotePartners)) {
-      const filtered = _pendingDeletes.size > 0
+      let merged = _pendingDeletes.size > 0
         ? remotePartners.filter(p => !_pendingDeletes.has(p.id))
-        : remotePartners;
-      savePartners(filtered);
+        : [...remotePartners];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((partner, id) => {
+          if (merged.some(p => p.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.push(partner);
+          }
+        });
+      }
+      savePartners(merged);
     }
   });
 }
@@ -54,6 +65,9 @@ export function savePartners(partners) {
 
 export function upsertPartner(partner) {
   _pendingDeletes.delete(partner.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(partner.id, partner);
+  }
   const partners = getPartners();
   const index = partners.findIndex(p => p.id === partner.id);
   if (index >= 0) {
@@ -63,7 +77,11 @@ export function upsertPartner(partner) {
   }
   savePartners(partners);
   if (isFirebaseConfigured()) {
-    saveDocument('partners', partner.id, partner);
+    saveDocument('partners', partner.id, partner).then(() => {
+      _pendingUpserts.delete(partner.id);
+    }).catch(() => {
+      _pendingUpserts.delete(partner.id);
+    });
   }
 }
 

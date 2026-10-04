@@ -122,16 +122,27 @@ const STORAGE_KEY = '2ms_leadership';
 // IDs pending deletion — filter these out of any incoming Firestore snapshot
 // until Firestore confirms the delete (prevents ghost re-appearance).
 const _pendingDeletes = new Set();
+// Leaders locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → leader object
 
 // ── Real-time Firestore Sync ─────────────────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('leadership', INITIAL_LEADERSHIP);
   subscribeCollection('leadership', (remoteTeam) => {
     if (remoteTeam && remoteTeam.length > 0) {
-      const filtered = _pendingDeletes.size > 0
+      let merged = _pendingDeletes.size > 0
         ? remoteTeam.filter(m => !_pendingDeletes.has(m.id))
-        : remoteTeam;
-      if (filtered.length > 0) saveLeadershipTeam(filtered);
+        : [...remoteTeam];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((leader, id) => {
+          if (merged.some(m => m.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.push(leader);
+          }
+        });
+      }
+      if (merged.length > 0) saveLeadershipTeam(merged);
     }
   });
 }
@@ -157,6 +168,9 @@ export function saveLeadershipTeam(team) {
 
 export function upsertLeader(leader) {
   _pendingDeletes.delete(leader.id); // re-adding clears any pending delete
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(leader.id, leader);
+  }
   const team = getLeadershipTeam();
   const index = team.findIndex(m => m.id === leader.id);
   if (index >= 0) {
@@ -166,7 +180,11 @@ export function upsertLeader(leader) {
   }
   saveLeadershipTeam(team);
   if (isFirebaseConfigured()) {
-    saveDocument('leadership', leader.id, leader);
+    saveDocument('leadership', leader.id, leader).then(() => {
+      _pendingUpserts.delete(leader.id);
+    }).catch(() => {
+      _pendingUpserts.delete(leader.id);
+    });
   }
 }
 
