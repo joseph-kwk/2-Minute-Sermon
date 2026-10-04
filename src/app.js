@@ -1,4 +1,5 @@
-import { getSermons, upsertSermon, durationToSeconds } from './data/sermons.js';
+import { getSermons, upsertSermon, durationToSeconds, getLatestSermon } from './data/sermons.js';
+import { getSeries } from './data/series.js';
 import { getEvents, saveEvents } from './data/events.js';
 import { getPreachers, savePreachers } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
@@ -19,6 +20,7 @@ const scheduledDailyVerses = () => getDailyVerses();
 const leadership = () => getLeadershipTeam();
 const partners   = () => getPartners();
 const conversations = () => getConversations();
+const seriesData = () => getSeries();
 
 
 let activeView = 'home';
@@ -92,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPersistentMiniPlayer();
   setupScriptureCardGenerator();
   setupSermonFilters();
+  setupSeriesHub();
+  setupPlusChannel();
   setupDailyVerse();
   setupPrayerForm();
   setupAdminWrittenPrayers();
@@ -104,6 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderHomeSermons();
   filterAndRenderSermons();
+  renderSeriesHub();
+  renderPlusChannel();
   renderSeasonsHub();
   renderTopicsHub();
   renderPreachersHub();
@@ -120,6 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const refreshAllUI = () => {
     renderHomeSermons();
     filterAndRenderSermons();
+    renderSeriesHub();
+    renderPlusChannel();
     renderSeasonsHub();
     renderTopicsHub();
     renderPreachersHub();
@@ -154,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('storage', refreshAllUI);
   window.addEventListener('2ms:sermons:updated', refreshAllUI);
+  window.addEventListener('2ms:series:updated', refreshAllUI);
   window.addEventListener('2ms:preachers:updated', refreshAllUI);
   window.addEventListener('2ms:verses:updated', refreshAllUI);
   window.addEventListener('2ms:events:updated', refreshAllUI);
@@ -329,6 +338,8 @@ function setupNavigation() {
 const VIEW_TITLES = {
   home: '2-Minute Sermon | Short, Scripture-Rooted Messages Worldwide',
   sermons: 'All Sermons | 2-Minute Sermon',
+  series: 'Sermon Series & Multi-Part Studies | 2-Minute Sermon',
+  plus: '2-Minute PLUS (Extended Messages: 3–50 min) | 2-Minute Sermon',
   seasons: 'Liturgical Seasons Hub | 2-Minute Sermon',
   topics: 'Topics & Pastoral Themes | 2-Minute Sermon',
   preachers: 'Preachers Directory | 2-Minute Sermon',
@@ -375,6 +386,10 @@ export function switchView(viewId) {
         heroContainer.style.opacity = '1';
         heroContainer.style.transform = 'translate3d(0, 0, 0)';
       }
+    } else if (viewId === 'series') {
+      renderSeriesHub();
+    } else if (viewId === 'plus') {
+      renderPlusChannel();
     }
 
     if (VIEW_TITLES[viewId]) {
@@ -450,7 +465,7 @@ const PROMO_VIDEO_ID = 'SJFqqNvTeh8';
 function setupHeroCtas() {
   document.getElementById('heroPrimaryCta')?.addEventListener('click', (e) => {
     e.preventDefault();
-    const latest = sermons()[0];
+    const latest = getLatestSermon();
     if (latest) {
       openSermonModal(latest.id);
     } else {
@@ -473,6 +488,12 @@ function setupHeroCtas() {
     if (e.key === '2ms_sermons') {
       renderHomeSermons();
       filterAndRenderSermons();
+      renderPlusChannel();
+      renderSeriesHub();
+    }
+    if (e.key === '2ms_series') {
+      renderSeriesHub();
+      populateDropdownFilterOptions();
     }
     if (e.key === '2ms_events') {
       renderEventsGrid();
@@ -2381,8 +2402,9 @@ function getSermonDisplayTopic(s) {
 function createSermonCardHtml(s, showFavorite = true) {
   const isFav = savedFavorites.includes(s.id);
   const cardTopic = getSermonDisplayTopic(s);
+  const isPlus = s.isPlus || (s.durationSec && s.durationSec >= 180);
   return `
-    <div class="sermon-card">
+    <div class="sermon-card ${isPlus ? 'sermon-card-plus' : ''}">
       <div class="sermon-thumb-wrap">
         ${showFavorite ? `
         <button class="sermon-card-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Favorite sermon">
@@ -2390,11 +2412,13 @@ function createSermonCardHtml(s, showFavorite = true) {
         </button>` : ''}
         <img src="${s.thumbnailUrl}" alt="${escapeHtml(s.title)}" class="sermon-thumb-img" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80';}">
-        <span class="sermon-duration-badge">${svgClock} ${s.duration}</span>
+        <span class="sermon-duration-badge ${isPlus ? 'badge-plus-duration' : ''}">${svgClock} ${s.duration}</span>
       </div>
       <div class="sermon-card-content">
-        <div class="carousel-badges" style="margin-bottom:8px;">
+        <div class="carousel-badges" style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px;">
           <span class="badge badge-topic">${escapeHtml(cardTopic)}</span>
+          ${isPlus ? `<span class="badge badge-plus">⚡ 2-MIN PLUS</span>` : ''}
+          ${s.seriesName ? `<span class="badge badge-series">📚 ${escapeHtml(s.seriesName)}${s.seriesPart ? ' · Pt ' + s.seriesPart : ''}</span>` : ''}
         </div>
         <h3 class="sermon-card-title">${escapeHtml(s.title)}</h3>
         <div class="sermon-card-meta">${escapeHtml(s.preacherName)} &bull; ${escapeHtml(s.scripture)}</div>
@@ -2418,6 +2442,7 @@ function createSermonCardHtml(s, showFavorite = true) {
 function createSermonListRowHtml(s) {
   const isFav = savedFavorites.includes(s.id);
   const cardTopic = getSermonDisplayTopic(s);
+  const isPlus = s.isPlus || (s.durationSec && s.durationSec >= 180);
   const snippetText = s.summary ? (s.summary.length > 90 ? s.summary.slice(0, 90).trim() + '…' : s.summary) : '';
   return `
     <div class="sermon-list-row" data-sermon-id="${s.id}">
@@ -2425,11 +2450,13 @@ function createSermonListRowHtml(s) {
         <img src="${s.thumbnailUrl}" alt="${escapeHtml(s.title)}" class="sermon-list-thumb" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='/assets/logo.png';}"
         >
-        <span class="sermon-list-duration-badge">${s.duration}</span>
+        <span class="sermon-list-duration-badge ${isPlus ? 'badge-plus-duration' : ''}">${s.duration}</span>
       </div>
       <div class="sermon-list-info">
-        <div class="sermon-list-chips">
+        <div class="sermon-list-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
           <span class="badge badge-topic" style="font-size:0.7rem;padding:2px 9px;">${escapeHtml(cardTopic)}</span>
+          ${isPlus ? `<span class="badge badge-plus" style="font-size:0.65rem;padding:2px 7px;">⚡ PLUS</span>` : ''}
+          ${s.seriesName ? `<span class="badge badge-series" style="font-size:0.65rem;padding:2px 7px;">📚 ${escapeHtml(s.seriesName)}${s.seriesPart ? ' · Pt ' + s.seriesPart : ''}</span>` : ''}
         </div>
         <h4 class="sermon-list-title" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="View Details">${escapeHtml(s.title)}</h4>
         <div class="sermon-list-meta">
@@ -2476,7 +2503,7 @@ function setupSermonFilters() {
     filterAndRenderSermons();
   });
 
-  // Duration quick filter chips
+  // Duration & Format quick filter chips
   document.querySelectorAll('.duration-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
@@ -2533,14 +2560,14 @@ function setupSermonFilters() {
     filterAndRenderSermons();
   });
 
-  ['filterTopic','filterPreacher','filterScripture','filterSort'].forEach(id => {
+  ['filterTopic','filterPreacher','filterScripture','filterSort','filterSeries'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', filterAndRenderSermons);
   });
 
   document.getElementById('resetFiltersBtn')?.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
     if (clearBtn) clearBtn.hidden = true;
-    ['filterTopic','filterPreacher','filterScripture'].forEach(id => {
+    ['filterTopic','filterPreacher','filterScripture','filterSeries'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = 'all';
     });
@@ -2580,6 +2607,7 @@ function populateDropdownFilterOptions() {
   const adminPre   = document.getElementById('adminPreacher');
   const adminSea   = document.getElementById('adminSeason');
   const scriptSel  = document.getElementById('filterScripture');
+  const seriesSel  = document.getElementById('filterSeries');
 
   if (topicSel) {
     const prevVal = topicSel.value || 'all';
@@ -2617,6 +2645,16 @@ function populateDropdownFilterOptions() {
     }
   }
 
+  if (seriesSel) {
+    const prevVal = seriesSel.value || 'all';
+    const sList = getSeries();
+    seriesSel.innerHTML = `<option value="all">All Series</option>` +
+      sList.map(item => `<option value="${escapeHtml(item.title)}">${escapeHtml(item.title)}</option>`).join('');
+    if (sList.some(item => item.title === prevVal)) {
+      seriesSel.value = prevVal;
+    }
+  }
+
   const adminPreList = document.getElementById('adminPreacherList');
   if (adminPreList) {
     adminPreList.innerHTML = preachers().map(p => `<option value="${p.name}"></option>`).join('');
@@ -2631,6 +2669,7 @@ function populateDropdownFilterOptions() {
 
 function filterAndRenderSermons() {
   const search     = (document.getElementById('sermonSearchInput')?.value || '').toLowerCase().trim();
+  const series     = document.getElementById('filterSeries')?.value || 'all';
   const topic      = document.getElementById('filterTopic')?.value || 'all';
   const preacher   = document.getElementById('filterPreacher')?.value || 'all';
   const scripture  = document.getElementById('filterScripture')?.value || 'all';
@@ -2638,6 +2677,7 @@ function filterAndRenderSermons() {
 
   // Update mobile active filters count badge & reset button
   let activeAdvCount = 0;
+  if (series !== 'all') activeAdvCount++;
   if (topic !== 'all') activeAdvCount++;
   if (preacher !== 'all') activeAdvCount++;
   if (scripture !== 'all') activeAdvCount++;
@@ -2684,18 +2724,27 @@ function filterAndRenderSermons() {
       if (!primary && !secondary) return false;
     }
 
-    // Duration & Favorites quick filters
+    // Duration & Format quick filters
     if (activeDurationFilter === 'favorites') {
       if (!savedFavorites.includes(s.id)) return false;
+    } else if (activeDurationFilter === 'plus') {
+      if (!s.isPlus && (s.durationSec ?? 120) < 180) return false;
+    } else if (activeDurationFilter === 'series') {
+      if (!s.seriesName) return false;
     } else if (activeDurationFilter === 'under1') {
       const sec = s.durationSec ?? 120;
-      if (sec >= 60) return false;                          // strictly under 1 min
+      if (sec >= 60) return false;
     } else if (activeDurationFilter === '1to2') {
       const sec = s.durationSec ?? 120;
-      if (sec < 60 || sec > 120) return false;              // 1:00 – 2:00 inclusive
+      if (sec < 60 || sec > 120) return false;
     } else if (activeDurationFilter === 'over2') {
       const sec = s.durationSec ?? 120;
-      if (sec < 121) return false;                          // anything above 2:00
+      if (sec < 121) return false;
+    }
+
+    // Series dropdown filter
+    if (series !== 'all') {
+      if (!s.seriesName || s.seriesName.toLowerCase() !== series.toLowerCase()) return false;
     }
 
     if (topic !== 'all') {
@@ -2706,7 +2755,6 @@ function filterAndRenderSermons() {
       } else if (typeof s.topics === 'string') {
         sTopics = s.topics.split(',').map(t => t.trim());
       }
-      // Note: intentionally NOT including s.sermonType — it is not a topic.
       if (s.category) sTopics.push(String(s.category).trim());
       if (s.topic)    sTopics.push(String(s.topic).trim());
       const matchesTopic = sTopics.some(t => t.toLowerCase() === topicLower);
@@ -2715,14 +2763,13 @@ function filterAndRenderSermons() {
     if (preacher !== 'all') {
       const pNorm = (s.preacherName || '').toLowerCase().trim();
       const fNorm = preacher.toLowerCase().trim();
-      // Support both exact match and preacher name containing filter value
       if (pNorm !== fNorm && !pNorm.includes(fNorm)) return false;
     }
     if (scripture !== 'all' && s.scriptureBook !== scripture) return false;
     if (search) {
       const fields = [
         s.title, s.preacherName, s.scripture, s.summary,
-        s.primarySeason, s.scriptureBook,
+        s.primarySeason, s.scriptureBook, s.seriesName,
         ...(Array.isArray(s.topics) ? s.topics : []),
         ...(s.transcript || []).map(t => t.text)
       ];
@@ -2765,6 +2812,215 @@ function filterAndRenderSermons() {
     observeNewCards(grid);
   }
 }
+
+// ─── SERMON SERIES HUB & PLAYLIST ─────────────────────────────────────────────
+function setupSeriesHub() {
+  const searchInput = document.getElementById('seriesSearchInput');
+  const clearBtn = document.getElementById('seriesSearchClearBtn');
+  searchInput?.addEventListener('input', () => {
+    if (clearBtn) clearBtn.hidden = !searchInput.value;
+    renderSeriesHub();
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    if (clearBtn) clearBtn.hidden = true;
+    renderSeriesHub();
+  });
+
+  // Close playlist modal
+  document.getElementById('closeSeriesModalBtn')?.addEventListener('click', () => {
+    const modal = document.getElementById('seriesPlaylistModal');
+    if (modal) modal.hidden = true;
+  });
+}
+
+export function renderSeriesHub() {
+  const container = document.getElementById('seriesCatalogGrid');
+  const countEl = document.getElementById('seriesResultsCount');
+  if (!container) return;
+
+  const search = (document.getElementById('seriesSearchInput')?.value || '').toLowerCase().trim();
+  const allSeries = getSeries();
+  const allSermons = sermons();
+
+  let filtered = allSeries;
+  if (search) {
+    filtered = allSeries.filter(s =>
+      (s.title && s.title.toLowerCase().includes(search)) ||
+      (s.preacherName && s.preacherName.toLowerCase().includes(search)) ||
+      (s.scripture && s.scripture.toLowerCase().includes(search)) ||
+      (s.description && s.description.toLowerCase().includes(search))
+    );
+  }
+
+  if (countEl) countEl.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: rgba(0,0,0,0.02); border-radius: 16px; border: 1px dashed var(--color-card-border);">
+        <p style="font-size: 1.1rem; color: var(--color-mediumgray); margin-bottom: 8px;">No sermon series found matching your search.</p>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('seriesSearchInput').value=''; renderSeriesHub();">Clear Search</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(series => {
+    const linkedSermons = allSermons
+      .filter(s => s.seriesName && s.seriesName.toLowerCase() === series.title.toLowerCase())
+      .sort((a, b) => (a.seriesPart || 999) - (b.seriesPart || 999));
+    const partCount = linkedSermons.length;
+    const firstSermonId = linkedSermons[0]?.id;
+
+    return `
+      <div class="series-hub-card">
+        <div class="series-hub-thumb-wrap">
+          <img src="${escapeHtml(series.bannerUrl)}" alt="${escapeHtml(series.title)}" class="series-hub-banner-img" loading="lazy"
+            onerror="this.src='https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=800&q=80'">
+          <div class="series-hub-gradient-overlay">
+            <span class="series-hub-badge-top">📚 Multi-Part Study</span>
+            <span class="series-hub-badge-bottom">${partCount} ${partCount === 1 ? 'Part' : 'Parts'}</span>
+          </div>
+        </div>
+        <div class="series-hub-content">
+          <h3 class="series-hub-title">${escapeHtml(series.title)}</h3>
+          <div class="series-hub-meta">
+            <span class="series-hub-meta-item">🎙️ ${escapeHtml(series.preacherName)}</span>
+            <span class="series-hub-meta-item">📖 ${escapeHtml(series.scripture)}</span>
+          </div>
+          <p class="series-hub-desc">${escapeHtml(series.description)}</p>
+          <div class="series-hub-actions">
+            ${firstSermonId ? `
+            <button class="btn btn-primary btn-sm" onclick="window.openSermonModal('${firstSermonId}')">
+              ▶ Start Series
+            </button>` : ''}
+            <button class="btn btn-outline btn-sm" onclick="window.openSeriesPlaylist('${series.id}')">
+              📋 View Playlist (${partCount})
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderSeriesHub = renderSeriesHub;
+
+export function openSeriesPlaylist(seriesId) {
+  const series = getSeries().find(s => s.id === seriesId);
+  if (!series) return;
+
+  const modal = document.getElementById('seriesPlaylistModal');
+  const body = document.getElementById('seriesPlaylistBody');
+  if (!modal || !body) return;
+
+  const linkedSermons = sermons()
+    .filter(s => s.seriesName && s.seriesName.toLowerCase() === series.title.toLowerCase())
+    .sort((a, b) => (a.seriesPart || 999) - (b.seriesPart || 999));
+
+  body.innerHTML = `
+    <div class="series-playlist-header">
+      <div class="series-playlist-header-backdrop" style="background-image: url('${escapeHtml(series.bannerUrl)}')"></div>
+      <div class="series-playlist-header-content">
+        <span class="badge" style="background:rgba(59,130,246,0.25);color:#93c5fd;border:1px solid rgba(59,130,246,0.4);font-size:0.75rem;padding:3px 10px;border-radius:999px;">
+          📚 SERMON SERIES PLAYLIST
+        </span>
+        <h2 class="series-playlist-header-title">${escapeHtml(series.title)}</h2>
+        <div class="series-playlist-header-meta">
+          <span>🎙️ <strong>${escapeHtml(series.preacherName)}</strong></span>
+          <span>•</span>
+          <span>📖 <strong>${escapeHtml(series.scripture)}</strong></span>
+          <span>•</span>
+          <span>${linkedSermons.length} Lessons</span>
+        </div>
+        <p class="series-playlist-header-desc">${escapeHtml(series.description)}</p>
+      </div>
+    </div>
+
+    <div class="series-playlist-parts-container">
+      <div class="series-playlist-parts-title">
+        <span>Sequential Episodes</span>
+        <span style="font-size:0.85rem;color:var(--color-mediumgray);font-weight:400;">Click any part to watch</span>
+      </div>
+
+      <div class="series-playlist-parts-list">
+        ${linkedSermons.length === 0 ? `
+          <p style="text-align:center;color:var(--color-mediumgray);padding:24px;">No sermons have been linked to this series yet.</p>
+        ` : linkedSermons.map((s, idx) => `
+          <div class="series-part-row" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0">
+            <div class="series-part-number">${s.seriesPart ? String(s.seriesPart).padStart(2, '0') : String(idx + 1).padStart(2, '0')}</div>
+            <img src="${s.thumbnailUrl}" alt="${escapeHtml(s.title)}" class="series-part-thumb" onerror="this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg'">
+            <div class="series-part-info">
+              <h4 class="series-part-title">${escapeHtml(s.title)}</h4>
+              <div class="series-part-meta">
+                <span>⏱️ ${s.duration}</span>
+                <span>•</span>
+                <span>${escapeHtml(s.scripture)}</span>
+                ${s.isPlus ? '<span class="badge badge-plus" style="font-size:0.62rem;padding:1px 6px;">⚡ PLUS</span>' : ''}
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm series-part-play-btn" onclick="event.stopPropagation(); window.openSermonModal('${s.id}')">
+              ▶ Watch
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  modal.hidden = false;
+}
+window.openSeriesPlaylist = openSeriesPlaylist;
+
+// ─── 2-MINUTE PLUS CHANNEL ──────────────────────────────────────────────────
+function setupPlusChannel() {
+  const searchInput = document.getElementById('plusSearchInput');
+  const clearBtn = document.getElementById('plusSearchClearBtn');
+  searchInput?.addEventListener('input', () => {
+    if (clearBtn) clearBtn.hidden = !searchInput.value;
+    renderPlusChannel();
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (searchInput) searchInput.value = '';
+    if (clearBtn) clearBtn.hidden = true;
+    renderPlusChannel();
+  });
+}
+
+export function renderPlusChannel() {
+  const container = document.getElementById('plusSermonsGrid');
+  const countEl = document.getElementById('plusResultsCount');
+  if (!container) return;
+
+  const search = (document.getElementById('plusSearchInput')?.value || '').toLowerCase().trim();
+  const allSermons = sermons();
+
+  let plusSermons = allSermons.filter(s => s.isPlus || (s.durationSec && s.durationSec >= 180));
+
+  if (search) {
+    plusSermons = plusSermons.filter(s =>
+      (s.title && s.title.toLowerCase().includes(search)) ||
+      (s.preacherName && s.preacherName.toLowerCase().includes(search)) ||
+      (s.scripture && s.scripture.toLowerCase().includes(search)) ||
+      (s.summary && s.summary.toLowerCase().includes(search))
+    );
+  }
+
+  if (countEl) countEl.textContent = plusSermons.length;
+
+  if (plusSermons.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: rgba(0,0,0,0.02); border-radius: 16px; border: 1px dashed var(--color-card-border);">
+        <p style="font-size: 1.1rem; color: var(--color-mediumgray); margin-bottom: 8px;">No 2-Minute PLUS sermons found.</p>
+        <p style="font-size: 0.9rem; color: var(--color-mediumgray);">Publish extended messages (3–50 min) from the Admin Portal to populate this channel.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = plusSermons.map(s => createSermonCardHtml(s, true)).join('');
+  observeNewCards(container);
+}
+window.renderPlusChannel = renderPlusChannel;
 
 // ─── SERMON MODAL — YouTube redirect (no iframe, keeps site fast) ─────────────
 export function openSermonModal(sermonId) {

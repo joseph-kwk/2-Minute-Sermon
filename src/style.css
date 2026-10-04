@@ -5346,6 +5346,390 @@ body[data-active-view="contact"] .newsletter-section {
   }
 }
 
+/* ==========================================================================
+   SERMON SERIES & 2-MINUTE PLUS STYLES
+   ========================================================================== */
+
+/* ── Badges ─────────────────────────────────────────────────────────────── */
+.badge-plus {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #111 !important;
+  font-weight: 800 !important;
+  font-size: 0.68rem !important;
+  padding: 3px 8px !important;
+  border-radius: var(--radius-sm) !important;
+  letter-spacing: 0.03em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.badge-series {
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: #2563eb !important;
+  border: 1px solid rgba(59, 130, 246, 0.28) !important;
+  font-weight: 700 !important;
+  font-size: 0.68rem !important;
+  padding: 3px 8px !important;
+  border-radius: var(--radius-sm) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.badge-plus-duration {
+  background: rgba(217, 119, 6, 0.92) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  font-weight: 700 !important;
+}
+
+/* ── 2-Minute PLUS Channel Banner ────────────────────────────────────────── */
+.plus-channel-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(245, 158, 11, 0.04) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  border-radius: var(--radius-lg);
+  margin-bottom: 28px;
+  box-shadow: 0 4px 20px rgba(217, 119, 6, 0.06);
+}
+.plus-channel-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #111;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35);
+}
+.plus-channel-info {
+  flex: 1;
+}
+.plus-channel-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-charcoal);
+  margin: 0 0 4px;
+}
+.plus-channel-desc {
+  font-size: 0.92rem;
+  color: var(--color-darkgray);
+  line-height: 1.5;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .plus-channel-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+}
+
+/* ── Sermon Series Grid & Cards ──────────────────────────────────────────── */
+.series-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 28px;
+  margin-top: 10px;
+}
+@media (max-width: 480px) {
+  .series-catalog-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.series-hub-card {
+  background: var(--color-card-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+.series-hub-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.series-hub-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1a1a24;
+  overflow: hidden;
+}
+.series-hub-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+.series-hub-card:hover .series-hub-banner-img {
+  transform: scale(1.04);
+}
+.series-hub-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(14, 15, 20, 0.88) 0%, rgba(14, 15, 20, 0.2) 60%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  pointer-events: none;
+}
+.series-hub-badge-top {
+  align-self: flex-start;
+  background: rgba(14, 15, 20, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.series-hub-badge-bottom {
+  align-self: flex-end;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.series-hub-content {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.series-hub-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-charcoal);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+.series-hub-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  color: var(--color-mediumgray);
+  margin-bottom: 12px;
+}
+.series-hub-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.series-hub-desc {
+  font-size: 0.9rem;
+  color: var(--color-darkgray);
+  line-height: 1.55;
+  margin: 0 0 20px;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.series-hub-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+.series-hub-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* ── Series Playlist Modal ───────────────────────────────────────────────── */
+.series-playlist-dialog {
+  max-width: 780px !important;
+  width: 94% !important;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-card-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+.series-playlist-body {
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.series-playlist-header {
+  position: relative;
+  background: #11131a;
+  color: #fff;
+  padding: 32px 32px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.series-playlist-header-backdrop {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  filter: blur(18px);
+  transform: scale(1.1);
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+.series-playlist-header-content {
+  position: relative;
+  z-index: 2;
+}
+.series-playlist-header-title {
+  font-family: var(--font-heading);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 8px 0 8px;
+  line-height: 1.25;
+}
+.series-playlist-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 14px;
+}
+.series-playlist-header-desc {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 640px;
+}
+
+.series-playlist-parts-container {
+  padding: 24px 32px 32px;
+}
+.series-playlist-parts-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-charcoal);
+  margin: 0 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.series-playlist-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.series-part-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.series-part-row:hover {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.35);
+  transform: translateX(4px);
+}
+.series-part-number {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.1);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.series-part-thumb {
+  width: 80px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #222;
+  flex-shrink: 0;
+}
+.series-part-info {
+  flex: 1;
+  min-width: 0;
+}
+.series-part-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-charcoal);
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.series-part-meta {
+  font-size: 0.8rem;
+  color: var(--color-mediumgray);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.series-part-play-btn {
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .series-playlist-header {
+    padding: 24px 20px 20px;
+  }
+  .series-playlist-header-title {
+    font-size: 1.35rem;
+  }
+  .series-playlist-parts-container {
+    padding: 20px 16px;
+  }
+  .series-part-row {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .series-part-thumb {
+    width: 64px;
+    height: 38px;
+  }
+}
+
 
 
 

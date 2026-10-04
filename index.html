@@ -105,6 +105,14 @@
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               All Sermons
             </a>
+            <a href="#series" class="dropdown-item" data-view="series">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              Sermon Series
+            </a>
+            <a href="#plus" class="dropdown-item" data-view="plus">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+              2-Minute PLUS (3–50 min)
+            </a>
             <a href="#seasons" class="dropdown-item" data-view="seasons">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Seasons Hub
@@ -136,7 +144,7 @@
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               The Conversation
             </a>
-            <a href="#conversations" class="dropdown-item" data-view="conversations" data-conv-filter="plus">
+            <a href="#plus" class="dropdown-item" data-view="plus">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
               2-Minute PLUS (3–50 min)
             </a>
@@ -202,12 +210,13 @@
       <div class="mobile-drawer-content">
         <button class="mobile-nav-btn active" data-view="home">Home</button>
         <button class="mobile-nav-btn" data-view="sermons">All Sermons</button>
+        <button class="mobile-nav-btn" data-view="series">📚 Sermon Series</button>
+        <button class="mobile-nav-btn" data-view="plus">⚡ 2-Minute PLUS (3–50 min)</button>
         <button class="mobile-nav-btn" data-view="seasons">Seasons Hub</button>
         <button class="mobile-nav-btn" data-view="topics">Topics Hub</button>
         <button class="mobile-nav-btn" data-view="preachers">Preachers Directory</button>
         <div class="mobile-divider"></div>
         <button class="mobile-nav-btn" data-view="conversations">🎙️ The Conversation</button>
-        <button class="mobile-nav-btn" data-view="conversations" data-conv-filter="plus">▶ 2-Minute PLUS (3–50 min)</button>
         <button class="mobile-nav-btn" data-view="prayers">🙏 Prayers &amp; Requests</button>
         <button class="mobile-nav-btn" data-view="daily-verse">📖 Daily Verse</button>
         <button class="mobile-nav-btn" data-view="daily-verse" data-scroll-to="communityReflectionsSection">💬 Fellowship Reflections</button>
@@ -364,6 +373,30 @@
           </div>
 
           <div class="tiles-grid">
+            <div class="tile-card tile-card-series" data-view="series">
+              <div class="tile-card-header">
+                <div class="tile-icon-box" style="background:rgba(59,130,246,0.12);color:#3b82f6;">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                </div>
+                <span class="tile-channel-badge badge-blue">Multi-Part Studies</span>
+              </div>
+              <h3 class="tile-title">Sermon Series</h3>
+              <p class="tile-desc">Grouped sequential teachings, topical series, and multi-part scripture studies.</p>
+              <span class="tile-link">Explore Series →</span>
+            </div>
+
+            <div class="tile-card tile-card-plus" data-view="plus">
+              <div class="tile-card-header">
+                <div class="tile-icon-box" style="background:rgba(217,119,6,0.12);color:#d97706;">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                </div>
+                <span class="tile-channel-badge badge-gold">3–50 Min Messages</span>
+              </div>
+              <h3 class="tile-title">2-Minute PLUS</h3>
+              <p class="tile-desc">Extended messages and deep-dive teachings when you have more time to reflect.</p>
+              <span class="tile-link">Watch Extended →</span>
+            </div>
+
             <div class="tile-card tile-card-seasons" data-view="seasons">
               <div class="tile-card-header">
                 <div class="tile-icon-box">
@@ -450,6 +483,8 @@
           <p class="page-subtitle">Bite-sized, scripture-rooted 2-minute messages organized by sacred season, theme, and scripture book.</p>
           <div class="sub-header-pills">
             <a href="#sermons" class="sub-pill active" data-view="sermons">All Sermons</a>
+            <a href="#series" class="sub-pill" data-view="series">Sermon Series</a>
+            <a href="#plus" class="sub-pill" data-view="plus">2-Minute PLUS</a>
             <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
             <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
             <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
@@ -468,11 +503,13 @@
 
           <div class="season-chips-container" id="seasonChipsContainer"></div>
 
-          <!-- Quick Filters: Duration & Favorites -->
+          <!-- Quick Filters: Duration, Series, PLUS & Favorites -->
           <div class="quick-filter-chips-row">
-            <span class="quick-filter-label">Length:</span>
+            <span class="quick-filter-label">Filter:</span>
             <button class="chip duration-chip active" data-duration="all">All</button>
-            <button class="chip duration-chip" data-duration="under1">⚡ Under 1 Min</button>
+            <button class="chip duration-chip" data-duration="series">📚 In a Series</button>
+            <button class="chip duration-chip" data-duration="plus">⚡ 2-Min PLUS (3–50 min)</button>
+            <button class="chip duration-chip" data-duration="under1">⚡ &lt; 1 Min</button>
             <button class="chip duration-chip" data-duration="1to2">⏱️ 1–2 Mins</button>
             <button class="chip duration-chip" data-duration="over2">📖 2+ Mins</button>
             <div class="quick-filter-separator"></div>
@@ -495,6 +532,13 @@
           </div>
 
           <div class="filters-row" id="advancedFiltersRow">
+            <div class="filter-group">
+              <label for="filterSeries">Sermon Series</label>
+              <select id="filterSeries" class="select-input">
+                <option value="all">All Series</option>
+              </select>
+            </div>
+
             <div class="filter-group">
               <label for="filterTopic">Topic</label>
               <select id="filterTopic" class="select-input">
@@ -546,6 +590,116 @@
         </div>
 
         <div class="sermons-grid" id="sermonsIndexGrid"></div>
+      </div>
+    </section>
+
+    <!-- View: Sermon Series Hub -->
+    <section class="view-section" id="view-series">
+      <div class="page-header">
+        <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item" data-view="sermons">Sermons</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Sermon Series</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot" style="background:#3b82f6;"></span>
+              <span>Sequential Multi-Part Studies</span>
+            </div>
+          </div>
+          <h1 class="page-title">Sermon Series Hub</h1>
+          <p class="page-subtitle">Immerse yourself in structured biblical series, consecutive scripture expositions, and thematic journeys curated by global ministers.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#series" class="sub-pill active" data-view="series">Sermon Series</a>
+            <a href="#plus" class="sub-pill" data-view="plus">2-Minute PLUS</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+            <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
+            <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="container section">
+        <!-- Series Filter / Search Bar -->
+        <div class="filter-control-panel" style="margin-bottom:28px;">
+          <div class="search-box">
+            <svg class="search-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="seriesSearchInput" placeholder="Search series by title, preacher, or scripture foundation...">
+            <button class="search-clear-btn" id="seriesSearchClearBtn" hidden>✕</button>
+          </div>
+        </div>
+
+        <div class="results-count-bar">
+          <div class="results-count-left">
+            <span>Showing <strong id="seriesResultsCount">0</strong> series</span>
+          </div>
+        </div>
+
+        <!-- Series Cards Grid -->
+        <div class="series-catalog-grid" id="seriesCatalogGrid"></div>
+      </div>
+    </section>
+
+    <!-- View: 2-Minute PLUS Extended Messages -->
+    <section class="view-section" id="view-plus">
+      <div class="page-header">
+        <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item" data-view="sermons">Sermons</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">2-Minute PLUS</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot" style="background:#f59e0b;"></span>
+              <span>Extended Teachings (3–50 min)</span>
+            </div>
+          </div>
+          <h1 class="page-title">2-Minute PLUS Sermons</h1>
+          <p class="page-subtitle">When you have more time to meditate on God's Word: extended messages, in-depth biblical exposition, and deeper pastoral teachings.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#series" class="sub-pill" data-view="series">Sermon Series</a>
+            <a href="#plus" class="sub-pill active" data-view="plus">2-Minute PLUS</a>
+            <a href="#conversations" class="sub-pill" data-view="conversations">The Conversation</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="container section">
+        <!-- Banner Info Card -->
+        <div class="plus-channel-banner">
+          <div class="plus-channel-icon">⚡</div>
+          <div class="plus-channel-info">
+            <h3 class="plus-channel-title">Deep-Dive Biblical Ministry</h3>
+            <p class="plus-channel-desc">While our flagship devotionals are 2 minutes, <strong>2-Minute PLUS</strong> gives ministers room to unfold comprehensive biblical context, verse-by-verse analysis, and extended pastoral reflections (3 to 50 minutes).</p>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="filter-control-panel" style="margin-bottom:28px;">
+          <div class="search-box">
+            <svg class="search-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="plusSearchInput" placeholder="Search extended messages by title, scripture, or preacher...">
+            <button class="search-clear-btn" id="plusSearchClearBtn" hidden>✕</button>
+          </div>
+        </div>
+
+        <div class="results-count-bar">
+          <div class="results-count-left">
+            <span>Showing <strong id="plusResultsCount">0</strong> extended messages</span>
+          </div>
+        </div>
+
+        <!-- Grid of PLUS Sermons -->
+        <div class="sermons-grid" id="plusSermonsGrid"></div>
       </div>
     </section>
 
@@ -1537,6 +1691,14 @@
     <div class="modal-dialog modal-lg">
       <button class="modal-close-btn" id="closeSermonModalBtn" aria-label="Close modal">✕</button>
       <div class="sermon-modal-body" id="sermonModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Series Playlist Modal -->
+  <div class="modal-backdrop" id="seriesPlaylistModal" hidden>
+    <div class="modal-dialog modal-lg series-playlist-dialog">
+      <button class="modal-close-btn" id="closeSeriesModalBtn" aria-label="Close series playlist">✕</button>
+      <div class="series-playlist-body" id="seriesPlaylistBody"></div>
     </div>
   </div>
 

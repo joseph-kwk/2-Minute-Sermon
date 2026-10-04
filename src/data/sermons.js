@@ -541,6 +541,27 @@ export function deleteSermon(id) {
   return all;
 }
 
+/** Explicitly mark a specific sermon as the featured Latest Sermon on hero/home */
+export function setLatestSermon(id) {
+  const all = getSermons().map(s => ({
+    ...s,
+    isLatest: s.id === id
+  }));
+  saveSermons(all);
+  if (isFirebaseConfigured()) {
+    all.forEach(s => {
+      saveDocument('sermons', s.id, { isLatest: s.isLatest });
+    });
+  }
+  return all;
+}
+
+/** Retrieve the designated Latest Sermon (or fallback to newest) */
+export function getLatestSermon() {
+  const all = getSermons();
+  return all.find(s => s.isLatest) || all[0] || null;
+}
+
 /** Extract a YouTube video ID from any URL format or bare 11-char ID. */
 export function extractVideoId(input) {
   const s = (input || '').trim();

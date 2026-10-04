@@ -1,7 +1,8 @@
 // Admin CMS Portal — Standalone JS (admin.html)
 // Sermon data is persisted in localStorage via the CMS store in sermons.js.
 
-import { getSermons, saveSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
+import { getSermons, saveSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds, setLatestSermon, getLatestSermon } from './data/sermons.js';
+import { getSeries, upsertSeries, deleteSeries } from './data/series.js';
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
 import { getPreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
@@ -28,6 +29,7 @@ export function refreshAdminView() {
   populateSelects();
   renderDashboardStats();
   renderSermonsList();
+  renderSeriesList();
   renderVerseQueue();
   renderPreachersList();
   renderLeadershipList();
@@ -48,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupQuickActions();
   setupVerseScheduler();
   setupSermonPublisher();
+  setupEditSermonModal();
+  setupSeriesManager();
   setupPreachersManager();
   setupLeadershipManager();
   setupConversationsManager();
@@ -65,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('storage', refreshAdminView);
   window.addEventListener('2ms:sermons:updated', refreshAdminView);
+  window.addEventListener('2ms:series:updated', refreshAdminView);
   window.addEventListener('2ms:preachers:updated', refreshAdminView);
   window.addEventListener('2ms:conversations:updated', refreshAdminView);
   window.addEventListener('2ms:verses:updated', refreshAdminView);
@@ -268,6 +273,7 @@ const PANEL_TITLES = {
   'daily-verse':       'Daily Verse Queue',
   reflections:         'Community Reflections Moderation',
   sermons:             'Sermon Publisher',
+  series:              'Sermon Series Manager',
   preachers:           'Preachers Manager',
   events:              'Events Manager',
   leadership:          'Leadership & Team',
@@ -293,6 +299,7 @@ function switchPanel(panelId) {
     'daily-verse': () => renderVerseQueue(),
     reflections: () => renderReflectionsList(),
     sermons: () => { populateSelects(); renderSermonsList(); },
+    series: () => { populateSelects(); renderSeriesList(); },
     preachers: () => renderPreachersList(),
     events: () => renderEventsList(),
     leadership: () => renderLeadershipList(),
@@ -455,26 +462,47 @@ function setupSermonPublisher() {
   }
 
   ytPreviewBtn?.addEventListener('click', loadPreview);
-  // Also auto-preview when user stops typing
   let ytDebounce;
   ytUrlInput?.addEventListener('input', () => {
     clearTimeout(ytDebounce);
     ytDebounce = setTimeout(loadPreview, 500);
   });
 
+  // Toggle series fields
+  const partOfSeriesToggle = document.getElementById('adminPartOfSeries');
+  const seriesFields = document.getElementById('adminSeriesFields');
+  partOfSeriesToggle?.addEventListener('change', () => {
+    if (seriesFields) seriesFields.style.display = partOfSeriesToggle.checked ? 'block' : 'none';
+  });
+
+  // Auto-detect 2-Minute PLUS if duration >= 3 minutes
+  const durationInput = document.getElementById('adminDuration');
+  const isPlusToggle = document.getElementById('adminIsPlus');
+  durationInput?.addEventListener('input', () => {
+    const val = durationInput.value.trim();
+    const sec = durationToSeconds(val);
+    if (sec >= 180 && isPlusToggle && !isPlusToggle.checked) {
+      isPlusToggle.checked = true;
+    }
+  });
+
   // ── Publish form submit ──
   document.getElementById('adminQuickPublishForm')?.addEventListener('submit', e => {
     e.preventDefault();
 
-    const title      = document.getElementById('adminSermonTitle').value.trim();
-    const preacher   = document.getElementById('adminPreacher').value;
-    const scripture  = document.getElementById('adminScripture').value.trim();
-    const season     = document.getElementById('adminSeason').value;
-    const duration   = document.getElementById('adminDuration').value.trim();
-    const summary    = document.getElementById('adminSummary').value.trim();
-    const featured   = document.getElementById('adminFeatured').checked;
-    const sermonType = document.querySelector('input[name="sermonType"]:checked')?.value || 'Devotional';
-    const topics     = [...document.querySelectorAll('.admin-checkbox-group input:checked')].map(c => c.value);
+    const title        = document.getElementById('adminSermonTitle').value.trim();
+    const preacher     = document.getElementById('adminPreacher').value.trim();
+    const scripture    = document.getElementById('adminScripture').value.trim();
+    const season       = document.getElementById('adminSeason').value;
+    const duration     = document.getElementById('adminDuration').value.trim();
+    const summary      = document.getElementById('adminSummary').value.trim();
+    const featured     = document.getElementById('adminFeatured').checked;
+    const isPlus       = isPlusToggle ? isPlusToggle.checked : false;
+    const partOfSeries = partOfSeriesToggle ? partOfSeriesToggle.checked : false;
+    const seriesName   = document.getElementById('adminSeriesName')?.value.trim() || '';
+    const seriesPart   = parseInt(document.getElementById('adminSeriesPart')?.value, 10) || 1;
+    const sermonType   = document.querySelector('input[name="sermonType"]:checked')?.value || 'Devotional';
+    const topics       = [...document.querySelectorAll('.admin-checkbox-group input:checked')].map(c => c.value);
 
     const rawUrl = ytUrlInput.value.trim();
     const embedId = videoIdInput.value || extractVideoId(rawUrl);
@@ -482,6 +510,8 @@ function setupSermonPublisher() {
     if (topics.length === 0) { toast('⚠️ Please select at least one topic.'); return; }
 
     const matchedPreacher = preachers.find(p => p.name.toLowerCase() === preacher.toLowerCase());
+    const durSec = durationToSeconds(duration);
+
     const sermon = {
       id: `sermon-${Date.now()}`,
       title,
@@ -496,7 +526,10 @@ function setupSermonPublisher() {
       category: topics[0] || 'Faith',
       sermonType,
       duration,
-      durationSec: durationToSeconds(duration),
+      durationSec: durSec,
+      isPlus: isPlus || durSec >= 180,
+      seriesName: (partOfSeries && seriesName) ? seriesName : '',
+      seriesPart: (partOfSeries && seriesName) ? seriesPart : null,
       youtubeUrl: `https://www.youtube.com/watch?v=${embedId}`,
       youtubeEmbedId: embedId,
       thumbnailUrl: ytThumb(embedId),
@@ -504,15 +537,38 @@ function setupSermonPublisher() {
       publishDate: new Date().toISOString().split('T')[0],
       views: 0,
       featured,
+      isLatest: false,
       transcript: []
     };
+
+    // If assigned to a series that doesn't yet exist in the store, auto-create it
+    if (partOfSeries && seriesName) {
+      const existingSeries = getSeries();
+      if (!existingSeries.some(s => s.title.toLowerCase() === seriesName.toLowerCase())) {
+        upsertSeries({
+          id: `series-${Date.now()}`,
+          title: seriesName,
+          preacherName: preacher,
+          scripture,
+          bannerUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=1200&q=80',
+          description: `Sermon series exploring ${seriesName}.`
+        });
+      }
+    }
 
     upsertSermon(sermon);
     renderDashboardStats();
     renderSermonsList();
+    renderSeriesList();
+    populateSelects();
+
     e.target.reset();
     ytPreviewBox.style.display = 'none';
     videoIdInput.value = '';
+    if (seriesFields) seriesFields.style.display = 'none';
+    if (partOfSeriesToggle) partOfSeriesToggle.checked = false;
+    if (isPlusToggle) isPlusToggle.checked = false;
+
     // Reset checkboxes — re-check Faith as default
     document.querySelectorAll('.admin-checkbox-group input').forEach((c, i) => c.checked = i === 0);
     document.querySelector('input[name="sermonType"][value="Devotional"]').checked = true;
@@ -541,17 +597,23 @@ function renderSermonsList() {
       <img class="admin-sermon-thumb"
         src="${s.thumbnailUrl}"
         onerror="this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg'"
-        alt="${s.title}">
+        alt="${escapeAdminHtml(s.title)}">
       <div class="admin-sermon-info">
-        <div class="admin-sermon-title" title="${s.title}">${s.title}</div>
+        <div class="admin-sermon-title" title="${escapeAdminHtml(s.title)}">${escapeAdminHtml(s.title)}</div>
         <div class="admin-sermon-meta">
-          <span>${s.preacherName}</span>
+          <span>${escapeAdminHtml(s.preacherName)}</span>
           <span>${s.duration}</span>
           <span class="admin-sermon-type-badge">${s.sermonType || 'Devotional'}</span>
-          ${(s.topics && s.topics.length ? s.topics : [s.category]).filter(Boolean).map(t => `<span class="admin-tag admin-tag-blue" style="font-size:0.68rem;padding:2px 6px;">${t}</span>`).join(' ')}
+          ${s.isPlus ? '<span class="admin-tag admin-tag-plus" style="font-size:0.68rem;padding:2px 6px;">⚡ PLUS</span>' : ''}
+          ${s.seriesName ? `<span class="admin-tag admin-tag-series" style="font-size:0.68rem;padding:2px 6px;">📚 ${escapeAdminHtml(s.seriesName)}${s.seriesPart ? ' · Pt ' + s.seriesPart : ''}</span>` : ''}
+          ${(s.topics && s.topics.length ? s.topics : [s.category]).filter(Boolean).map(t => `<span class="admin-tag admin-tag-blue" style="font-size:0.68rem;padding:2px 6px;">${escapeAdminHtml(t)}</span>`).join(' ')}
         </div>
       </div>
       <div class="admin-sermon-actions">
+        <button class="latest-btn ${s.isLatest ? 'latest-active' : ''}" data-id="${s.id}" title="${s.isLatest ? 'Current Homepage Latest Sermon' : 'Set as Homepage Latest Sermon'}">
+          ${s.isLatest ? '📍 Latest' : 'Set Latest'}
+        </button>
+        <button class="edit-btn" data-id="${s.id}" title="Edit Sermon">✏️</button>
         <button class="feat-btn ${s.featured ? 'featured-on' : ''}" data-id="${s.id}" title="${s.featured ? 'Unfeature' : 'Feature'}">
           ${s.featured ? '★' : '☆'}
         </button>
@@ -559,6 +621,24 @@ function renderSermonsList() {
       </div>
     </div>
   `).join('');
+
+  // Latest sermon toggle
+  list.querySelectorAll('.latest-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getSermons().find(x => x.id === id);
+      setLatestSermon(id);
+      renderSermonsList();
+      toast(`📍 "${target ? target.title : 'Sermon'}" set as Homepage Latest!`);
+    });
+  });
+
+  // Edit sermon
+  list.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openEditSermonModal(btn.dataset.id);
+    });
+  });
 
   // Feature toggle
   list.querySelectorAll('.feat-btn').forEach(btn => {
@@ -594,10 +674,256 @@ function renderSermonsList() {
   });
 }
 
+// ── EDIT SERMON MODAL ─────────────────────────────────────────────────────
+function setupEditSermonModal() {
+  const modal = document.getElementById('adminEditSermonModal');
+  if (!modal) return;
+
+  const closeModal = () => { modal.style.display = 'none'; };
+  document.getElementById('btnCancelEditSermon')?.addEventListener('click', closeModal);
+  document.getElementById('btnCancelEditSermonTop')?.addEventListener('click', closeModal);
+
+  const seriesCheck = document.getElementById('editSermonPartOfSeries');
+  const seriesFields = document.getElementById('editSermonSeriesFields');
+  seriesCheck?.addEventListener('change', () => {
+    if (seriesFields) seriesFields.style.display = seriesCheck.checked ? 'block' : 'none';
+  });
+
+  document.getElementById('adminEditSermonForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editSermonId').value;
+    const all = getSermons();
+    const s = all.find(item => item.id === id);
+    if (!s) return;
+
+    s.title = document.getElementById('editSermonTitle').value.trim();
+    s.preacherName = document.getElementById('editSermonPreacher').value.trim();
+    s.duration = document.getElementById('editSermonDuration').value.trim();
+    s.durationSec = durationToSeconds(s.duration);
+    s.scripture = document.getElementById('editSermonScripture').value.trim();
+    s.primarySeason = document.getElementById('editSermonSeason').value;
+    s.sermonType = document.querySelector('input[name="editSermonType"]:checked')?.value || 'Devotional';
+    s.summary = document.getElementById('editSermonSummary').value.trim();
+    s.isPlus = document.getElementById('editSermonIsPlus').checked;
+    s.featured = document.getElementById('editSermonFeatured').checked;
+
+    const partOfSeries = document.getElementById('editSermonPartOfSeries').checked;
+    if (partOfSeries) {
+      s.seriesName = document.getElementById('editSermonSeriesName').value.trim();
+      s.seriesPart = parseInt(document.getElementById('editSermonSeriesPart').value, 10) || 1;
+      if (s.seriesName && !getSeries().some(sr => sr.title.toLowerCase() === s.seriesName.toLowerCase())) {
+        upsertSeries({
+          id: `series-${Date.now()}`,
+          title: s.seriesName,
+          preacherName: s.preacherName,
+          scripture: s.scripture,
+          bannerUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=1200&q=80',
+          description: `Sermon series exploring ${s.seriesName}.`
+        });
+      }
+    } else {
+      delete s.seriesName;
+      delete s.seriesPart;
+    }
+
+    const isLatest = document.getElementById('editSermonIsLatest').checked;
+    if (isLatest) {
+      setLatestSermon(s.id);
+    } else {
+      s.isLatest = false;
+      upsertSermon(s);
+    }
+
+    closeModal();
+    renderSermonsList();
+    renderSeriesList();
+    populateSelects();
+    renderDashboardStats();
+    toast(`💾 Changes saved for "${s.title}"!`);
+  });
+}
+
+function openEditSermonModal(id) {
+  const sermon = getSermons().find(s => s.id === id);
+  if (!sermon) return;
+
+  const modal = document.getElementById('adminEditSermonModal');
+  if (!modal) return;
+
+  document.getElementById('editSermonId').value = sermon.id;
+  document.getElementById('editSermonTitle').value = sermon.title;
+  document.getElementById('editSermonPreacher').value = sermon.preacherName || '';
+  document.getElementById('editSermonDuration').value = sermon.duration || '2:00';
+  document.getElementById('editSermonScripture').value = sermon.scripture || '';
+  document.getElementById('editSermonSummary').value = sermon.summary || '';
+
+  const seasonSel = document.getElementById('editSermonSeason');
+  if (seasonSel) {
+    seasonSel.innerHTML = seasons.filter(s => s.slug !== 'all')
+      .map(s => `<option value="${s.name}" ${s.name === sermon.primarySeason ? 'selected' : ''}>${s.name}</option>`).join('');
+  }
+
+  const typeRadios = document.querySelectorAll('input[name="editSermonType"]');
+  typeRadios.forEach(r => {
+    r.checked = (r.value === (sermon.sermonType || 'Devotional'));
+  });
+
+  const isPlusCheck = document.getElementById('editSermonIsPlus');
+  if (isPlusCheck) isPlusCheck.checked = !!sermon.isPlus;
+
+  const seriesCheck = document.getElementById('editSermonPartOfSeries');
+  const seriesFields = document.getElementById('editSermonSeriesFields');
+  if (seriesCheck) {
+    seriesCheck.checked = !!sermon.seriesName;
+    if (seriesFields) seriesFields.style.display = sermon.seriesName ? 'block' : 'none';
+  }
+  document.getElementById('editSermonSeriesName').value = sermon.seriesName || '';
+  document.getElementById('editSermonSeriesPart').value = sermon.seriesPart || '';
+
+  const featuredCheck = document.getElementById('editSermonFeatured');
+  if (featuredCheck) featuredCheck.checked = !!sermon.featured;
+
+  const latestCheck = document.getElementById('editSermonIsLatest');
+  if (latestCheck) latestCheck.checked = !!sermon.isLatest;
+
+  modal.style.display = 'flex';
+}
+
+// ── SERMON SERIES MANAGER ─────────────────────────────────────────────────
+function setupSeriesManager() {
+  const form = document.getElementById('adminSeriesForm');
+  const cancelBtn = document.getElementById('btnSeriesCancelEdit');
+  const titleInput = document.getElementById('seriesTitleInput');
+  const preacherInput = document.getElementById('seriesPreacherInput');
+  const scriptureInput = document.getElementById('seriesScriptureInput');
+  const bannerInput = document.getElementById('seriesBannerUrlInput');
+  const descInput = document.getElementById('seriesDescInput');
+  const editIdInput = document.getElementById('editSeriesId');
+  const formTitle = document.getElementById('seriesFormTitle');
+  const submitBtn = document.getElementById('btnSeriesSubmit');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = editIdInput.value || `series-${Date.now()}`;
+    const seriesData = {
+      id,
+      title: titleInput.value.trim(),
+      preacherName: preacherInput.value.trim(),
+      scripture: scriptureInput.value.trim(),
+      bannerUrl: bannerInput.value.trim(),
+      description: descInput.value.trim(),
+      updatedAt: new Date().toISOString()
+    };
+
+    upsertSeries(seriesData);
+    form.reset();
+    editIdInput.value = '';
+    if (formTitle) formTitle.textContent = 'Create Sermon Series';
+    if (submitBtn) submitBtn.textContent = '📚 Save Sermon Series';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+
+    populateSelects();
+    renderSeriesList();
+    toast(`📚 Series "${seriesData.title}" saved!`);
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    form.reset();
+    editIdInput.value = '';
+    if (formTitle) formTitle.textContent = 'Create Sermon Series';
+    if (submitBtn) submitBtn.textContent = '📚 Save Sermon Series';
+    cancelBtn.style.display = 'none';
+  });
+
+  renderSeriesList();
+}
+
+function renderSeriesList() {
+  const container = document.getElementById('adminSeriesListContainer');
+  const counter = document.getElementById('seriesCount');
+  if (!container) return;
+
+  const seriesList = getSeries();
+  const sermons = getSermons();
+  if (counter) counter.textContent = seriesList.length;
+
+  if (seriesList.length === 0) {
+    container.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No series created yet. Start one on the left!</p>';
+    return;
+  }
+
+  container.innerHTML = seriesList.map(item => {
+    const linkedCount = sermons.filter(s => s.seriesName && s.seriesName.toLowerCase() === item.title.toLowerCase()).length;
+    return `
+      <div class="admin-series-card" id="scard-${item.id}">
+        <img class="admin-series-banner-preview" src="${escapeAdminHtml(item.bannerUrl)}" alt="${escapeAdminHtml(item.title)}" onerror="this.src='https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=600&q=80'">
+        <div class="admin-series-details">
+          <h4 class="admin-series-title">${escapeAdminHtml(item.title)}</h4>
+          <div class="admin-series-meta">
+            <span>🎙️ ${escapeAdminHtml(item.preacherName)}</span>
+            <span>📖 ${escapeAdminHtml(item.scripture)}</span>
+            <span class="admin-tag admin-tag-blue" style="font-size:0.7rem;padding:2px 7px;">${linkedCount} ${linkedCount === 1 ? 'Part' : 'Parts'}</span>
+          </div>
+        </div>
+        <div class="admin-series-actions">
+          <button class="admin-btn admin-btn-outline admin-btn-sm edit-series-btn" data-id="${item.id}" style="padding:4px 8px;">✏️ Edit</button>
+          <button class="admin-btn admin-btn-danger admin-btn-sm del-series-btn" data-id="${item.id}" style="padding:4px 8px;">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire Edit Series
+  container.querySelectorAll('.edit-series-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const item = getSeries().find(s => s.id === id);
+      if (!item) return;
+
+      document.getElementById('editSeriesId').value = item.id;
+      document.getElementById('seriesTitleInput').value = item.title || '';
+      document.getElementById('seriesPreacherInput').value = item.preacherName || '';
+      document.getElementById('seriesScriptureInput').value = item.scripture || '';
+      document.getElementById('seriesBannerUrlInput').value = item.bannerUrl || '';
+      document.getElementById('seriesDescInput').value = item.description || '';
+
+      const formTitle = document.getElementById('seriesFormTitle');
+      const submitBtn = document.getElementById('btnSeriesSubmit');
+      const cancelBtn = document.getElementById('btnSeriesCancelEdit');
+      if (formTitle) formTitle.textContent = 'Edit Sermon Series';
+      if (submitBtn) submitBtn.textContent = '💾 Update Series';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+      document.getElementById('seriesTitleInput').focus();
+    });
+  });
+
+  // Wire Delete Series
+  container.querySelectorAll('.del-series-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const item = getSeries().find(s => s.id === id);
+      if (!item) return;
+
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Sermon Series',
+        message: `Are you sure you want to delete the series "${item.title}"? Sermons assigned to this series will remain in the catalog.`,
+        confirmText: 'Delete Series'
+      });
+      if (!confirmed) return;
+
+      deleteSeries(item.id);
+      populateSelects();
+      renderSeriesList();
+      toast(`🗑️ Series "${item.title}" deleted.`);
+    });
+  });
+}
+
 function populateSelects() {
   const preacherDataList = document.getElementById('adminPreacherList');
   const preacherSel = document.getElementById('adminPreacher');
   const seasonSel   = document.getElementById('adminSeason');
+  const seriesDatalist = document.getElementById('adminSeriesListDatalist');
 
   if (preacherDataList) {
     const list = getPreachers();
@@ -605,6 +931,11 @@ function populateSelects() {
   } else if (preacherSel && preacherSel.tagName === 'SELECT') {
     const list = getPreachers();
     preacherSel.innerHTML = list.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
+
+  if (seriesDatalist) {
+    const sList = getSeries();
+    seriesDatalist.innerHTML = sList.map(s => `<option value="${escapeAdminHtml(s.title)}"></option>`).join('');
   }
 
   if (seasonSel)
