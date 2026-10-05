@@ -1354,6 +1354,75 @@
     </div>
   </div>
 
+  <!-- ── Ministry Partner Edit Modal ────────────────────────────────────────── -->
+  <div id="adminEditPartnerModal" class="crop-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="editPartnerModalTitle">
+    <div class="crop-modal-card" style="max-width:620px;width:94%;max-height:92vh;overflow-y:auto;text-align:left;padding:26px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:14px;">
+        <div>
+          <h3 id="editPartnerModalTitle" style="margin:0;font-size:1.25rem;display:flex;align-items:center;gap:8px;">
+            <span>✏️ Edit Ministry Partner</span>
+          </h3>
+          <p style="margin:4px 0 0;font-size:0.8rem;color:var(--admin-muted);">Update partner organization details, scripture anchor, link, or logo.</p>
+        </div>
+        <button type="button" id="btnCancelEditPartnerTop" class="admin-btn admin-btn-outline admin-btn-sm" style="padding:6px 12px;font-size:0.9rem;" title="Close modal">✕</button>
+      </div>
+
+      <form id="adminEditPartnerForm">
+        <input type="hidden" id="editPartnerId">
+
+        <!-- Logo Row -->
+        <div class="admin-form-group" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:14px;margin-bottom:16px;">
+          <label style="display:block;margin-bottom:8px;font-size:0.82rem;color:var(--admin-muted);">Partner Logo / Photo</label>
+          <div style="display:flex;gap:14px;align-items:center;">
+            <img id="editPartnerLogoPreview" src="" alt="Preview" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid var(--admin-border);flex-shrink:0;">
+            <div style="flex:1;min-width:0;">
+              <input type="file" id="editPartnerLogoFile" accept="image/*" style="display:none;">
+              <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnTriggerEditPartnerLogo">
+                📁 Upload New Logo
+              </button>
+              <input type="url" id="editPartnerLogoUrl" placeholder="Or paste logo URL (https://...)" class="admin-input" style="margin-top:8px;font-size:0.8rem;padding:6px 10px;">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-form-group">
+          <label>Organization / Ministry Name <span style="color:#ef5350;">*</span></label>
+          <input type="text" id="editPartnerName" class="admin-input" placeholder="e.g. Crossover Project Ministries" required>
+        </div>
+
+        <div class="admin-form-row">
+          <div class="admin-form-group">
+            <label>Ministry Category / Focus <span style="color:#ef5350;">*</span></label>
+            <input type="text" id="editPartnerCategory" class="admin-input" placeholder="e.g. Spiritual Revival &amp; Discipleship" required>
+          </div>
+          <div class="admin-form-group">
+            <label>Scripture Foundation (Optional)</label>
+            <input type="text" id="editPartnerScripture" class="admin-input" placeholder="e.g. Matthew 28:19–20 &amp; John 5:24">
+          </div>
+        </div>
+
+        <div class="admin-form-group">
+          <label>Partner Website URL (Optional)</label>
+          <input type="url" id="editPartnerWebsite" class="admin-input" placeholder="https://www.crossoverproject.org">
+        </div>
+
+        <div class="admin-form-group">
+          <label>Ministry Description &amp; Mission <span style="color:#ef5350;">*</span></label>
+          <textarea id="editPartnerDesc" rows="4" class="admin-input" placeholder="Describe the partner ministry's purpose..." required></textarea>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">
+          <button type="submit" class="admin-btn admin-btn-primary" style="flex:1;padding:12px;font-size:0.95rem;">
+            💾 Save Partner Changes
+          </button>
+          <button type="button" id="btnCancelEditPartner" class="admin-btn admin-btn-outline" style="padding:12px 20px;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ── Photo Crop Modal ──────────────────────────────────────────────────── -->
   <div id="photoCropModal" class="crop-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Crop Photo">
     <div class="crop-modal-card">

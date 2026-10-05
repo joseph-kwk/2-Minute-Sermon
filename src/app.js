@@ -408,6 +408,14 @@ export function switchView(viewId) {
   document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-view') === viewId);
   });
+
+  // Highlight parent dropdown button if one of its items is active
+  document.querySelectorAll('.dropdown-wrapper').forEach(wrapper => {
+    const toggle = wrapper.querySelector('.dropdown-toggle');
+    if (!toggle) return;
+    const hasActiveChild = !!wrapper.querySelector(`.dropdown-item[data-view="${viewId}"]`);
+    toggle.classList.toggle('active', hasActiveChild);
+  });
 }
 window.switchView = switchView;
 

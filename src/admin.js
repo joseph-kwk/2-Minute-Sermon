@@ -2160,7 +2160,115 @@ function setupPartnersManager() {
     toast(`🤝 "${name}" added to Ministry Partners!`);
   });
 
+  setupEditPartnerModal();
   renderPartnersList();
+}
+
+function openEditPartnerModal(id) {
+  const partner = getPartners().find(p => p.id === id);
+  if (!partner) return;
+
+  const modal = document.getElementById('adminEditPartnerModal');
+  if (!modal) return;
+
+  const idInput = document.getElementById('editPartnerId');
+  const nameInput = document.getElementById('editPartnerName');
+  const categoryInput = document.getElementById('editPartnerCategory');
+  const scriptureInput = document.getElementById('editPartnerScripture');
+  const websiteInput = document.getElementById('editPartnerWebsite');
+  const descInput = document.getElementById('editPartnerDesc');
+  const logoPreview = document.getElementById('editPartnerLogoPreview');
+  const logoUrlInput = document.getElementById('editPartnerLogoUrl');
+
+  if (idInput) idInput.value = partner.id;
+  if (nameInput) nameInput.value = partner.name || '';
+  if (categoryInput) categoryInput.value = partner.category || '';
+  if (scriptureInput) scriptureInput.value = partner.scriptureAnchor || '';
+  if (websiteInput) websiteInput.value = partner.websiteUrl || '';
+  if (descInput) descInput.value = partner.description || '';
+
+  const defaultLogo = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80';
+  if (logoPreview) logoPreview.src = partner.logoUrl || defaultLogo;
+  if (logoUrlInput) logoUrlInput.value = partner.logoUrl || '';
+
+  modal.style.display = 'flex';
+}
+
+function closeEditPartnerModal() {
+  const modal = document.getElementById('adminEditPartnerModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function setupEditPartnerModal() {
+  const modal = document.getElementById('adminEditPartnerModal');
+  const form = document.getElementById('adminEditPartnerForm');
+  const closeTopBtn = document.getElementById('btnCancelEditPartnerTop');
+  const cancelBtn = document.getElementById('btnCancelEditPartner');
+  const fileInput = document.getElementById('editPartnerLogoFile');
+  const uploadBtn = document.getElementById('btnTriggerEditPartnerLogo');
+  const previewImg = document.getElementById('editPartnerLogoPreview');
+  const logoUrlInput = document.getElementById('editPartnerLogoUrl');
+
+  uploadBtn?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      toast('⏳ Optimizing logo...');
+      const compressedDataUrl = await compressImageFile(file, 480, 0.85);
+      if (previewImg) previewImg.src = compressedDataUrl;
+      if (logoUrlInput) logoUrlInput.value = compressedDataUrl;
+      toast('🖼️ Partner logo optimized & ready!');
+    } catch (err) {
+      console.warn('Edit partner logo compression error:', err);
+      toast('⚠️ Could not process image. Please try another file or paste a URL.');
+    }
+  });
+
+  logoUrlInput?.addEventListener('input', () => {
+    if (logoUrlInput.value.trim() && previewImg) {
+      previewImg.src = logoUrlInput.value.trim();
+    }
+  });
+
+  closeTopBtn?.addEventListener('click', closeEditPartnerModal);
+  cancelBtn?.addEventListener('click', closeEditPartnerModal);
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeEditPartnerModal();
+  });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editPartnerId')?.value;
+    const name = document.getElementById('editPartnerName')?.value.trim();
+    const category = document.getElementById('editPartnerCategory')?.value.trim() || 'Ministry Partner';
+    const scriptureAnchor = document.getElementById('editPartnerScripture')?.value.trim() || '';
+    const websiteUrl = document.getElementById('editPartnerWebsite')?.value.trim() || '';
+    const description = document.getElementById('editPartnerDesc')?.value.trim();
+    let logoUrl = logoUrlInput?.value.trim() || previewImg?.src || '';
+
+    if (!name || !description) {
+      toast('⚠️ Please provide the partner name and description.');
+      return;
+    }
+
+    const updated = {
+      id,
+      name,
+      category,
+      scriptureAnchor,
+      websiteUrl,
+      description,
+      logoUrl
+    };
+
+    upsertPartner(updated);
+    renderPartnersList();
+    closeEditPartnerModal();
+    toast(`🤝 Partner "${name}" updated successfully!`);
+  });
 }
 
 function renderPartnersList() {
@@ -2189,11 +2297,22 @@ function renderPartnersList() {
         <p style="font-size:0.82rem;color:var(--admin-muted);line-height:1.5;margin:0 0 6px 0;">${p.description.substring(0, 110)}...</p>
         ${p.websiteUrl ? `<a href="${p.websiteUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--admin-gold);text-decoration:none;">🌐 ${p.websiteUrl}</a>` : ''}
       </div>
-      <button class="admin-btn admin-btn-sm admin-btn-danger" data-id="${p.id}" title="Remove partner">✕</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button class="admin-btn admin-btn-sm admin-btn-outline admin-btn-edit-partner" data-id="${p.id}" title="Edit partner details">✏️ Edit</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger admin-btn-delete-partner" data-id="${p.id}" title="Remove partner">✕</button>
+      </div>
     </div>
   `).join('');
 
-  c.querySelectorAll('.admin-btn-danger').forEach(btn => {
+  // Edit partner
+  c.querySelectorAll('.admin-btn-edit-partner').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openEditPartnerModal(btn.dataset.id);
+    });
+  });
+
+  // Delete partner
+  c.querySelectorAll('.admin-btn-delete-partner').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getPartners().find(x => x.id === id);

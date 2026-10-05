@@ -116,6 +116,17 @@ html, body { height: 100%; font-family: var(--font-body); }
 }
 .admin-auth-input::placeholder { color: rgba(255, 255, 255, 0.35); }
 
+/* Disable browser's native reveal eye button (Microsoft Edge / Windows Chromium) to prevent duplicate 2nd eye */
+.admin-auth-input::-ms-reveal,
+.admin-auth-input::-ms-clear,
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none;
+}
+
 .admin-auth-eye-btn {
   position: absolute;
   right: 12px;

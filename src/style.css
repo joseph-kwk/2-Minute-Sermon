@@ -43,6 +43,15 @@
 /* Fix for hidden attribute */
 [hidden], .modal-backdrop[hidden] { display: none !important; }
 
+/* Disable browser's native reveal eye button (Microsoft Edge / Windows Chromium) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none;
+}
+
 /* ==========================================================================
    RESET & BASE
    ========================================================================== */
