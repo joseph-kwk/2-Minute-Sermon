@@ -1220,8 +1220,74 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   gap: 10px;
 }
 
+/* Card top ambient accent bar on hover */
+.tile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 2;
+}
+.tile-card-series::before { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.tile-card-plus::before { background: linear-gradient(90deg, #dc2626, #f87171); }
+.tile-card-seasons::before { background: linear-gradient(90deg, #7e22ce, #c084fc); }
+.tile-card-topics::before { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.tile-card-preachers::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.tile-card-prayers::before { background: linear-gradient(90deg, #059669, #34d399); }
+.tile-card:hover::before { opacity: 1; }
+
 /* Individual Channel Themes */
-/* 1. Seasons Hub (Regal Amethyst) */
+/* 1. Sermon Series (Deep Cobalt / Scripture Indigo) */
+.tile-card-series .tile-icon-box {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.tile-card-series .badge-series,
+.tile-card-series .badge-blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+.tile-card-series .tile-link { color: #2563eb; }
+.tile-card-series:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 20px 42px rgba(37, 99, 235, 0.22), 0 0 24px rgba(59, 130, 246, 0.14);
+}
+.tile-card-series:hover .tile-icon-box {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+/* 2. 2-Minute PLUS (Radiant Crimson Flame / Deep Dive Gold) */
+.tile-card-plus .tile-icon-box {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.tile-card-plus .badge-plus,
+.tile-card-plus .badge-gold {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+.tile-card-plus .tile-link { color: #dc2626; }
+.tile-card-plus:hover {
+  border-color: #ef4444;
+  box-shadow: 0 20px 42px rgba(220, 38, 38, 0.22), 0 0 24px rgba(239, 68, 68, 0.14);
+}
+.tile-card-plus:hover .tile-icon-box {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
+/* 3. Seasons Hub (Regal Amethyst) */
 .tile-card-seasons .tile-icon-box {
   background: #f3e8ff;
   color: #7e22ce;
@@ -1235,14 +1301,15 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .tile-card-seasons .tile-link { color: #7e22ce; }
 .tile-card-seasons:hover {
   border-color: #a855f7;
-  box-shadow: 0 20px 42px rgba(168, 85, 247, 0.18);
+  box-shadow: 0 20px 42px rgba(168, 85, 247, 0.22), 0 0 24px rgba(168, 85, 247, 0.14);
 }
 .tile-card-seasons:hover .tile-icon-box {
   background: #7e22ce;
   color: #fff;
+  border-color: #7e22ce;
 }
 
-/* 2. Topics & Themes (Sacred Radiant Amber) */
+/* 4. Topics & Themes (Sacred Radiant Amber) */
 .tile-card-topics .tile-icon-box {
   background: #fef3c7;
   color: #b45309;
@@ -1256,14 +1323,15 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .tile-card-topics .tile-link { color: #b45309; }
 .tile-card-topics:hover {
   border-color: #f59e0b;
-  box-shadow: 0 20px 42px rgba(245, 158, 11, 0.18);
+  box-shadow: 0 20px 42px rgba(245, 158, 11, 0.22), 0 0 24px rgba(245, 158, 11, 0.14);
 }
 .tile-card-topics:hover .tile-icon-box {
   background: #d97706;
   color: #fff;
+  border-color: #d97706;
 }
 
-/* 3. Preachers Directory (Celestial Sapphire) */
+/* 5. Preachers Directory (Celestial Sapphire) */
 .tile-card-preachers .tile-icon-box {
   background: #e0f2fe;
   color: #0284c7;
@@ -1277,14 +1345,15 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .tile-card-preachers .tile-link { color: #0284c7; }
 .tile-card-preachers:hover {
   border-color: #0284c7;
-  box-shadow: 0 20px 42px rgba(2, 132, 199, 0.18);
+  box-shadow: 0 20px 42px rgba(2, 132, 199, 0.22), 0 0 24px rgba(2, 132, 199, 0.14);
 }
 .tile-card-preachers:hover .tile-icon-box {
   background: #0284c7;
   color: #fff;
+  border-color: #0284c7;
 }
 
-/* 4. Prayers & Requests (Living Hope Emerald) */
+/* 6. Prayers & Requests (Living Hope Emerald) */
 .tile-card-prayers .tile-icon-box {
   background: #d1fae5;
   color: #047857;
@@ -1298,11 +1367,12 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
 .tile-card-prayers .tile-link { color: #047857; }
 .tile-card-prayers:hover {
   border-color: #10b981;
-  box-shadow: 0 20px 42px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 20px 42px rgba(16, 185, 129, 0.22), 0 0 24px rgba(16, 185, 129, 0.14);
 }
 .tile-card-prayers:hover .tile-icon-box {
   background: #059669;
   color: #fff;
+  border-color: #059669;
 }
 
 /* Cursor pointer on ALL interactive cards */
@@ -1766,7 +1836,7 @@ textarea.text-input { resize: vertical; }
   border-radius: var(--radius-lg);
   padding: 14px 18px 14px 14px;
   transition: all 0.2s ease;
-  cursor: default;
+  cursor: pointer;
 }
 .sermon-list-row:hover {
   transform: translateY(-2px);

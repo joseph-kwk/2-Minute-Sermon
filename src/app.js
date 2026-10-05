@@ -2574,7 +2574,7 @@ function createSermonCardHtml(s, showFavorite = true) {
   const cardTopic = getSermonDisplayTopic(s);
   const isPlus = s.isPlus || (s.durationSec && s.durationSec >= 180);
   return `
-    <div class="sermon-card ${isPlus ? 'sermon-card-plus' : ''}">
+    <div class="sermon-card ${isPlus ? 'sermon-card-plus' : ''}" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="Watch ${escapeHtml(s.title)}">
       <div class="sermon-thumb-wrap">
         ${showFavorite ? `
         <button class="sermon-card-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Favorite sermon">
@@ -2597,7 +2597,7 @@ function createSermonCardHtml(s, showFavorite = true) {
           <button class="btn btn-primary btn-sm" onclick="window.openSermonModal('${s.id}')">
             ${svgPlay} Watch
           </button>
-          <button class="btn btn-outline btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')" title="Listen in background while you browse">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.playSermonInMiniPlayer('${s.id}')" title="Listen in background while you browse">
             🎧 Listen
           </button>
           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); window.shareSermon('${s.id}')">
@@ -2615,7 +2615,7 @@ function createSermonListRowHtml(s) {
   const isPlus = s.isPlus || (s.durationSec && s.durationSec >= 180);
   const snippetText = s.summary ? (s.summary.length > 90 ? s.summary.slice(0, 90).trim() + '…' : s.summary) : '';
   return `
-    <div class="sermon-list-row" data-sermon-id="${s.id}">
+    <div class="sermon-list-row" data-sermon-id="${s.id}" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="Watch ${escapeHtml(s.title)}">
       <div class="sermon-list-thumb-wrap">
         <img src="${s.thumbnailUrl}" alt="${escapeHtml(s.title)}" class="sermon-list-thumb" loading="lazy"
           onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg';}else{this.onerror=null;this.src='/assets/logo.png';}"
@@ -2628,7 +2628,7 @@ function createSermonListRowHtml(s) {
           ${isPlus ? `<span class="badge badge-plus" style="font-size:0.65rem;padding:2px 7px;">⚡ PLUS</span>` : ''}
           ${s.seriesName ? `<span class="badge badge-series" style="font-size:0.65rem;padding:2px 7px;">📚 ${escapeHtml(s.seriesName)}${s.seriesPart ? ' · Pt ' + s.seriesPart : ''}</span>` : ''}
         </div>
-        <h4 class="sermon-list-title" onclick="window.openSermonModal('${s.id}')" role="button" tabindex="0" title="View Details">${escapeHtml(s.title)}</h4>
+        <h4 class="sermon-list-title" role="button" tabindex="0" title="View Details">${escapeHtml(s.title)}</h4>
         <div class="sermon-list-meta">
           <span><strong>${escapeHtml(s.preacherName)}</strong></span>
           <span class="list-meta-sep">·</span>
@@ -2637,11 +2637,11 @@ function createSermonListRowHtml(s) {
         ${snippetText ? `<p class="sermon-list-snippet">${escapeHtml(snippetText)}</p>` : ''}
       </div>
       <div class="sermon-list-actions">
-        <button class="sermon-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Save sermon">
+        <button class="sermon-fav-btn ${isFav ? 'is-favorited' : ''}" onclick="event.stopPropagation(); window.toggleSermonFavorite('${s.id}')" title="${isFav ? 'Remove from Saved' : 'Save to Devotional Queue'}" aria-label="Save sermon">
           ★
         </button>
         <div class="sermon-list-btns">
-          <button class="btn btn-primary btn-sm" onclick="window.playSermonInMiniPlayer('${s.id}')">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); window.playSermonInMiniPlayer('${s.id}')">
             🎧 Listen
           </button>
           <button class="btn btn-outline btn-sm" onclick="window.openSermonModal('${s.id}')">
