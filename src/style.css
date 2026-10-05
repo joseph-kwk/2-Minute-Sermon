@@ -1014,18 +1014,149 @@ h3, h4, h5, h6 { font-family: var(--font-body); font-weight: 600; color: var(--c
   max-width: 600px;
   margin: 0 auto;
 }
-.tiles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
+/* ── Channels Carousel Rail (4 visible on desktop, auto-scrolls one-by-one) ── */
+.channels-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.tiles-carousel-track {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 20px !important;
+  overflow-x: auto !important;
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x mandatory !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  padding: 14px 4px 24px !important;
+  width: 100% !important;
   position: relative;
   z-index: 1;
 }
+.tiles-carousel-track::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Default Desktop: Exactly 4 cards visible (100% minus 3 gaps divided by 4) */
+.tiles-carousel-track .tile-card {
+  flex: 0 0 calc((100% - (3 * 20px)) / 4) !important;
+  min-width: calc((100% - (3 * 20px)) / 4) !important;
+  max-width: calc((100% - (3 * 20px)) / 4) !important;
+  scroll-snap-align: start !important;
+  box-sizing: border-box !important;
+}
+
+/* Tablet (800px - 1080px): 3 cards visible */
+@media (max-width: 1080px) {
+  .tiles-carousel-track .tile-card {
+    flex: 0 0 calc((100% - (2 * 18px)) / 3) !important;
+    min-width: calc((100% - (2 * 18px)) / 3) !important;
+    max-width: calc((100% - (2 * 18px)) / 3) !important;
+  }
+}
+
+/* Mobile landscape / small tablet (540px - 799px): 2 cards visible */
+@media (max-width: 799px) {
+  .tiles-carousel-track .tile-card {
+    flex: 0 0 calc((100% - 16px) / 2) !important;
+    min-width: calc((100% - 16px) / 2) !important;
+    max-width: calc((100% - 16px) / 2) !important;
+    padding: 24px 20px !important;
+  }
+}
+
+/* Mobile phone (< 540px): 1 card visible with a subtle peek */
+@media (max-width: 539px) {
+  .tiles-carousel-track .tile-card {
+    flex: 0 0 85% !important;
+    min-width: 85% !important;
+    max-width: 85% !important;
+    padding: 22px 18px !important;
+  }
+}
+
+/* Floating Navigation Arrows */
+.channels-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  color: #1e293b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+.channels-nav-arrow:hover {
+  background: #ffffff;
+  color: #c62828;
+  border-color: rgba(198, 40, 40, 0.3);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 12px 28px rgba(198, 40, 40, 0.18), 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+.channels-nav-arrow:active {
+  transform: translateY(-50%) scale(0.96);
+}
+.channels-nav-prev {
+  left: -20px;
+}
+.channels-nav-next {
+  right: -20px;
+}
+
+@media (max-width: 680px) {
+  .channels-nav-arrow {
+    display: none; /* Mobile users use natural touch swipe */
+  }
+}
+
+/* Dots Indicator */
+.channels-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.channel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.channel-dot:hover {
+  background: rgba(198, 40, 40, 0.5);
+}
+.channel-dot.active {
+  width: 26px;
+  background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.35);
+}
+
 .tile-card {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.07);
   border-radius: 22px;
-  padding: 32px 26px;
+  padding: 30px 24px;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;

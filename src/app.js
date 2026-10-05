@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupExploreDropdown();
   setupMobileDrawer();
   setupHeroCtas();
+  setupChannelsCarousel();
   setupHeroAmbientEffects();
   setupFooterWater();
   setupPromoVideo();
@@ -506,6 +507,175 @@ function setupHeroCtas() {
       setupDailyVerse();
     }
   });
+}
+
+// ─── CHANNELS CAROUSEL RAIL (Auto-scrolling 4-card rail with arrow controls) ───
+function setupChannelsCarousel() {
+  const section = document.getElementById('channelsCarouselSection');
+  const track = document.getElementById('tilesCarouselTrack');
+  const prevBtn = document.getElementById('channelsPrevBtn');
+  const nextBtn = document.getElementById('channelsNextBtn');
+  const dotsContainer = document.getElementById('channelsCarouselDots');
+  if (!section || !track) return;
+
+  const dots = dotsContainer ? Array.from(dotsContainer.querySelectorAll('.channel-dot')) : [];
+  let isIntersecting = false;
+  let isHovered = false;
+  let userInteracting = false;
+  let autoScrollTimer = null;
+  let userResumeTimeout = null;
+  const SCROLL_INTERVAL = 3800; // 3.8s per card slide
+
+  function getCardStep() {
+    const firstCard = track.querySelector('.tile-card');
+    if (!firstCard) return 300;
+    const style = window.getComputedStyle(track);
+    const gap = parseFloat(style.gap) || 20;
+    return firstCard.getBoundingClientRect().width + gap;
+  }
+
+  function advanceNext() {
+    if (!track) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (maxScroll <= 5) return;
+    const step = getCardStep();
+    if (track.scrollLeft >= maxScroll - 15) {
+      track.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      track.scrollBy({ left: step, behavior: 'smooth' });
+    }
+  }
+
+  function advancePrev() {
+    if (!track) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (maxScroll <= 5) return;
+    const step = getCardStep();
+    if (track.scrollLeft <= 15) {
+      track.scrollTo({ left: maxScroll, behavior: 'smooth' });
+    } else {
+      track.scrollBy({ left: -step, behavior: 'smooth' });
+    }
+  }
+
+  function startTimer() {
+    stopTimer();
+    if (isIntersecting && !isHovered && !userInteracting && activeView === 'home') {
+      autoScrollTimer = setInterval(() => {
+        advanceNext();
+      }, SCROLL_INTERVAL);
+    }
+  }
+
+  function stopTimer() {
+    if (autoScrollTimer) {
+      clearInterval(autoScrollTimer);
+      autoScrollTimer = null;
+    }
+  }
+
+  function handleUserAction(actionFn) {
+    userInteracting = true;
+    stopTimer();
+    actionFn();
+    clearTimeout(userResumeTimeout);
+    userResumeTimeout = setTimeout(() => {
+      userInteracting = false;
+      if (isIntersecting && !isHovered && activeView === 'home') {
+        startTimer();
+      }
+    }, 6000); // 6s pause after user clicks arrow or dot
+  }
+
+  // Arrow controls
+  nextBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleUserAction(advanceNext);
+  });
+
+  prevBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleUserAction(advancePrev);
+  });
+
+  // Dots indicator update & click navigation
+  function updateDots() {
+    if (!dots.length) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (maxScroll <= 0) {
+      dots.forEach((d, i) => d.classList.toggle('active', i === 0));
+      return;
+    }
+    const ratio = Math.max(0, Math.min(1, track.scrollLeft / maxScroll));
+    const activeIndex = Math.min(dots.length - 1, Math.round(ratio * (dots.length - 1)));
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === activeIndex);
+    });
+  }
+
+  let scrollRaf = null;
+  track.addEventListener('scroll', () => {
+    if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    scrollRaf = requestAnimationFrame(updateDots);
+  }, { passive: true });
+
+  dots.forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+      handleUserAction(() => {
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        const targetLeft = (maxScroll / (dots.length - 1)) * idx;
+        track.scrollTo({ left: targetLeft, behavior: 'smooth' });
+      });
+    });
+  });
+
+  // Pause on hover
+  const wrapper = document.getElementById('channelsCarouselWrapper') || section;
+  wrapper.addEventListener('mouseenter', () => {
+    isHovered = true;
+    stopTimer();
+  });
+
+  wrapper.addEventListener('mouseleave', () => {
+    isHovered = false;
+    if (isIntersecting && !userInteracting && activeView === 'home') {
+      startTimer();
+    }
+  });
+
+  // Touch pause for mobile
+  track.addEventListener('touchstart', () => {
+    userInteracting = true;
+    stopTimer();
+  }, { passive: true });
+
+  track.addEventListener('touchend', () => {
+    clearTimeout(userResumeTimeout);
+    userResumeTimeout = setTimeout(() => {
+      userInteracting = false;
+      if (isIntersecting && !isHovered && activeView === 'home') {
+        startTimer();
+      }
+    }, 5000);
+  }, { passive: true });
+
+  // IntersectionObserver: auto-scroll ONLY when section is visible in viewport
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+    });
+  }, { threshold: 0.25 });
+
+  observer.observe(section);
+
+  // Guarantee carousel starts on Card 1 (Sermon Series)
+  track.scrollLeft = 0;
+  updateDots();
 }
 
 // --- FOOTER FLOWING WATER CANVAS - Natural Deep Ocean Simulation ---
