@@ -1183,37 +1183,58 @@
 
   <!-- ── Sermon Edit Modal ────────────────────────────────────────────────── -->
   <div id="adminEditSermonModal" class="crop-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="editSermonModalTitle">
-    <div class="crop-modal-card" style="max-width:640px;width:92%;max-height:90vh;overflow-y:auto;text-align:left;padding:24px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:12px;">
-        <h3 id="editSermonModalTitle" style="margin:0;font-size:1.2rem;display:flex;align-items:center;gap:8px;">
-          <span>✏️ Edit Sermon Details</span>
-        </h3>
-        <button type="button" id="btnCancelEditSermonTop" class="admin-btn admin-btn-outline admin-btn-sm" style="padding:4px 10px;">✕</button>
+    <div class="crop-modal-card" style="max-width:680px;width:94%;max-height:92vh;overflow-y:auto;text-align:left;padding:26px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:14px;">
+        <div>
+          <h3 id="editSermonModalTitle" style="margin:0;font-size:1.25rem;display:flex;align-items:center;gap:8px;">
+            <span>✏️ Edit Sermon Details</span>
+          </h3>
+          <p style="margin:4px 0 0;font-size:0.8rem;color:var(--admin-muted);">Update title, speaker spelling, scripture, video link, topics, or series assignment.</p>
+        </div>
+        <button type="button" id="btnCancelEditSermonTop" class="admin-btn admin-btn-outline admin-btn-sm" style="padding:6px 12px;font-size:0.9rem;" title="Close modal">✕</button>
       </div>
 
       <form id="adminEditSermonForm">
         <input type="hidden" id="editSermonId">
+        <input type="hidden" id="editSermonEmbedId">
+
+        <!-- Video Preview & Link Edit Row -->
+        <div class="admin-form-group" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:14px;margin-bottom:16px;">
+          <div style="display:flex;gap:14px;align-items:center;">
+            <img id="editSermonThumbPreview" src="" alt="Thumbnail Preview" style="width:116px;height:66px;object-fit:cover;border-radius:8px;background:#111;border:1px solid rgba(255,255,255,0.12);flex-shrink:0;">
+            <div style="flex:1;min-width:0;">
+              <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.82rem;color:var(--admin-muted);">
+                <span>YouTube Video URL or Video ID</span>
+                <span id="editSermonEmbedIdBadge" style="font-family:monospace;font-size:0.75rem;color:#60a5fa;background:rgba(59,130,246,0.12);padding:2px 7px;border-radius:4px;"></span>
+              </label>
+              <div class="admin-yt-input-row" style="margin:0;">
+                <input type="text" id="editSermonYoutubeUrl" class="admin-input" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+                <button type="button" id="btnEditSermonPreviewYt" class="admin-btn admin-btn-outline admin-btn-sm">Preview</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="admin-form-group">
-          <label>Sermon Title</label>
-          <input type="text" id="editSermonTitle" class="admin-input" required>
+          <label>Sermon Title <span style="color:#ef5350;">*</span></label>
+          <input type="text" id="editSermonTitle" class="admin-input" placeholder="Enter sermon title" required>
         </div>
 
         <div class="admin-form-row">
           <div class="admin-form-group">
-            <label>Preacher</label>
-            <input type="text" id="editSermonPreacher" list="adminPreacherList" class="admin-input" required>
+            <label>Preacher / Minister <span style="color:#ef5350;">*</span></label>
+            <input type="text" id="editSermonPreacher" list="adminPreacherList" class="admin-input" placeholder="Speaker name" required autocomplete="off">
           </div>
           <div class="admin-form-group">
-            <label>Duration (M:SS)</label>
-            <input type="text" id="editSermonDuration" class="admin-input" required>
+            <label>Duration (M:SS) <span style="color:#ef5350;">*</span></label>
+            <input type="text" id="editSermonDuration" class="admin-input" placeholder="e.g. 1:58 or 24:15" required>
           </div>
         </div>
 
         <div class="admin-form-row">
           <div class="admin-form-group">
-            <label>Scripture Reference</label>
-            <input type="text" id="editSermonScripture" class="admin-input" required>
+            <label>Scripture Reference <span style="color:#ef5350;">*</span></label>
+            <input type="text" id="editSermonScripture" class="admin-input" placeholder="e.g. Romans 8:28" required>
           </div>
           <div class="admin-form-group">
             <label>Liturgical Season</label>
@@ -1232,12 +1253,30 @@
         </div>
 
         <div class="admin-form-group">
+          <label>Themes &amp; Topics <span style="color:var(--admin-muted);font-weight:400;">(select all that apply)</span></label>
+          <div class="admin-checkbox-group" id="editSermonTopicsGroup" style="grid-template-columns:repeat(auto-fill, minmax(110px, 1fr));gap:6px 10px;">
+            <label class="admin-check-label"><input type="checkbox" value="Faith"> Faith</label>
+            <label class="admin-check-label"><input type="checkbox" value="Grace"> Grace</label>
+            <label class="admin-check-label"><input type="checkbox" value="Hope"> Hope</label>
+            <label class="admin-check-label"><input type="checkbox" value="Prayer"> Prayer</label>
+            <label class="admin-check-label"><input type="checkbox" value="Salvation"> Salvation</label>
+            <label class="admin-check-label"><input type="checkbox" value="Love"> Love</label>
+            <label class="admin-check-label"><input type="checkbox" value="Purpose"> Purpose</label>
+            <label class="admin-check-label"><input type="checkbox" value="Wisdom"> Wisdom</label>
+            <label class="admin-check-label"><input type="checkbox" value="Healing"> Healing</label>
+            <label class="admin-check-label"><input type="checkbox" value="Peace"> Peace</label>
+            <label class="admin-check-label"><input type="checkbox" value="Trust"> Trust</label>
+            <label class="admin-check-label"><input type="checkbox" value="Surrender"> Surrender</label>
+          </div>
+        </div>
+
+        <div class="admin-form-group">
           <label>Pastoral Summary</label>
-          <textarea id="editSermonSummary" rows="2" class="admin-input" required></textarea>
+          <textarea id="editSermonSummary" rows="2" class="admin-input" placeholder="Brief pastoral reflection or core takeaway" required></textarea>
         </div>
 
         <!-- 2-Minute PLUS Toggle -->
-        <div class="admin-form-group admin-toggle-row" style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.3);border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+        <div class="admin-form-group admin-toggle-row" style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.3);border-radius:10px;padding:12px 14px;margin-bottom:12px;">
           <div>
             <div class="admin-toggle-label" style="display:flex;align-items:center;gap:8px;color:#fbbf24;font-weight:700;font-size:0.9rem;">
               <span>⚡ 2-Minute PLUS (Extended 3–50 Min)</span>
@@ -1269,11 +1308,11 @@
             <div class="admin-form-row">
               <div class="admin-form-group" style="margin-bottom:0;">
                 <label>Series Name</label>
-                <input type="text" id="editSermonSeriesName" list="adminSeriesListDatalist" class="admin-input" autocomplete="off">
+                <input type="text" id="editSermonSeriesName" list="adminSeriesListDatalist" class="admin-input" placeholder="Series title" autocomplete="off">
               </div>
               <div class="admin-form-group" style="margin-bottom:0;">
                 <label>Episode / Part #</label>
-                <input type="number" id="editSermonSeriesPart" min="1" max="99" class="admin-input">
+                <input type="number" id="editSermonSeriesPart" min="1" max="99" placeholder="1" class="admin-input">
               </div>
             </div>
           </div>
@@ -1283,7 +1322,7 @@
           <div class="admin-form-group admin-toggle-row" style="flex:1;">
             <div>
               <div class="admin-toggle-label">Featured</div>
-              <div class="admin-toggle-sub">Pin to Hero</div>
+              <div class="admin-toggle-sub">Pin to Hero Carousel</div>
             </div>
             <label class="admin-toggle-switch">
               <input type="checkbox" id="editSermonFeatured">
@@ -1303,8 +1342,8 @@
           </div>
         </div>
 
-        <div style="display:flex;gap:12px;margin-top:16px;">
-          <button type="submit" class="admin-btn admin-btn-primary" style="flex:1;padding:12px;">
+        <div style="display:flex;gap:12px;margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">
+          <button type="submit" class="admin-btn admin-btn-primary" style="flex:1;padding:12px;font-size:0.95rem;">
             💾 Save Changes
           </button>
           <button type="button" id="btnCancelEditSermon" class="admin-btn admin-btn-outline" style="padding:12px 20px;">

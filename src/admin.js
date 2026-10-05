@@ -777,6 +777,54 @@ function setupEditSermonModal() {
   document.getElementById('btnCancelEditSermon')?.addEventListener('click', closeModal);
   document.getElementById('btnCancelEditSermonTop')?.addEventListener('click', closeModal);
 
+  // Close modal when clicking the dark backdrop
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Close on Escape key
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display !== 'none') {
+      closeModal();
+    }
+  });
+
+  // Live YouTube URL preview in Edit Modal
+  const editYtUrlInput = document.getElementById('editSermonYoutubeUrl');
+  const editYtPreviewBtn = document.getElementById('btnEditSermonPreviewYt');
+  const editThumbImg = document.getElementById('editSermonThumbPreview');
+  const editEmbedIdInput = document.getElementById('editSermonEmbedId');
+  const editEmbedIdBadge = document.getElementById('editSermonEmbedIdBadge');
+
+  function updateEditVideoPreview() {
+    const raw = (editYtUrlInput?.value || '').trim();
+    const vid = extractVideoId(raw);
+    if (vid) {
+      if (editEmbedIdInput) editEmbedIdInput.value = vid;
+      if (editEmbedIdBadge) editEmbedIdBadge.textContent = vid;
+      if (editThumbImg) editThumbImg.src = ytThumb(vid);
+    }
+  }
+
+  editYtPreviewBtn?.addEventListener('click', updateEditVideoPreview);
+  let editYtDebounce;
+  editYtUrlInput?.addEventListener('input', () => {
+    clearTimeout(editYtDebounce);
+    editYtDebounce = setTimeout(updateEditVideoPreview, 400);
+  });
+
+  // Auto-detect 2-Minute PLUS if duration >= 3 minutes (180s)
+  const editDurationInput = document.getElementById('editSermonDuration');
+  const editIsPlusCheck = document.getElementById('editSermonIsPlus');
+  editDurationInput?.addEventListener('input', () => {
+    const val = editDurationInput.value.trim();
+    const sec = durationToSeconds(val);
+    if (sec >= 180 && editIsPlusCheck && !editIsPlusCheck.checked) {
+      editIsPlusCheck.checked = true;
+    }
+  });
+
+  // Series toggle
   const seriesCheck = document.getElementById('editSermonPartOfSeries');
   const seriesFields = document.getElementById('editSermonSeriesFields');
   seriesCheck?.addEventListener('change', () => {
@@ -790,16 +838,51 @@ function setupEditSermonModal() {
     const s = all.find(item => item.id === id);
     if (!s) return;
 
-    s.title = document.getElementById('editSermonTitle').value.trim();
-    s.preacherName = document.getElementById('editSermonPreacher').value.trim();
-    s.duration = document.getElementById('editSermonDuration').value.trim();
-    s.durationSec = durationToSeconds(s.duration);
-    s.scripture = document.getElementById('editSermonScripture').value.trim();
-    s.primarySeason = document.getElementById('editSermonSeason').value;
-    s.sermonType = document.querySelector('input[name="editSermonType"]:checked')?.value || 'Devotional';
-    s.summary = document.getElementById('editSermonSummary').value.trim();
-    s.isPlus = document.getElementById('editSermonIsPlus').checked;
-    s.featured = document.getElementById('editSermonFeatured').checked;
+    const newTitle = document.getElementById('editSermonTitle').value.trim();
+    const newPreacher = document.getElementById('editSermonPreacher').value.trim();
+    const newDuration = document.getElementById('editSermonDuration').value.trim();
+    const durSec = durationToSeconds(newDuration);
+    const newScripture = document.getElementById('editSermonScripture').value.trim();
+    const newSeason = document.getElementById('editSermonSeason').value;
+    const newType = document.querySelector('input[name="editSermonType"]:checked')?.value || 'Devotional';
+    const newSummary = document.getElementById('editSermonSummary').value.trim();
+    const newIsPlus = editIsPlusCheck ? editIsPlusCheck.checked : (durSec >= 180);
+    const newFeatured = document.getElementById('editSermonFeatured').checked;
+
+    // Check YouTube link update
+    const rawUrl = (editYtUrlInput?.value || '').trim();
+    const updatedEmbedId = extractVideoId(rawUrl) || editEmbedIdInput?.value || s.youtubeEmbedId;
+
+    // Selected Topics
+    const selectedTopics = [...document.querySelectorAll('#editSermonTopicsGroup input:checked')].map(c => c.value);
+    const finalTopics = selectedTopics.length > 0 ? selectedTopics : (s.topics && s.topics.length ? s.topics : ['Faith']);
+
+    // Match preacher from directory
+    const matchedPreacher = preachers.find(p => p.name.toLowerCase() === newPreacher.toLowerCase());
+    if (matchedPreacher) {
+      s.preacherId = matchedPreacher.id;
+    }
+
+    s.title = newTitle;
+    s.slug = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    s.preacherName = newPreacher;
+    s.duration = newDuration;
+    s.durationSec = durSec;
+    s.scripture = newScripture;
+    s.scriptureBook = newScripture.split(' ')[0] || '';
+    s.primarySeason = newSeason;
+    s.sermonType = newType;
+    s.topics = finalTopics;
+    s.category = finalTopics[0] || 'Faith';
+    s.summary = newSummary;
+    s.isPlus = newIsPlus;
+    s.featured = newFeatured;
+
+    if (updatedEmbedId) {
+      s.youtubeEmbedId = updatedEmbedId;
+      s.youtubeUrl = `https://www.youtube.com/watch?v=${updatedEmbedId}`;
+      s.thumbnailUrl = ytThumb(updatedEmbedId);
+    }
 
     const partOfSeries = document.getElementById('editSermonPartOfSeries').checked;
     if (partOfSeries) {
@@ -851,20 +934,43 @@ function openEditSermonModal(id) {
   document.getElementById('editSermonScripture').value = sermon.scripture || '';
   document.getElementById('editSermonSummary').value = sermon.summary || '';
 
+  // YouTube fields
+  const embedId = sermon.youtubeEmbedId || extractVideoId(sermon.youtubeUrl || '');
+  const editEmbedIdInput = document.getElementById('editSermonEmbedId');
+  const editEmbedIdBadge = document.getElementById('editSermonEmbedIdBadge');
+  const editYtUrlInput = document.getElementById('editSermonYoutubeUrl');
+  const editThumbImg = document.getElementById('editSermonThumbPreview');
+
+  if (editEmbedIdInput) editEmbedIdInput.value = embedId || '';
+  if (editEmbedIdBadge) editEmbedIdBadge.textContent = embedId || 'No ID';
+  if (editYtUrlInput) editYtUrlInput.value = sermon.youtubeUrl || (embedId ? `https://www.youtube.com/watch?v=${embedId}` : '');
+  if (editThumbImg) editThumbImg.src = sermon.thumbnailUrl || (embedId ? ytThumb(embedId) : '');
+
+  // Season dropdown
   const seasonSel = document.getElementById('editSermonSeason');
   if (seasonSel) {
     seasonSel.innerHTML = seasons.filter(s => s.slug !== 'all')
       .map(s => `<option value="${s.name}" ${s.name === sermon.primarySeason ? 'selected' : ''}>${s.name}</option>`).join('');
   }
 
+  // Sermon type radio
   const typeRadios = document.querySelectorAll('input[name="editSermonType"]');
   typeRadios.forEach(r => {
     r.checked = (r.value === (sermon.sermonType || 'Devotional'));
   });
 
+  // Topics checklist
+  const topicCheckboxes = document.querySelectorAll('#editSermonTopicsGroup input[type="checkbox"]');
+  const activeTopics = (sermon.topics && sermon.topics.length) ? sermon.topics : (sermon.category ? [sermon.category] : []);
+  topicCheckboxes.forEach(cb => {
+    cb.checked = activeTopics.some(t => t.toLowerCase() === cb.value.toLowerCase());
+  });
+
+  // Plus toggle
   const isPlusCheck = document.getElementById('editSermonIsPlus');
   if (isPlusCheck) isPlusCheck.checked = !!sermon.isPlus;
 
+  // Series
   const seriesCheck = document.getElementById('editSermonPartOfSeries');
   const seriesFields = document.getElementById('editSermonSeriesFields');
   if (seriesCheck) {
@@ -874,6 +980,7 @@ function openEditSermonModal(id) {
   document.getElementById('editSermonSeriesName').value = sermon.seriesName || '';
   document.getElementById('editSermonSeriesPart').value = sermon.seriesPart || '';
 
+  // Featured & Latest
   const featuredCheck = document.getElementById('editSermonFeatured');
   if (featuredCheck) featuredCheck.checked = !!sermon.featured;
 
