@@ -30,6 +30,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: var(--font-body); }
 
+/* Fix for HTML5 hidden attribute across the Admin Portal */
+[hidden] { display: none !important; }
+
 .admin-body {
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -144,6 +147,10 @@ input[type="password"]::-ms-clear {
 .admin-auth-eye-btn:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
+}
+.admin-auth-eye-btn svg {
+  display: block;
+  pointer-events: none;
 }
 
 .admin-caps-warning {
