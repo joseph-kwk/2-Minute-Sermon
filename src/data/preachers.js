@@ -218,9 +218,9 @@ export function deletePreacher(id) {
   savePreachers(all);
   if (isFirebaseConfigured()) {
     deleteDocument('preachers', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

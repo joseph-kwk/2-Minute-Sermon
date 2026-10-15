@@ -1,7 +1,7 @@
 // Ministry Leadership & Who is Who Store
 // Persisted in localStorage ('2ms_leadership') and synced via Firestore when configured.
 
-import { isFirebaseConfigured, saveDocument, subscribeCollection, seedCollectionIfEmpty } from '../firebase.js';
+import { isFirebaseConfigured, saveDocument, deleteDocument, subscribeCollection, seedCollectionIfEmpty } from '../firebase.js';
 
 
 export const INITIAL_LEADERSHIP = [
@@ -129,7 +129,7 @@ const _pendingUpserts = new Map(); // id → leader object
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('leadership', INITIAL_LEADERSHIP);
   subscribeCollection('leadership', (remoteTeam) => {
-    if (remoteTeam && remoteTeam.length > 0) {
+    if (Array.isArray(remoteTeam)) {
       let merged = _pendingDeletes.size > 0
         ? remoteTeam.filter(m => !_pendingDeletes.has(m.id))
         : [...remoteTeam];
@@ -142,7 +142,7 @@ if (isFirebaseConfigured()) {
           }
         });
       }
-      if (merged.length > 0) saveLeadershipTeam(merged);
+      saveLeadershipTeam(merged);
     }
   });
 }
@@ -150,12 +150,12 @@ if (isFirebaseConfigured()) {
 export function getLeadershipTeam() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (_) {}
-  return INITIAL_LEADERSHIP;
+  return [...INITIAL_LEADERSHIP];
 }
 
 export function saveLeadershipTeam(team) {
@@ -191,9 +191,9 @@ export function deleteLeader(id) {
   saveLeadershipTeam(team);
   if (isFirebaseConfigured()) {
     deleteDocument('leadership', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

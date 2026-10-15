@@ -37,7 +37,7 @@ const _pendingUpserts = new Map();
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('series', INITIAL_SERIES);
   subscribeCollection('series', (remoteSeries) => {
-    if (remoteSeries && remoteSeries.length > 0) {
+    if (Array.isArray(remoteSeries)) {
       let merged = _pendingDeletes.size > 0
         ? remoteSeries.filter(s => !_pendingDeletes.has(s.id))
         : [...remoteSeries];
@@ -50,7 +50,7 @@ if (isFirebaseConfigured()) {
           }
         });
       }
-      if (merged.length > 0) saveSeries(merged);
+      saveSeries(merged);
     }
   });
 }
@@ -60,7 +60,7 @@ export function getSeries() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (_) {}
   return [...INITIAL_SERIES];
@@ -100,9 +100,9 @@ export function deleteSeries(id) {
   saveSeries(list);
   if (isFirebaseConfigured()) {
     deleteDocument('series', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

@@ -13,6 +13,7 @@ import { getConversations, upsertConversation, deleteConversation, saveConversat
 import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
 import { getAllReflections, deleteReflection, saveReflections } from './data/reflections.js';
 import { getPrayers, savePrayers, deletePrayer } from './data/prayers.js';
+import { getMinistryStructure, saveMinistryStructure, resetMinistryStructure } from './data/structure.js';
 import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ export function refreshAdminView() {
   renderVerseQueue();
   renderPreachersList();
   renderLeadershipList();
+  renderStructureEditor();
   renderConversationsList();
   renderPartnersList();
   renderEventsList();
@@ -83,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSeriesManager();
   setupPreachersManager();
   setupLeadershipManager();
+  setupStructureManager();
   setupConversationsManager();
   setupPartnersManager();
   setupEventsManager();
@@ -104,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:verses:updated', refreshAdminView);
   window.addEventListener('2ms:events:updated', refreshAdminView);
   window.addEventListener('2ms:leadership:updated', refreshAdminView);
+  window.addEventListener('2ms:structure:updated', refreshAdminView);
   window.addEventListener('2ms:partners:updated', refreshAdminView);
   window.addEventListener('2ms:reflections:updated', refreshAdminView);
   window.addEventListener('2ms:prayers:updated', refreshAdminView);
@@ -380,6 +384,7 @@ const PANEL_TITLES = {
   preachers:           'Preachers Manager',
   events:              'Events Manager',
   leadership:          'Leadership & Team',
+  structure:           'Ministry Structure & Pillars',
   conversations:       'The Conversation',
   partners:            'Ministry Partners',
   subscribers:         'Newsletter Subscribers',
@@ -406,6 +411,7 @@ function switchPanel(panelId) {
     preachers: () => renderPreachersList(),
     events: () => renderEventsList(),
     leadership: () => renderLeadershipList(),
+    structure: () => renderStructureEditor(),
     conversations: () => renderConversationsList(),
     partners: () => renderPartnersList(),
     subscribers: () => renderSubscribersList(),
@@ -1714,6 +1720,11 @@ function setupLeadershipManager() {
   bioInput?.addEventListener('paste', () => setTimeout(refreshLeaderBioCount, 50));
   refreshLeaderBioCount();
 
+  document.getElementById('btnGoToStructureFromLeadership')?.addEventListener('click', () => {
+    switchPanel('structure');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
   // Populate Preachers quick-import dropdown
   function populateLeaderPreacherImport() {
     if (!importSelect) return;
@@ -1927,6 +1938,238 @@ function renderLeadershipList() {
       toast(`🗑️ "${target.name}" removed from leadership.`);
     });
   });
+}
+
+// ── MINISTRY STRUCTURE & PILLARS MANAGER ─────────────────────────────────────
+let activeStructureData = null;
+
+function setupStructureManager() {
+  const form = document.getElementById('adminMinistryStructureForm');
+  const btnReset = document.getElementById('btnResetStructureDefaults');
+  const btnAddPillar = document.getElementById('btnAddStructurePillar');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const tag = document.getElementById('structureHeaderTag')?.value.trim() || '';
+    const title = document.getElementById('structureHeaderTitle')?.value.trim() || '';
+    const subtitle = document.getElementById('structureHeaderSubtitle')?.value.trim() || '';
+
+    // Collect pillars from container
+    const container = document.getElementById('structurePillarsListContainer');
+    const pillarCards = container ? container.querySelectorAll('.structure-pillar-card') : [];
+    const pillars = [];
+
+    pillarCards.forEach((card, idx) => {
+      const id = card.dataset.pillarId || `pillar-${idx + 1}`;
+      const pillarTitle = card.querySelector('.pillar-input-title')?.value.trim() || `Pillar ${idx + 1}`;
+      const pillarBadge = card.querySelector('.pillar-input-badge')?.value.trim() || 'Ministry Pillar';
+      const pillarIcon = card.querySelector('.pillar-input-icon')?.value.trim() || '🏛️';
+      const pillarDesc = card.querySelector('.pillar-input-desc')?.value.trim() || '';
+
+      pillars.push({
+        id,
+        title: pillarTitle,
+        badge: pillarBadge,
+        icon: pillarIcon,
+        description: pillarDesc
+      });
+    });
+
+    const updatedData = {
+      header: { tag, title, subtitle },
+      pillars
+    };
+
+    activeStructureData = saveMinistryStructure(updatedData, true);
+    renderStructureEditor();
+    toast('✅ Ministry Structure & Pillars saved and synced!');
+  });
+
+  btnReset?.addEventListener('click', async () => {
+    const confirmed = await showAdminConfirm({
+      title: 'Reset Ministry Structure',
+      message: 'Restore the standard Ministry Structure texts (The Board, Preachers Network, Media Branch) to default?',
+      confirmText: 'Reset to Defaults'
+    });
+    if (!confirmed) return;
+    activeStructureData = resetMinistryStructure();
+    renderStructureEditor();
+    toast('↺ Ministry Structure restored to defaults.');
+  });
+
+  btnAddPillar?.addEventListener('click', () => {
+    if (!activeStructureData) activeStructureData = getMinistryStructure();
+    syncDomPillarsToState();
+    const newId = `pillar-${Date.now()}`;
+    activeStructureData.pillars.push({
+      id: newId,
+      badge: 'Ministry Pillar',
+      icon: '✨',
+      title: 'New Pillar Title',
+      description: 'Describe the purpose, function, and ministers involved in this pillar.'
+    });
+    renderStructureEditor();
+    setTimeout(() => {
+      const newCard = document.querySelector(`[data-pillar-id="${newId}"]`);
+      if (newCard) {
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        newCard.querySelector('.pillar-input-title')?.focus();
+      }
+    }, 100);
+  });
+}
+
+function renderStructureEditor() {
+  const structure = activeStructureData || getMinistryStructure();
+  activeStructureData = structure;
+
+  const tagInput = document.getElementById('structureHeaderTag');
+  const titleInput = document.getElementById('structureHeaderTitle');
+  const subInput = document.getElementById('structureHeaderSubtitle');
+  const countEl = document.getElementById('structurePillarsCount');
+  const container = document.getElementById('structurePillarsListContainer');
+
+  if (tagInput) tagInput.value = structure.header?.tag || '';
+  if (titleInput) titleInput.value = structure.header?.title || '';
+  if (subInput) subInput.value = structure.header?.subtitle || '';
+  if (countEl) countEl.textContent = structure.pillars?.length || 0;
+
+  if (!container) return;
+
+  if (!structure.pillars || !structure.pillars.length) {
+    container.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No structure pillars defined. Click "Add Another Pillar" or "Reset Defaults".</p>';
+    return;
+  }
+
+  container.innerHTML = structure.pillars.map((p, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === structure.pillars.length - 1;
+    return `
+      <div class="structure-pillar-card" data-pillar-id="${escapeAdminHtml(p.id)}" style="background:rgba(255,255,255,0.02);border:1px solid var(--admin-border);border-radius:var(--radius);padding:18px;position:relative;transition:var(--transition);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.6rem;line-height:1;" class="pillar-display-icon">${escapeAdminHtml(p.icon || '🏛️')}</span>
+            <div>
+              <strong style="color:#fff;font-size:0.95rem;" class="pillar-display-title">${escapeAdminHtml(p.title || `Pillar ${idx + 1}`)}</strong>
+              <span class="admin-tag" style="margin-left:8px;font-size:0.68rem;">${escapeAdminHtml(p.badge || 'Pillar')}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-pillar-up" data-index="${idx}" ${isFirst ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} title="Move Up">↑</button>
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-pillar-down" data-index="${idx}" ${isLast ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} title="Move Down">↓</button>
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-danger del-pillar-btn" data-index="${idx}" title="Remove this pillar">✕</button>
+          </div>
+        </div>
+
+        <div class="admin-form-row" style="margin-bottom:12px;">
+          <div class="admin-form-group" style="flex:2;">
+            <label class="admin-form-label">Pillar Title</label>
+            <input type="text" class="admin-input pillar-input-title" value="${escapeAdminHtml(p.title || '')}" placeholder="e.g. The Board" required>
+          </div>
+          <div class="admin-form-group" style="flex:1.5;">
+            <label class="admin-form-label">Eyebrow / Badge Tag</label>
+            <input type="text" class="admin-input pillar-input-badge" value="${escapeAdminHtml(p.badge || '')}" placeholder="e.g. Governance" required>
+          </div>
+          <div class="admin-form-group" style="flex:1;">
+            <label class="admin-form-label">Icon (Emoji)</label>
+            <input type="text" class="admin-input pillar-input-icon" value="${escapeAdminHtml(p.icon || '🏛️')}" placeholder="🏛️" style="text-align:center;font-size:1.1rem;" required>
+          </div>
+        </div>
+
+        <div class="admin-form-group" style="margin-bottom:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label class="admin-form-label" style="margin:0;">Description Text (Describe the role, authority, or purpose of this pillar)</label>
+            <span class="pillar-word-count" style="font-size:0.75rem;color:var(--admin-muted);font-weight:600;">${countWords(p.description || '')} words</span>
+          </div>
+          <textarea class="admin-input pillar-input-desc" rows="4" placeholder="Detailed description of this pillar, its ministers, and its role in 2-Minute Sermon..." required style="line-height:1.6;">${escapeAdminHtml(p.description || '')}</textarea>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire up live title/icon preview & word counters
+  container.querySelectorAll('.structure-pillar-card').forEach(card => {
+    const titleIn = card.querySelector('.pillar-input-title');
+    const iconIn = card.querySelector('.pillar-input-icon');
+    const descIn = card.querySelector('.pillar-input-desc');
+    const displayTitle = card.querySelector('.pillar-display-title');
+    const displayIcon = card.querySelector('.pillar-display-icon');
+    const wordCountEl = card.querySelector('.pillar-word-count');
+
+    titleIn?.addEventListener('input', () => {
+      if (displayTitle) displayTitle.textContent = titleIn.value.trim() || 'Untitled Pillar';
+    });
+    iconIn?.addEventListener('input', () => {
+      if (displayIcon) displayIcon.textContent = iconIn.value.trim() || '🏛️';
+    });
+    descIn?.addEventListener('input', () => {
+      if (wordCountEl) wordCountEl.textContent = `${countWords(descIn.value || '')} words`;
+    });
+  });
+
+  // Wire up Move Up buttons
+  container.querySelectorAll('.move-pillar-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      if (idx > 0 && activeStructureData?.pillars) {
+        syncDomPillarsToState();
+        const temp = activeStructureData.pillars[idx];
+        activeStructureData.pillars[idx] = activeStructureData.pillars[idx - 1];
+        activeStructureData.pillars[idx - 1] = temp;
+        renderStructureEditor();
+      }
+    });
+  });
+
+  // Wire up Move Down buttons
+  container.querySelectorAll('.move-pillar-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      if (activeStructureData?.pillars && idx < activeStructureData.pillars.length - 1) {
+        syncDomPillarsToState();
+        const temp = activeStructureData.pillars[idx];
+        activeStructureData.pillars[idx] = activeStructureData.pillars[idx + 1];
+        activeStructureData.pillars[idx + 1] = temp;
+        renderStructureEditor();
+      }
+    });
+  });
+
+  // Wire up Delete buttons
+  container.querySelectorAll('.del-pillar-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      syncDomPillarsToState();
+      const target = activeStructureData?.pillars[idx];
+      if (!target) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Pillar',
+        message: `Remove "${target.title || 'this pillar'}" from the Ministry Structure?`,
+        confirmText: 'Remove'
+      });
+      if (!confirmed) return;
+      activeStructureData.pillars.splice(idx, 1);
+      renderStructureEditor();
+      toast('🗑️ Pillar removed (remember to click Save to apply).');
+    });
+  });
+}
+
+function syncDomPillarsToState() {
+  if (!activeStructureData) activeStructureData = getMinistryStructure();
+  const container = document.getElementById('structurePillarsListContainer');
+  if (!container) return;
+  const cards = container.querySelectorAll('.structure-pillar-card');
+  const pillars = [];
+  cards.forEach((card, idx) => {
+    const id = card.dataset.pillarId || `pillar-${idx + 1}`;
+    const title = card.querySelector('.pillar-input-title')?.value.trim() || `Pillar ${idx + 1}`;
+    const badge = card.querySelector('.pillar-input-badge')?.value.trim() || 'Ministry Pillar';
+    const icon = card.querySelector('.pillar-input-icon')?.value.trim() || '🏛️';
+    const description = card.querySelector('.pillar-input-desc')?.value.trim() || '';
+    pillars.push({ id, title, badge, icon, description });
+  });
+  activeStructureData.pillars = pillars;
 }
 
 // ── THE CONVERSATION MANAGER ──────────────────────────────────────────────
@@ -2681,6 +2924,7 @@ function setupBackupPanel() {
         preachers: getPreachers(),
         events: getEvents(),
         leadership: getLeadershipTeam(),
+        structure: getMinistryStructure(),
         conversations: getConversations(),
         partners: getPartners(),
         subscribers: getSubscribers(),
@@ -2751,6 +2995,11 @@ function setupBackupPanel() {
         if (Array.isArray(parsed.leadership) && parsed.leadership.length) {
           saveLeadershipTeam(parsed.leadership);
           restoredItems.push(`${parsed.leadership.length} leaders`);
+        }
+
+        if (parsed.structure && typeof parsed.structure === 'object') {
+          saveMinistryStructure(parsed.structure);
+          restoredItems.push('ministry structure');
         }
 
         if (Array.isArray(parsed.conversations) && parsed.conversations.length) {

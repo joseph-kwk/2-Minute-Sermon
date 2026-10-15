@@ -98,9 +98,9 @@ export function deleteEvent(id) {
   saveEvents(all);
   if (isFirebaseConfigured()) {
     deleteDocument('events', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

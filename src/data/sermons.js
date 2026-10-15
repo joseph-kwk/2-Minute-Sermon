@@ -453,7 +453,7 @@ const _pendingUpserts = new Map(); // id → sermon object
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('sermons', seedSermons);
   subscribeCollection('sermons', (remoteSermons) => {
-    if (remoteSermons && remoteSermons.length > 0) {
+    if (Array.isArray(remoteSermons)) {
       // Remove deleted items
       let merged = _pendingDeletes.size > 0
         ? remoteSermons.filter(s => !_pendingDeletes.has(s.id))
@@ -474,7 +474,7 @@ if (isFirebaseConfigured()) {
         });
       }
 
-      if (merged.length > 0) saveSermons(merged);
+      saveSermons(merged);
     }
   });
 }
@@ -485,9 +485,9 @@ if (isFirebaseConfigured()) {
 export function getSermons() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
@@ -531,9 +531,9 @@ export function deleteSermon(id) {
   saveSermons(all);
   if (isFirebaseConfigured()) {
     deleteDocument('sermons', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

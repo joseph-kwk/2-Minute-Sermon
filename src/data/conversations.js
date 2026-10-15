@@ -80,7 +80,7 @@ const _pendingUpserts = new Map();
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('conversations', INITIAL_CONVERSATIONS);
   subscribeCollection('conversations', (remoteConversations) => {
-    if (remoteConversations && remoteConversations.length > 0) {
+    if (Array.isArray(remoteConversations)) {
       let merged = _pendingDeletes.size > 0
         ? remoteConversations.filter(c => !_pendingDeletes.has(c.id))
         : [...remoteConversations];
@@ -93,7 +93,7 @@ if (isFirebaseConfigured()) {
           }
         });
       }
-      if (merged.length > 0) saveConversations(merged);
+      saveConversations(merged);
     }
   });
 }
@@ -143,9 +143,9 @@ export function deleteConversation(id) {
   saveConversations(list);
   if (isFirebaseConfigured()) {
     deleteDocument('conversations', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

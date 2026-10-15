@@ -11,6 +11,7 @@ import { getConversations, saveConversations, extractVideoId, ytThumb } from './
 import { addSubscriber } from './data/subscribers.js';
 import { getAllReflections, addReflection, toggleLikeReflection } from './data/reflections.js';
 import { getPrayers, addPrayer, deletePrayer } from './data/prayers.js';
+import { getMinistryStructure } from './data/structure.js';
 
 // ─── Dynamic store getters — always return fresh data from localStorage ─────────────
 const sermons    = () => getSermons();
@@ -120,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminPreachersList();
   renderAboutTeamRoster();
   renderAboutPartners();
+  renderAboutStructure();
   updateFooterSocialLinks();
   renderWrittenPrayers();
 
@@ -136,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderEventsGrid();
     renderAboutTeamRoster();
     renderAboutPartners();
+    renderAboutStructure();
     populateDropdownFilterOptions();
     renderDailyVerse();
     updateFooterSocialLinks();
@@ -169,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('2ms:events:updated', refreshAllUI);
   window.addEventListener('2ms:leadership:updated', refreshAllUI);
   window.addEventListener('2ms:partners:updated', refreshAllUI);
+  window.addEventListener('2ms:structure:updated', refreshAllUI);
   window.addEventListener('2ms:conversations:updated', refreshAllUI);
 });
 
@@ -4371,6 +4375,38 @@ export function renderAboutPartners() {
   `).join('');
 }
 window.renderAboutPartners = renderAboutPartners;
+
+export function renderAboutStructure() {
+  const structure = getMinistryStructure();
+  if (!structure) return;
+
+  const tagEl = document.getElementById('structureSectionTag');
+  const titleEl = document.getElementById('structureSectionTitle');
+  const subEl = document.getElementById('structureSectionSubtitle');
+  const container = document.getElementById('structurePillarsContainer');
+
+  if (tagEl && structure.header?.tag) {
+    tagEl.textContent = structure.header.tag;
+  }
+  if (titleEl && structure.header?.title) {
+    titleEl.textContent = structure.header.title;
+  }
+  if (subEl && structure.header?.subtitle) {
+    subEl.textContent = structure.header.subtitle;
+  }
+
+  if (container && Array.isArray(structure.pillars) && structure.pillars.length > 0) {
+    container.innerHTML = structure.pillars.map(pillar => `
+      <div class="structure-card" id="pillar-${escapeHtml(pillar.id || '')}">
+        <div class="structure-card-badge">${escapeHtml(pillar.badge || 'Ministry Pillar')}</div>
+        <div class="structure-card-icon">${escapeHtml(pillar.icon || '🏛️')}</div>
+        <h3>${escapeHtml(pillar.title || '')}</h3>
+        <p>${escapeHtml(pillar.description || '')}</p>
+      </div>
+    `).join('');
+  }
+}
+window.renderAboutStructure = renderAboutStructure;
 
 // ─── THE CONVERSATION HUB ─────────────────────────────────────────────────────
 let activeConvFilter = 'all';

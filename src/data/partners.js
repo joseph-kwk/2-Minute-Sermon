@@ -47,12 +47,12 @@ if (isFirebaseConfigured()) {
 export function getPartners() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (_) {}
-  return INITIAL_PARTNERS;
+  return [...INITIAL_PARTNERS];
 }
 
 export function savePartners(partners) {
@@ -88,9 +88,9 @@ export function deletePartner(id) {
   savePartners(partners);
   if (isFirebaseConfigured()) {
     deleteDocument('partners', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);

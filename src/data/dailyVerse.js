@@ -393,9 +393,9 @@ export function deleteDailyVerse(id) {
   saveDailyVerses(all);
   if (isFirebaseConfigured()) {
     deleteDocument('dailyVerses', id).then(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     }).catch(() => {
-      _pendingDeletes.delete(id);
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
     });
   } else {
     _pendingDeletes.delete(id);
