@@ -29,7 +29,7 @@ const seedPreachers = [
     country: "Democratic Republic of Congo",
     specialties: ["Grace", "Salvation", "Discipleship"],
     photoUrl: "https://ui-avatars.com/api/?name=Lievin+Nsuka&background=2E7D32&color=fff&size=200",
-    bio: "Senior Preacher's Network Coordinator. Passionate about communicating Christ crucified with clarity and depth."
+    bio: "Senior Ministry Coordinator. Passionate about communicating Christ crucified with clarity and depth."
   },
   {
     id: "p4",
@@ -39,7 +39,7 @@ const seedPreachers = [
     country: "United States",
     specialties: ["Faith", "Hope", "Encouragement"],
     photoUrl: "https://ui-avatars.com/api/?name=Kerith+Meya&background=6A1B9A&color=fff&size=200",
-    bio: "Associate Preacher's Network Coordinator. Dedicated to helping believers trust God through impossible situations."
+    bio: "Associate Ministry Coordinator. Dedicated to helping believers trust God through impossible situations."
   },
   {
     id: "p5",

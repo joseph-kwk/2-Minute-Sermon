@@ -643,7 +643,7 @@
             <span style="font-size:1.4rem;">🏛️</span>
             <div>
               <strong style="color:#fff; font-size:0.92rem;">Looking to edit Ministry Structure?</strong>
-              <p style="color:var(--admin-muted); font-size:0.78rem; margin:2px 0 0 0;">Edit the descriptions for The Board, Preachers Network, and Media Branch.</p>
+              <p style="color:var(--admin-muted); font-size:0.78rem; margin:2px 0 0 0;">Edit the descriptions for Board of Directors, Executive Director, and Ministry Department.</p>
             </div>
           </div>
           <button type="button" class="admin-btn admin-btn-outline admin-btn-sm" id="btnGoToStructureFromLeadership">
@@ -697,20 +697,27 @@
                 <label>Full Name with Title</label>
                 <input type="text" id="newLeaderName" placeholder="e.g. Pastor Anany Kasongo" class="admin-input" required>
               </div>
+              <div class="admin-form-group">
+                <label>Role / Position Title</label>
+                <input type="text" id="newLeaderRole" placeholder="e.g. President &amp; Founder" class="admin-input" required>
+              </div>
               <div class="admin-form-row">
-                <div class="admin-form-group">
-                  <label>Role / Position Title</label>
-                  <input type="text" id="newLeaderRole" placeholder="e.g. President &amp; Founder" class="admin-input" required>
-                </div>
-                <div class="admin-form-group">
-                  <label>Who is Who Tier / Level</label>
+                <div class="admin-form-group" style="flex:2;">
+                  <label>Who is Who Tier / Department</label>
                   <select id="newLeaderTier" class="admin-input" required>
-                    <option value="Executive Board">Executive Board (Tier 1)</option>
-                    <option value="Department Coordinators">Department Coordinators (Tier 2)</option>
-                    <option value="Network Preachers">Network Preachers (Tier 3)</option>
+                    <option value="Board of Directors">Board of Directors (Tier 1)</option>
+                    <option value="Executive Director">Executive Director (Tier 2)</option>
+                    <option value="Ministry Department">Ministry Department (Tier 3)</option>
                   </select>
                 </div>
+                <div class="admin-form-group" style="flex:1;">
+                  <label>Display Position (Rank)</label>
+                  <input type="number" id="newLeaderOrder" class="admin-input" min="1" step="1" placeholder="e.g. 1" style="text-align:center;">
+                </div>
               </div>
+              <p style="font-size:0.72rem;color:var(--admin-text-muted);margin:-8px 0 14px 0;line-height:1.4;">
+                Rank #1 appears first on the About page. You can also reorder instantly with the <strong>↑ Move Up</strong> and <strong>↓ Move Down</strong> buttons on the roster list!
+              </p>
               <div class="admin-form-group">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                   <label style="margin:0;">Biography &amp; Ministry Affiliations</label>
@@ -749,7 +756,7 @@
               <div>
                 <strong style="color:#fff;font-size:0.95rem;">Ministry Structure &amp; Pillars</strong>
                 <p style="margin:2px 0 0 0;font-size:0.8rem;color:var(--admin-muted);">
-                  Edit the header and foundational governance pillars (The Board, Preachers Network, Media Branch) shown on the public About page.
+                  Edit the header and foundational governance pillars (Board of Directors, Executive Director, Ministry Department) shown on the public About page.
                 </p>
               </div>
             </div>

@@ -7,7 +7,7 @@ import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.j
 import { getPreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse, getLocalDateStr } from './data/dailyVerse.js';
-import { getLeadershipTeam, upsertLeader, deleteLeader, saveLeadershipTeam } from './data/leadership.js';
+import { getLeadershipTeam, upsertLeader, deleteLeader, moveLeader, saveLeadershipTeam } from './data/leadership.js';
 import { getPartners, upsertPartner, deletePartner, savePartners } from './data/partners.js';
 import { getConversations, upsertConversation, deleteConversation, saveConversations } from './data/conversations.js';
 import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
@@ -1707,6 +1707,7 @@ function setupLeadershipManager() {
   const nameInput = document.getElementById('newLeaderName');
   const roleInput = document.getElementById('newLeaderRole');
   const tierInput = document.getElementById('newLeaderTier');
+  const orderInput = document.getElementById('newLeaderOrder');
   const photoUrlInput = document.getElementById('newLeaderPhoto');
   const photoFileInput = document.getElementById('newLeaderPhotoFile');
   const bioInput = document.getElementById('newLeaderBio');
@@ -1775,6 +1776,7 @@ function setupLeadershipManager() {
     if (submitBtn) submitBtn.textContent = '➕ Add to Who is Who (Team)';
     if (cancelBtn) cancelBtn.style.display = 'none';
     if (importSelect) importSelect.value = '';
+    if (orderInput) orderInput.value = getLeadershipTeam().length + 1;
     updateLeaderAvatarPreview();
     refreshLeaderBioCount();
   }
@@ -1814,9 +1816,11 @@ function setupLeadershipManager() {
     const editId   = editIdInput?.value;
     const name     = nameInput?.value.trim() || '';
     const role     = roleInput?.value.trim() || '';
-    const tier     = tierInput?.value || 'Executive Board';
+    const tier     = tierInput?.value || 'Board of Directors';
     let photoUrl   = photoUrlInput?.value.trim();
     const bio      = bioInput?.value.trim() || '';
+    const orderVal = orderInput?.value ? parseInt(orderInput.value, 10) : NaN;
+    const order    = !isNaN(orderVal) ? orderVal : (editId ? undefined : getLeadershipTeam().length + 1);
 
     const bioWords = countWords(bio);
     if (bioWords > 150) {
@@ -1826,8 +1830,8 @@ function setupLeadershipManager() {
     }
 
     let tierOrder = 1;
-    if (tier === 'Department Coordinators' || tier.includes('Department')) tierOrder = 2;
-    if (tier === 'Network Preachers' || tier.includes('Network') || tier.includes('Preacher')) tierOrder = 3;
+    if (tier === 'Executive Director') tierOrder = 2;
+    if (tier === 'Ministry Department' || tier.includes('Department') || tier.includes('Minister')) tierOrder = 3;
 
     if (!photoUrl) {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
@@ -1839,6 +1843,7 @@ function setupLeadershipManager() {
       role,
       tier,
       tierOrder,
+      order,
       photoUrl,
       bio,
       email: ''
@@ -1866,23 +1871,53 @@ function renderLeadershipList() {
     return;
   }
 
-  c.innerHTML = team.map((m) => `
-    <div class="admin-list-item" style="display:flex;align-items:center;gap:14px;padding:12px 14px;">
-      <img src="${m.photoUrl}" alt="${m.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--admin-red);"
-           onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=88'">
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-          <strong style="color:#fff;font-size:0.92rem;">${m.name}</strong>
-          <span class="admin-tag" style="font-size:0.68rem;">${m.tier || 'Team'}</span>
+  c.innerHTML = team.map((m, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === team.length - 1;
+    const rank = m.order || (idx + 1);
+    return `
+      <div class="admin-list-item" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 6px;border:1px solid rgba(255,255,255,0.08);" title="Display Rank #${rank}">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--admin-red);">#${rank}</span>
         </div>
-        <span style="font-size:0.78rem;color:var(--admin-muted);">${m.role}</span>
+        <img src="${m.photoUrl}" alt="${m.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--admin-red);"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=88'">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap;">
+            <strong style="color:#fff;font-size:0.92rem;">${m.name}</strong>
+            <span class="admin-tag" style="font-size:0.68rem;">${m.tier || 'Team'}</span>
+          </div>
+          <span style="font-size:0.78rem;color:var(--admin-muted);">${m.role}</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-leader-up" data-id="${m.id}" ${isFirst ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} title="Move Up (Rank Higher)">↑</button>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-leader-down" data-id="${m.id}" ${isLast ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} title="Move Down (Rank Lower)">↓</button>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-outline edit-leader-btn" data-id="${m.id}" title="Edit leader details">✏️</button>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-danger del-leader-btn" data-id="${m.id}" title="Remove from leadership">✕</button>
+        </div>
       </div>
-      <div style="display:flex;gap:6px;">
-        <button class="admin-btn admin-btn-sm admin-btn-outline edit-leader-btn" data-id="${m.id}" title="Edit leader details">✏️</button>
-        <button class="admin-btn admin-btn-sm admin-btn-danger del-leader-btn" data-id="${m.id}" title="Remove from leadership">✕</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+
+  // Hook Move Up buttons
+  c.querySelectorAll('.move-leader-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      moveLeader(id, 'up');
+      renderLeadershipList();
+      toast('⬆️ Position moved up');
+    });
+  });
+
+  // Hook Move Down buttons
+  c.querySelectorAll('.move-leader-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      moveLeader(id, 'down');
+      renderLeadershipList();
+      toast('⬇️ Position moved down');
+    });
+  });
 
   // Hook Edit buttons
   c.querySelectorAll('.edit-leader-btn').forEach(btn => {
@@ -1891,21 +1926,23 @@ function renderLeadershipList() {
       const target = getLeadershipTeam().find(x => x.id === id);
       if (!target) return;
 
-      const editIdInput = document.getElementById('editLeaderId');
-      const nameInput   = document.getElementById('newLeaderName');
-      const roleInput   = document.getElementById('newLeaderRole');
-      const tierInput   = document.getElementById('newLeaderTier');
+      const editIdInput   = document.getElementById('editLeaderId');
+      const nameInput     = document.getElementById('newLeaderName');
+      const roleInput     = document.getElementById('newLeaderRole');
+      const tierInput     = document.getElementById('newLeaderTier');
+      const orderInput    = document.getElementById('newLeaderOrder');
       const photoUrlInput = document.getElementById('newLeaderPhoto');
-      const bioInput    = document.getElementById('newLeaderBio');
-      const previewImg  = document.getElementById('adminLeaderPhotoPreview');
-      const heading     = document.getElementById('leaderFormHeading');
-      const submitBtn   = document.getElementById('btnSubmitLeader');
-      const cancelBtn   = document.getElementById('btnCancelLeaderEdit');
+      const bioInput      = document.getElementById('newLeaderBio');
+      const previewImg    = document.getElementById('adminLeaderPhotoPreview');
+      const heading       = document.getElementById('leaderFormHeading');
+      const submitBtn     = document.getElementById('btnSubmitLeader');
+      const cancelBtn     = document.getElementById('btnCancelLeaderEdit');
 
       if (editIdInput) editIdInput.value = target.id;
       if (nameInput) nameInput.value = target.name || '';
       if (roleInput) roleInput.value = target.role || '';
-      if (tierInput) tierInput.value = target.tier || 'Executive Board';
+      if (tierInput) tierInput.value = target.tier || 'Board of Directors';
+      if (orderInput) orderInput.value = target.order || 1;
       if (photoUrlInput) photoUrlInput.value = target.photoUrl || '';
       if (previewImg) previewImg.src = target.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(target.name)}&background=C62828&color=fff&size=160`;
       if (bioInput) {
@@ -1988,7 +2025,7 @@ function setupStructureManager() {
   btnReset?.addEventListener('click', async () => {
     const confirmed = await showAdminConfirm({
       title: 'Reset Ministry Structure',
-      message: 'Restore the standard Ministry Structure texts (The Board, Preachers Network, Media Branch) to default?',
+      message: 'Restore the standard Ministry Structure texts (Board of Directors, Executive Director, Ministry Department) to default?',
       confirmText: 'Reset to Defaults'
     });
     if (!confirmed) return;

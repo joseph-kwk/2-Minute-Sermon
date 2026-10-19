@@ -7,29 +7,29 @@ export const DEFAULT_STRUCTURE = {
   header: {
     tag: 'Governance & Framework',
     title: '2-Minute Sermon Structure',
-    subtitle: 'Our platform operates through three foundational pillars ensuring faithful governance, pastoral vetting, and creative broadcast excellence.'
+    subtitle: 'Our platform operates through three foundational pillars ensuring faithful governance, pastoral leadership, and dynamic ministry operations.'
   },
   pillars: [
     {
-      id: 'board',
-      badge: 'Governance',
+      id: 'board-of-directors',
+      badge: 'Governance & Oversight',
       icon: '🏛️',
-      title: 'The Board',
-      description: 'The platform is governed by its Board, entrusted with the pivotal task of making strategic decisions. The Board comprises the President, Executive Coordinator, Administrative Coordinator, Finance & Fundraising Coordinator, along with Members who serve as Consultants and Advisors.'
+      title: 'Board of Directors',
+      description: 'The platform is governed by the Board of Directors, entrusted with strategic decision-making, spiritual stewardship, and organizational accountability. The Board comprises visionary pastoral leaders and executive trustees who ensure the mission and core values remain biblically rooted and sustainably guided.'
     },
     {
-      id: 'preachers-network',
-      badge: 'Pulpit & Fellowship',
-      icon: '🎙️',
-      title: 'Preachers Network (PN)',
-      description: 'The Preachers Network within 2-MS serves as a framework for recruiting individuals who possess a divine calling to preach and teach the Word of God, facilitating their regular participation on the platform. The primary aim of the PN is to foster connection, consultation, and the sharing of faith among preachers affiliated with 2-MS. Network Preachers contribute to each theme and collectively discern semester themes through prayerful consultation.'
+      id: 'executive-director',
+      badge: 'Executive Leadership',
+      icon: '🧭',
+      title: 'Executive Director',
+      description: 'The Executive Director provides visionary leadership and day-to-day administrative oversight for the 2-Minute Sermon global outreach. Working closely with the Board, the Executive Director directs organizational strategies, operational alignment, and partnership development across all broadcast and ministerial avenues.'
     },
     {
-      id: 'media-branch',
-      badge: 'Creative & Broadcast',
-      icon: '🎥',
-      title: 'Media Branch',
-      description: 'The Media branch serves as the creative arm of our online preaching platform, responsible for crafting visually engaging content to promote our messages. This dynamic team designs posters, develops video templates, and ensures our digital broadcast presence effectively captures the essence of our mission and vision.'
+      id: 'ministry-department',
+      badge: 'Ministry & Operations',
+      icon: '👥',
+      title: 'Ministry Department',
+      description: 'The Ministry Department serves as the operational heart of our outreach, encompassing our pastoral contributors, intercessory prayer network, creative media production, and community engagement. This dedicated department facilitates weekly message curation, prayer ministry, digital broadcasting, and platform logistics.'
     }
   ]
 };
@@ -45,29 +45,51 @@ if (isFirebaseConfigured()) {
       if (mainDoc) {
         const { id, ...data } = mainDoc;
         if (data.pillars || data.header) {
-          saveMinistryStructure(data, false);
+          // Check if remote doc contains legacy pillars
+          const isLegacy = Array.isArray(data.pillars) && data.pillars.some(p =>
+            p.id === 'preachers-network' || p.id === 'board' || (p.title && p.title.toLowerCase().includes('preacher'))
+          );
+          if (isLegacy) {
+            saveMinistryStructure(DEFAULT_STRUCTURE, true);
+          } else {
+            saveMinistryStructure(data, false);
+          }
         }
       }
     }
   });
 }
 
-/** Retrieve current structure with safe fallback to defaults */
+/** Retrieve current structure with safe fallback to defaults & migration of legacy pillars */
 export function getMinistryStructure() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw !== null) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        const pillars = Array.isArray(parsed.pillars) && parsed.pillars.length > 0
+          ? parsed.pillars
+          : DEFAULT_STRUCTURE.pillars;
+
+        // Auto-upgrade if cache still contains legacy "preachers-network" or "The Board"
+        const hasLegacy = pillars.some(p =>
+          p.id === 'preachers-network' ||
+          p.id === 'board' ||
+          (p.title && p.title.toLowerCase().includes('preacher'))
+        );
+        if (hasLegacy) {
+          const upgraded = JSON.parse(JSON.stringify(DEFAULT_STRUCTURE));
+          saveMinistryStructure(upgraded, true);
+          return upgraded;
+        }
+
         return {
           header: {
             tag: parsed.header?.tag || DEFAULT_STRUCTURE.header.tag,
             title: parsed.header?.title || DEFAULT_STRUCTURE.header.title,
             subtitle: parsed.header?.subtitle || DEFAULT_STRUCTURE.header.subtitle
           },
-          pillars: Array.isArray(parsed.pillars) && parsed.pillars.length > 0
-            ? parsed.pillars
-            : DEFAULT_STRUCTURE.pillars
+          pillars
         };
       }
     }

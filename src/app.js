@@ -4306,12 +4306,18 @@ export function renderAboutTeamRoster(filter = 'all') {
   const countEl = document.getElementById('teamTotalCount');
   if (!container) return;
 
-  const team = leadership();
+  const rawTeam = leadership();
+  const team = [...rawTeam].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
   if (countEl) countEl.textContent = team.length;
 
   let filtered = team;
   if (filter && filter !== 'all') {
-    filtered = team.filter(m => m.tier === filter);
+    filtered = team.filter(m => {
+      if (m.tier === filter) return true;
+      if (filter === 'Board of Directors' && m.tier === 'Executive Board') return true;
+      if (filter === 'Ministry Department' && (m.tier === 'Department Coordinators' || m.tier === 'Network Preachers')) return true;
+      return false;
+    });
   }
 
   if (!filtered.length) {
@@ -4320,7 +4326,7 @@ export function renderAboutTeamRoster(filter = 'all') {
   }
 
   container.innerHTML = filtered.map(m => {
-    const isExec = m.tier === 'Executive Board' || m.tierOrder === 1;
+    const isExec = m.tier === 'Board of Directors' || m.tier === 'Executive Director' || m.tier === 'Executive Board' || (m.tierOrder && m.tierOrder <= 2);
     const bio = m.bio || '';
     const isLong = bio.length > 150;
     const bioHtml = bio ? (isLong ? `
@@ -4396,14 +4402,23 @@ export function renderAboutStructure() {
   }
 
   if (container && Array.isArray(structure.pillars) && structure.pillars.length > 0) {
-    container.innerHTML = structure.pillars.map(pillar => `
-      <div class="structure-card" id="pillar-${escapeHtml(pillar.id || '')}">
-        <div class="structure-card-badge">${escapeHtml(pillar.badge || 'Ministry Pillar')}</div>
-        <div class="structure-card-icon">${escapeHtml(pillar.icon || '🏛️')}</div>
-        <h3>${escapeHtml(pillar.title || '')}</h3>
-        <p>${escapeHtml(pillar.description || '')}</p>
-      </div>
-    `).join('');
+    container.innerHTML = structure.pillars.map((pillar, idx) => {
+      const num = String(idx + 1).padStart(2, '0');
+      return `
+        <div class="structure-card" id="pillar-${escapeHtml(pillar.id || '')}">
+          <div class="structure-card-header">
+            <div class="structure-card-icon-box">${escapeHtml(pillar.icon || '🏛️')}</div>
+            <span class="structure-card-num">PILLAR ${num}</span>
+          </div>
+          <div class="structure-card-badge-wrap">
+            <span class="structure-card-badge">${escapeHtml(pillar.badge || 'Ministry Pillar')}</span>
+          </div>
+          <h3 class="structure-card-title">${escapeHtml(pillar.title || '')}</h3>
+          <p class="structure-card-desc">${escapeHtml(pillar.description || '')}</p>
+          <div class="structure-card-accent"></div>
+        </div>
+      `;
+    }).join('');
   }
 }
 window.renderAboutStructure = renderAboutStructure;
@@ -4509,7 +4524,7 @@ export function renderConversationsHub(filter = 'all') {
       <div style="grid-column:1/-1;text-align:center;padding:48px 24px;background:#fff;border-radius:16px;border:1px solid var(--color-lightgray);">
         <div style="font-size:2.4rem;margin-bottom:10px;">🎙️</div>
         <h3 style="font-family:var(--font-heading);margin-bottom:6px;">No Episodes in this Category</h3>
-        <p style="color:var(--color-mediumgray);font-size:0.92rem;max-width:360px;margin:0 auto 16px;">More messages and round-table panels are currently in production with our preachers network.</p>
+        <p style="color:var(--color-mediumgray);font-size:0.92rem;max-width:360px;margin:0 auto 16px;">More messages and round-table panels are currently in production with our ministry team.</p>
         <button class="btn btn-outline btn-sm" onclick="document.querySelector('#conversationFilterBar [data-conv-filter=\\'all\\']')?.click()">View All Episodes</button>
       </div>`;
     return;
