@@ -1018,13 +1018,13 @@ class SeasonalManager {
 
     if (banner) {
       if (this.activeSeason === 'christmas') {
-        banner.innerHTML = '✨ <em>"For unto us a Child is born, unto us a Son is given..."</em> — Isaiah 9:6';
+        banner.innerHTML = '<em>"For unto us a Child is born, unto us a Son is given..."</em> — Isaiah 9:6';
       } else if (this.activeSeason === 'newyear') {
-        banner.innerHTML = '✨ <em>"See, I am doing a new thing! Now it springs up; do you not perceive it?"</em> — Isaiah 43:19';
+        banner.innerHTML = '<em>"See, I am doing a new thing! Now it springs up; do you not perceive it?"</em> — Isaiah 43:19';
       } else if (this.activeSeason === 'passion') {
-        banner.innerHTML = '✝️ <em>"He was pierced for our transgressions, He was crushed for our iniquities..."</em> — Isaiah 53:5';
+        banner.innerHTML = '<em>"He was pierced for our transgressions, He was crushed for our iniquities..."</em> — Isaiah 53:5';
       } else if (this.activeSeason === 'easter') {
-        banner.innerHTML = '✝️ <em>"He is not here; He has risen, just as He said!"</em> — Matthew 28:6';
+        banner.innerHTML = '<em>"He is not here; He has risen, just as He said!"</em> — Matthew 28:6';
       } else {
         banner.remove();
       }
