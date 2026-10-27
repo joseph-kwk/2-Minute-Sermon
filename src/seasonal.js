@@ -17,6 +17,7 @@ class SeasonalManager {
     this.lastFireworkTime = 0;
     this.godRayAngle = 0;
     this.isListening = false;
+    this.footerObserver = null;
   }
 
   init() {
@@ -24,13 +25,16 @@ class SeasonalManager {
     const oldControl = document.getElementById('seasonalFooterControl');
     if (oldControl) oldControl.remove();
 
+    // Clean up any seasonal badge after logo
+    const oldBadge = document.getElementById('seasonalHeaderBadge');
+    if (oldBadge) oldBadge.remove();
+
     // Determine active season (Admin Panel setting or Automatic liturgical date calculation)
     this.activeSeason = this.determineSeason();
     document.body.setAttribute('data-season', this.activeSeason);
 
     if (this.activeSeason === 'off') {
       this.cleanup();
-      this.updateHeaderBadge();
       this.updateFooterShowcase();
       return;
     }
@@ -45,11 +49,10 @@ class SeasonalManager {
       this.animate();
     }
 
-    // Header badge, seasonal logo, favicon, scripture banner, and footer showcase
+    // Seasonal logo, favicon, scripture banner, and footer showcase
     this.updateSeasonalLogos();
     this.updateSeasonalFavicon();
     this.updateSeasonalScriptureBanner();
-    this.updateHeaderBadge();
     this.updateFooterShowcase();
 
     // New Year Celebration Ceremony (Dec 31 to Jan 1 first landing)
@@ -481,40 +484,41 @@ class SeasonalManager {
     }
   }
 
-  updateHeaderBadge() {
-    const navLogo = document.querySelector('.brand-logo') || document.querySelector('.header-container');
-    if (!navLogo) return;
+  /**
+   * Sets up an IntersectionObserver so animations are activated when the footer section is active/in view
+   */
+  setupFooterObserver() {
+    const container = document.getElementById('seasonalFooterShowcase');
+    if (!container) return;
 
-    let badge = document.getElementById('seasonalHeaderBadge');
-    if (this.activeSeason === 'off') {
-      if (badge) badge.remove();
+    if (this.footerObserver) {
+      this.footerObserver.disconnect();
+      this.footerObserver = null;
+    }
+
+    if (!('IntersectionObserver' in window)) {
+      container.classList.add('in-view');
       return;
     }
 
-    if (!badge) {
-      badge = document.createElement('span');
-      badge.id = 'seasonalHeaderBadge';
-      badge.className = 'seasonal-badge';
-      navLogo.appendChild(badge);
-    }
+    this.footerObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          container.classList.add('in-view');
+        } else {
+          container.classList.remove('in-view');
+        }
+      });
+    }, {
+      threshold: 0.15
+    });
 
-    if (badge) {
-      if (this.activeSeason === 'christmas') {
-        badge.innerHTML = '⭐ Christmas Season';
-      } else if (this.activeSeason === 'newyear') {
-        badge.innerHTML = '✨ Grace in the New Year';
-      } else if (this.activeSeason === 'easter') {
-        badge.innerHTML = '✝️ He is Risen';
-      } else if (this.activeSeason === 'passion') {
-        badge.innerHTML = '✝️ Holy Week • The Passion';
-      } else {
-        badge.remove();
-      }
-    }
+    this.footerObserver.observe(container);
   }
 
   /**
-   * Renders a rich festive display in the footer showcase during active holidays
+   * Renders a lightweight, animated display in the footer showcase during active holidays
+   * Minimal words (concise title + reference), simple animations triggered when section is in-view.
    */
   updateFooterShowcase() {
     const container = document.getElementById('seasonalFooterShowcase');
@@ -523,221 +527,197 @@ class SeasonalManager {
     if (this.activeSeason === 'christmas') {
       container.hidden = false;
       container.innerHTML = `
-        <div class="seasonal-showcase-svg-wrap">
-          <svg class="seasonal-showcase-svg" viewBox="0 0 340 85" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bethlehem Star and Caravans">
-            <defs>
-              <radialGradient id="bethlehemAura" cx="80%" cy="25%" r="45%">
-                <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.8" />
-                <stop offset="35%" stop-color="#F59E0B" stop-opacity="0.35" />
-                <stop offset="100%" stop-color="#000" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-            <circle cx="270" cy="22" r="24" fill="url(#bethlehemAura)" />
-            <g transform="translate(270, 22)">
-              <line x1="0" y1="-18" x2="0" y2="18" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
-              <line x1="-18" y1="0" x2="18" y2="0" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
-              <line x1="-9" y1="-9" x2="9" y2="9" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round" />
-              <line x1="9" y1="-9" x2="-9" y2="9" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round" />
-              <circle cx="0" cy="0" r="2.5" fill="#FFFFFF" />
-            </g>
-            <path d="M0 85 Q75 62 165 72 Q250 82 340 68 L340 85 L0 85 Z" fill="#0C1412" />
-            <!-- Camel 1 (Lead) -->
-            <g transform="translate(180, 52) scale(0.48)">
-              <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
-              <circle cx="34" cy="18" r="4.5" fill="#050907" />
-            </g>
-            <!-- Camel 2 -->
-            <g transform="translate(130, 55) scale(0.44)">
-              <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
-              <circle cx="34" cy="18" r="4.5" fill="#050907" />
-            </g>
-            <!-- Camel 3 -->
-            <g transform="translate(85, 58) scale(0.40)">
-              <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
-              <circle cx="34" cy="18" r="4.5" fill="#050907" />
-            </g>
-          </svg>
-        </div>
-        <div class="seasonal-showcase-pill">⭐ Christmas Season of Grace</div>
-        <h3 class="seasonal-showcase-title">Joy to the World — Celebrating the Nativity</h3>
-        <blockquote class="seasonal-showcase-quote">
-          “For unto us a Child is born, unto us a Son is given; and the government will be upon His shoulder. And His name will be called Wonderful, Counselor, Mighty God, Everlasting Father, Prince of Peace.”
-        </blockquote>
-        <span class="seasonal-showcase-ref">— Isaiah 9:6</span>
-      `;
-    } else if (this.activeSeason === 'newyear') {
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
-      let outgoingYear, incomingYear;
-      if (month === 12 && now.getDate() === 31) {
-        outgoingYear = year;
-        incomingYear = year + 1;
-      } else if (month === 1 && now.getDate() === 1) {
-        incomingYear = year;
-        outgoingYear = year - 1;
-      } else {
-        if (month >= 7) {
-          outgoingYear = year;
-          incomingYear = year + 1;
-        } else {
-          outgoingYear = year - 1;
-          incomingYear = year;
-        }
-      }
-
-      container.hidden = false;
-      container.innerHTML = `
-        <div class="ny-footer-crossover-wrap">
-          <div class="ny-footer-years-row">
-            <div class="ny-footer-year-col out">
-              <span class="ny-footer-col-label">Bidding Farewell</span>
-              <span class="ny-footer-col-digit">${outgoingYear}</span>
-              <span class="ny-footer-col-desc">Faithful In Every Trial</span>
-            </div>
-            
-            <div class="ny-footer-crossover-center">
-              <div class="ny-footer-sparkle-icon">✨</div>
-              <div class="ny-footer-arrow-line">
-                <span class="line-dot"></span>
-                <span class="line-bar"></span>
-                <svg class="line-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </div>
-              <span class="ny-footer-crossover-tag">SACRED CROSSOVER</span>
-            </div>
-
-            <div class="ny-footer-year-col in">
-              <span class="ny-footer-col-label">Stepping Into</span>
-              <span class="ny-footer-col-digit">${incomingYear}</span>
-              <span class="ny-footer-col-desc">Walking In Divine Favor</span>
-            </div>
-          </div>
-
-          <div class="seasonal-showcase-svg-wrap ny-footer-skyline-wrap">
-            <svg class="seasonal-showcase-svg" viewBox="0 0 360 80" width="320" height="70" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="New Year Transition Stardust Bridge">
+        <div class="seasonal-showcase-inner">
+          <div class="seasonal-showcase-svg-wrap">
+            <svg class="seasonal-showcase-svg anim-christmas-scene" viewBox="0 0 320 80" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bethlehem Star and Caravan">
               <defs>
-                <linearGradient id="nyBridgeGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-                  <stop offset="0%" stop-color="#A8A29E" stop-opacity="0.3" />
-                  <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.9" />
-                  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.8" />
-                </linearGradient>
-                <radialGradient id="nyRightSunburst" cx="80%" cy="30%" r="50%">
-                  <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.8" />
-                  <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.35" />
-                  <stop offset="100%" stop-color="#000" stop-opacity="0" />
+                <radialGradient id="bethlehemGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#FFFBEB" stop-opacity="0.9" />
+                  <stop offset="40%" stop-color="#FDE68A" stop-opacity="0.5" />
+                  <stop offset="100%" stop-color="#F59E0B" stop-opacity="0" />
                 </radialGradient>
               </defs>
-              <path d="M40 75 Q180 15 320 75" stroke="url(#nyBridgeGrad)" stroke-width="1.8" stroke-dasharray="4 4" fill="none" />
-              <circle cx="65" cy="52" r="3" fill="#E2E8F0" opacity="0.7" />
-              <circle cx="95" cy="38" r="2" fill="#E2E8F0" opacity="0.5" />
-              <circle cx="180" cy="22" r="14" fill="rgba(245,158,11,0.2)" />
-              <circle cx="180" cy="22" r="3.5" fill="#FFFFFF" />
-              <line x1="180" y1="10" x2="180" y2="34" stroke="#FDE68A" stroke-width="1.2" />
-              <line x1="168" y1="22" x2="192" y2="22" stroke="#FDE68A" stroke-width="1.2" />
-              <circle cx="285" cy="28" r="24" fill="url(#nyRightSunburst)" />
-              <g transform="translate(285, 28)">
-                <line x1="0" y1="-16" x2="0" y2="16" stroke="#FFFFFF" stroke-width="1.4" />
-                <line x1="-16" y1="0" x2="16" y2="0" stroke="#FFFFFF" stroke-width="1.4" />
-                <line x1="-10" y1="-10" x2="10" y2="10" stroke="#F59E0B" stroke-width="1.1" />
-                <line x1="10" y1="-10" x2="-10" y2="10" stroke="#F59E0B" stroke-width="1.1" />
-                <circle cx="0" cy="0" r="2.5" fill="#FFFFFF" />
+              <!-- Twinkling stars -->
+              <g class="anim-twinkle-group">
+                <circle cx="35" cy="18" r="1.2" fill="#FEF3C7" class="star-twinkle-1" />
+                <circle cx="85" cy="12" r="1.5" fill="#FEF3C7" class="star-twinkle-2" />
+                <circle cx="140" cy="22" r="1.2" fill="#FEF3C7" class="star-twinkle-3" />
+                <circle cx="195" cy="15" r="1.4" fill="#FEF3C7" class="star-twinkle-1" />
               </g>
-              <path d="M0 80 L35 80 L35 68 L48 68 L48 80 L95 80 L95 62 L105 52 L115 62 L115 80 L155 80 L165 42 L170 34 L175 42 L185 80 L225 80 L225 64 L235 55 L245 64 L245 80 L290 80 L290 72 L302 72 L302 80 L360 80 Z" fill="#0C0E14" />
+              <!-- Bethlehem Star with Pulsing Aura -->
+              <g class="anim-bethlehem-star" transform="translate(265, 22)">
+                <circle cx="0" cy="0" r="22" fill="url(#bethlehemGlow)" class="anim-star-aura" />
+                <line x1="0" y1="-18" x2="0" y2="18" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
+                <line x1="-18" y1="0" x2="18" y2="0" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
+                <line x1="-9" y1="-9" x2="9" y2="9" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round" />
+                <line x1="9" y1="-9" x2="-9" y2="9" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round" />
+                <circle cx="0" cy="0" r="2.8" fill="#FFFFFF" />
+              </g>
+              <!-- Desert Dune -->
+              <path d="M0 80 Q80 58 160 66 Q240 74 320 62 L320 80 L0 80 Z" fill="#0C1412" />
+              <!-- Drifting Caravan of Wise Men -->
+              <g class="anim-caravan-group">
+                <!-- Lead Camel -->
+                <g transform="translate(170, 48) scale(0.42)">
+                  <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
+                  <circle cx="34" cy="18" r="4.5" fill="#050907" />
+                </g>
+                <!-- Second Camel -->
+                <g transform="translate(125, 51) scale(0.38)">
+                  <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
+                  <circle cx="34" cy="18" r="4.5" fill="#050907" />
+                </g>
+                <!-- Third Camel -->
+                <g transform="translate(85, 54) scale(0.35)">
+                  <path d="M10 25 Q12 18 18 12 Q24 6 28 8 Q32 10 30 16 Q28 20 25 24 Q30 20 38 20 Q44 20 48 26 Q52 30 50 40 L50 62 L46 62 L46 44 L38 44 L38 62 L34 62 L34 40 L26 40 L24 62 L20 62 L22 36 L15 36 L12 62 L8 62 L10 25 Z" fill="#050907" />
+                  <circle cx="34" cy="18" r="4.5" fill="#050907" />
+                </g>
+              </g>
             </svg>
           </div>
+          <h3 class="seasonal-footer-simple-title">Joy to the World</h3>
+          <span class="seasonal-footer-simple-ref">Isaiah 9:6</span>
         </div>
-
-        <div class="seasonal-showcase-pill">✨ The Sacred Crossover • ${outgoingYear} ➔ ${incomingYear}</div>
-        <h3 class="seasonal-showcase-title">Walking in Faith &amp; New Beginnings</h3>
-        <blockquote class="seasonal-showcase-quote">
-          “Forget the former things; do not dwell on the past. See, I am doing a new thing! Now it springs up; do you not perceive it? I am making a way in the wilderness and streams in the wasteland.”
-        </blockquote>
-        <span class="seasonal-showcase-ref">— Isaiah 43:18–19</span>
       `;
+      this.setupFooterObserver();
+    } else if (this.activeSeason === 'newyear') {
+      container.hidden = false;
+      container.innerHTML = `
+        <div class="seasonal-showcase-inner ny-showcase-inner">
+          <div class="seasonal-showcase-svg-wrap ny-anim-svg-wrap">
+            <svg class="seasonal-showcase-svg anim-newyear-scene" viewBox="0 0 320 80" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="New Year 2027 Celebration">
+              <defs>
+                <radialGradient id="fireworkGlow1" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#FFFBEB" stop-opacity="0.9" />
+                  <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.3" />
+                  <stop offset="100%" stop-color="#F59E0B" stop-opacity="0" />
+                </radialGradient>
+                <linearGradient id="stardustTrail" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.1" />
+                  <stop offset="50%" stop-color="#FDE68A" stop-opacity="0.8" />
+                  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.9" />
+                </linearGradient>
+              </defs>
+              <!-- Fireworks Burst Left -->
+              <g class="anim-firework-1" transform="translate(60, 26)">
+                <circle cx="0" cy="0" r="16" fill="url(#fireworkGlow1)" class="anim-firework-aura" />
+                <line x1="0" y1="-12" x2="0" y2="12" stroke="#FEF3C7" stroke-width="1.2" stroke-linecap="round" />
+                <line x1="-12" y1="0" x2="12" y2="0" stroke="#FEF3C7" stroke-width="1.2" stroke-linecap="round" />
+                <line x1="-8" y1="-8" x2="8" y2="8" stroke="#F59E0B" stroke-width="1" stroke-linecap="round" />
+                <line x1="8" y1="-8" x2="-8" y2="8" stroke="#F59E0B" stroke-width="1" stroke-linecap="round" />
+              </g>
+              <!-- Fireworks Burst Right -->
+              <g class="anim-firework-2" transform="translate(260, 24)">
+                <circle cx="0" cy="0" r="18" fill="url(#fireworkGlow1)" class="anim-firework-aura" />
+                <line x1="0" y1="-14" x2="0" y2="14" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" />
+                <line x1="-14" y1="0" x2="14" y2="0" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" />
+                <line x1="-9" y1="-9" x2="9" y2="9" stroke="#FDE68A" stroke-width="1.1" stroke-linecap="round" />
+                <line x1="9" y1="-9" x2="-9" y2="9" stroke="#FDE68A" stroke-width="1.1" stroke-linecap="round" />
+              </g>
+              <!-- Stardust Arch Curve -->
+              <path d="M30 75 Q160 10 290 75" stroke="url(#stardustTrail)" stroke-width="1.5" stroke-dasharray="3 4" fill="none" class="anim-stardust-trail" />
+              <!-- Star sparks floating -->
+              <circle cx="110" cy="38" r="1.8" fill="#FFFFFF" class="anim-sparkle-1" />
+              <circle cx="160" cy="22" r="2.2" fill="#FDE68A" class="anim-sparkle-2" />
+              <circle cx="210" cy="36" r="1.8" fill="#FFFFFF" class="anim-sparkle-3" />
+              <!-- Silhouette skyline horizon -->
+              <path d="M0 80 L40 80 L40 70 L52 70 L52 80 L95 80 L95 64 L105 56 L115 64 L115 80 L155 80 L160 48 L165 48 L170 80 L210 80 L218 66 L226 80 L270 80 L270 72 L282 72 L282 80 L320 80 Z" fill="#0C0E14" />
+            </svg>
+          </div>
+
+          <div class="ny-2027-badge-wrap">
+            <div class="ny-2027-digits">2027</div>
+          </div>
+          <h3 class="seasonal-footer-simple-title">Happy New Year 2027</h3>
+          <span class="seasonal-footer-simple-ref">Isaiah 43:19</span>
+        </div>
+      `;
+      this.setupFooterObserver();
     } else if (this.activeSeason === 'passion') {
       container.hidden = false;
       container.innerHTML = `
-        <div class="seasonal-showcase-svg-wrap calvary-crosses-wrap">
-          <svg class="seasonal-showcase-svg calvary-crosses-svg" viewBox="0 0 320 90" width="280" height="80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Three Crosses on Calvary Hill">
-            <defs>
-              <radialGradient id="crossAura" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#DC2626" stop-opacity="0.65" />
-                <stop offset="55%" stop-color="#6B21A8" stop-opacity="0.30" />
-                <stop offset="100%" stop-color="#000" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-            <circle cx="160" cy="38" r="28" fill="url(#crossAura)" />
-            <path d="M0 90 Q80 62 160 60 Q240 62 320 90 L320 90 L0 90 Z" fill="#0C0D14" />
-            <!-- Left Cross -->
-            <g transform="translate(100, 36) rotate(-2 0 0)">
-              <rect x="-2" y="0" width="4" height="42" rx="1.5" fill="#1C1924" />
-              <rect x="-11" y="9" width="22" height="3.5" rx="1.5" fill="#1C1924" />
-            </g>
-            <!-- Right Cross -->
-            <g transform="translate(220, 36) rotate(2 0 0)">
-              <rect x="-2" y="0" width="4" height="42" rx="1.5" fill="#1C1924" />
-              <rect x="-11" y="9" width="22" height="3.5" rx="1.5" fill="#1C1924" />
-            </g>
-            <!-- Center Cross of Christ -->
-            <g transform="translate(160, 16)">
-              <rect x="-3" y="0" width="6" height="64" rx="2" fill="#090A0F" />
-              <rect x="-5" y="2" width="10" height="3.5" rx="1" fill="#1C1924" />
-              <rect x="-18" y="14" width="36" height="5" rx="2" fill="#090A0F" />
-            </g>
-          </svg>
+        <div class="seasonal-showcase-inner">
+          <div class="seasonal-showcase-svg-wrap calvary-crosses-wrap">
+            <svg class="seasonal-showcase-svg calvary-crosses-svg anim-passion-scene" viewBox="0 0 320 85" width="280" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Three Crosses on Calvary Hill">
+              <defs>
+                <radialGradient id="crossAuraRed" cx="50%" cy="45%" r="50%">
+                  <stop offset="0%" stop-color="#DC2626" stop-opacity="0.6" />
+                  <stop offset="60%" stop-color="#6B21A8" stop-opacity="0.25" />
+                  <stop offset="100%" stop-color="#000" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+              <!-- Sacred Backlight Halo behind Center Cross -->
+              <circle cx="160" cy="34" r="28" fill="url(#crossAuraRed)" class="anim-cross-aura" />
+              <!-- Calvary Hill -->
+              <path d="M0 85 Q80 58 160 56 Q240 58 320 85 L320 85 L0 85 Z" fill="#0C0D14" />
+              <!-- Left Cross -->
+              <g transform="translate(100, 32) rotate(-2 0 0)">
+                <rect x="-2" y="0" width="4" height="42" rx="1.5" fill="#1C1924" />
+                <rect x="-11" y="9" width="22" height="3.5" rx="1.5" fill="#1C1924" />
+              </g>
+              <!-- Right Cross -->
+              <g transform="translate(220, 32) rotate(2 0 0)">
+                <rect x="-2" y="0" width="4" height="42" rx="1.5" fill="#1C1924" />
+                <rect x="-11" y="9" width="22" height="3.5" rx="1.5" fill="#1C1924" />
+              </g>
+              <!-- Center Cross of Christ -->
+              <g transform="translate(160, 14)" class="anim-center-cross">
+                <rect x="-3" y="0" width="6" height="64" rx="2" fill="#090A0F" />
+                <rect x="-5" y="2" width="10" height="3.5" rx="1" fill="#1C1924" />
+                <rect x="-18" y="14" width="36" height="5" rx="2" fill="#090A0F" />
+              </g>
+            </svg>
+          </div>
+          <h3 class="seasonal-footer-simple-title">Holy Week — The Passion</h3>
+          <span class="seasonal-footer-simple-ref">Isaiah 53:5</span>
         </div>
-        <div class="seasonal-showcase-pill">✝️ Holy Week • The Passion &amp; Sacrifice</div>
-        <h3 class="seasonal-showcase-title">It Is Finished — The Sacred Lamb of God</h3>
-        <blockquote class="seasonal-showcase-quote">
-          “He was pierced for our transgressions, He was crushed for our iniquities; the punishment that brought us peace was on Him, and by His wounds we are healed.”
-        </blockquote>
-        <span class="seasonal-showcase-ref">— Isaiah 53:5</span>
       `;
+      this.setupFooterObserver();
     } else if (this.activeSeason === 'easter') {
       container.hidden = false;
       container.innerHTML = `
-        <div class="seasonal-showcase-svg-wrap">
-          <svg class="seasonal-showcase-svg" viewBox="0 0 340 85" width="300" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="The Empty Tomb of Christ">
-            <defs>
-              <radialGradient id="tombDawnGlow" cx="48%" cy="56%" r="48%">
-                <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
-                <stop offset="35%" stop-color="#FDE68A" stop-opacity="0.65" />
-                <stop offset="65%" stop-color="#F59E0B" stop-opacity="0.30" />
-                <stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
-              </radialGradient>
-              <radialGradient id="easterDawnSky" cx="50%" cy="30%" r="55%">
-                <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.4" />
-                <stop offset="50%" stop-color="#7C3AED" stop-opacity="0.15" />
-                <stop offset="100%" stop-color="#000" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-            <circle cx="170" cy="35" r="40" fill="url(#easterDawnSky)" />
-            <path d="M0 85 Q70 65 140 70 L140 85 Z" fill="#0F1018" />
-            <g transform="translate(60, 50) scale(0.4)">
-              <rect x="-1" y="0" width="2" height="18" fill="#1C1A28" />
-              <rect x="-5" y="4" width="10" height="2" fill="#1C1A28" />
-              <rect x="19" y="-6" width="3" height="26" fill="#1C1A28" />
-              <rect x="13" y="0" width="15" height="2.5" fill="#1C1A28" />
-              <rect x="39" y="0" width="2" height="18" fill="#1C1A28" />
-              <rect x="35" y="4" width="10" height="2" fill="#1C1A28" />
-            </g>
-            <path d="M110 85 Q160 38 240 50 Q290 58 340 85 L340 85 L110 85 Z" fill="#11131E" />
-            <path d="M165 60 L130 30 M165 60 L145 20 M165 60 L170 15 M165 60 L195 20 M165 60 L210 32" stroke="#FDE68A" stroke-width="1.2" stroke-opacity="0.6" stroke-dasharray="2 3" />
-            <ellipse cx="172" cy="62" rx="16" ry="20" fill="url(#tombDawnGlow)" />
-            <ellipse cx="172" cy="63" rx="13" ry="17" fill="#FFFBEB" />
-            <path d="M166 69 Q172 67 178 69" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" />
-            <ellipse cx="198" cy="64" rx="14" ry="18" fill="#1E2130" stroke="#2D3247" stroke-width="1.5" />
-            <ellipse cx="196" cy="63" rx="10" ry="14" fill="#282D42" />
-          </svg>
+        <div class="seasonal-showcase-inner">
+          <div class="seasonal-showcase-svg-wrap">
+            <svg class="seasonal-showcase-svg anim-easter-scene" viewBox="0 0 320 85" width="290" height="75" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="The Empty Tomb of Christ">
+              <defs>
+                <radialGradient id="tombLightGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+                  <stop offset="35%" stop-color="#FDE68A" stop-opacity="0.7" />
+                  <stop offset="70%" stop-color="#F59E0B" stop-opacity="0.3" />
+                  <stop offset="100%" stop-color="#7C3AED" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+              <!-- Dawn Sky Glow -->
+              <circle cx="160" cy="35" r="38" fill="url(#tombLightGlow)" class="anim-dawn-sky" />
+              <!-- Distant Hills -->
+              <path d="M0 85 Q70 65 140 70 L140 85 Z" fill="#0F1018" />
+              <!-- Tomb Hill -->
+              <path d="M100 85 Q150 40 230 52 Q280 60 320 85 L320 85 L100 85 Z" fill="#11131E" />
+              <!-- Radiant Light Rays emanating from Tomb -->
+              <g class="anim-dawn-rays">
+                <line x1="160" y1="58" x2="125" y2="28" stroke="#FDE68A" stroke-width="1.4" stroke-opacity="0.8" stroke-dasharray="2 3" />
+                <line x1="160" y1="58" x2="142" y2="18" stroke="#FDE68A" stroke-width="1.4" stroke-opacity="0.8" stroke-dasharray="2 3" />
+                <line x1="160" y1="58" x2="165" y2="12" stroke="#FFFBEB" stroke-width="1.6" stroke-opacity="0.9" stroke-dasharray="2 3" />
+                <line x1="160" y1="58" x2="188" y2="18" stroke="#FDE68A" stroke-width="1.4" stroke-opacity="0.8" stroke-dasharray="2 3" />
+                <line x1="160" y1="58" x2="205" y2="30" stroke="#FDE68A" stroke-width="1.4" stroke-opacity="0.8" stroke-dasharray="2 3" />
+              </g>
+              <!-- Open Tomb Cave entrance -->
+              <ellipse cx="162" cy="62" rx="15" ry="19" fill="#FFFBEB" class="anim-tomb-glow" />
+              <path d="M156 68 Q162 66 168 68" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" />
+              <!-- Rolled Stone -->
+              <ellipse cx="188" cy="63" rx="13" ry="17" fill="#1E2130" stroke="#2D3247" stroke-width="1.5" class="anim-rolled-stone" />
+            </svg>
+          </div>
+          <h3 class="seasonal-footer-simple-title">He Is Risen</h3>
+          <span class="seasonal-footer-simple-ref">Matthew 28:6</span>
         </div>
-        <div class="seasonal-showcase-pill">✝️ Holy Easter Resurrection</div>
-        <h3 class="seasonal-showcase-title">He is Risen — Victory Over the Grave</h3>
-        <blockquote class="seasonal-showcase-quote">
-          “I am the resurrection and the life. He who believes in Me, though he may die, he shall live.”
-        </blockquote>
-        <span class="seasonal-showcase-ref">— John 11:25</span>
       `;
+      this.setupFooterObserver();
     } else {
+      if (this.footerObserver) {
+        this.footerObserver.disconnect();
+        this.footerObserver = null;
+      }
       container.hidden = true;
       container.innerHTML = '';
     }
@@ -837,6 +817,10 @@ class SeasonalManager {
     if (faviconLink && faviconLink.dataset.defaultHref) {
       faviconLink.href = faviconLink.dataset.defaultHref;
     }
+    if (this.footerObserver) {
+      this.footerObserver.disconnect();
+      this.footerObserver = null;
+    }
     const banner = document.getElementById('seasonalScriptureBanner');
     if (banner) {
       banner.remove();
@@ -850,6 +834,7 @@ class SeasonalManager {
     }
     const showcase = document.getElementById('seasonalFooterShowcase');
     if (showcase) {
+      showcase.classList.remove('in-view');
       showcase.hidden = true;
       showcase.innerHTML = '';
     }
@@ -921,35 +906,12 @@ class NewYearCeremony {
   }
 
   getYears() {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
-    const year = now.getFullYear();
-
-    let outgoingYear, incomingYear;
-    if (month === 12 && day === 31) {
-      outgoingYear = year;
-      incomingYear = year + 1;
-    } else if (month === 1 && day === 1) {
-      incomingYear = year;
-      outgoingYear = year - 1;
-    } else {
-      // Testing/preview: if in latter half of year (like 2026), transition 2026 -> 2027
-      if (month >= 7) {
-        outgoingYear = year;
-        incomingYear = year + 1;
-      } else {
-        outgoingYear = year - 1;
-        incomingYear = year;
-      }
-    }
-    return { outgoingYear, incomingYear };
+    return { outgoingYear: 2026, incomingYear: 2027 };
   }
 
   markSeen() {
-    const { incomingYear } = this.getYears();
     try {
-      localStorage.setItem(`2ms_ny_ceremony_${incomingYear}`, 'seen');
+      localStorage.setItem('2ms_ny_ceremony_2027', 'seen');
     } catch (_) {}
   }
 
@@ -959,10 +921,7 @@ class NewYearCeremony {
     this.markSeen();
 
     const heroSection = document.querySelector('.hero-section') || document.getElementById('mainContent') || document.body;
-    const { outgoingYear, incomingYear } = this.getYears();
-    const now = new Date();
-    const isNewYearDay = (now.getMonth() === 0 && now.getDate() === 1);
-    const displayYear = isNewYearDay ? incomingYear : outgoingYear;
+    const displayYear = 2027;
 
     // 1. Confetti Canvas over the Hero
     this.canvas = document.createElement('canvas');
