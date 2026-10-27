@@ -473,7 +473,7 @@ function closeMobileDrawer() {
 }
 
 // ─── HERO & PROMO VIDEO ───────────────────────────────────────────────────────
-const PROMO_VIDEO_ID = 'SJFqqNvTeh8';
+const PROMO_VIDEO_ID = 'aQ33_rdzdoo';
 
 function setupHeroCtas() {
   document.getElementById('heroPrimaryCta')?.addEventListener('click', (e) => {
@@ -2509,7 +2509,7 @@ function playPromoVideo() {
   playerWrap.innerHTML = `
     <iframe 
       src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1" 
-      title="2-Minute Sermon Promo Video" 
+      title="2-Minute Sermon is Back | Announcement from the Founders" 
       frameborder="0" 
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
       allowfullscreen
@@ -3655,7 +3655,7 @@ const DEFAULT_YT_CHANNEL     = 'https://www.youtube.com/c/2MinuteSermonP';
 const DEFAULT_FB_PAGE        = 'https://www.facebook.com/2minutesermon';
 const DEFAULT_IG_PAGE        = 'https://www.instagram.com/2_minutesermon/';
 const DEFAULT_TIKTOK_PAGE    = 'https://www.tiktok.com/@2minutesermon';
-const DEFAULT_PROMO_URL      = 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
+const DEFAULT_PROMO_URL      = 'https://www.youtube.com/watch?v=aQ33_rdzdoo';
 
 // ─── SETTINGS HELPERS (reads from localStorage & Firestore) ─────────────────
 function getMinistrySettings() {
@@ -3684,7 +3684,7 @@ function getMinistrySettings() {
       if (!parsed.tiktokUrl) {
         parsed.tiktokUrl = DEFAULT_TIKTOK_PAGE;
       }
-      if (!parsed.promoVideoUrl) {
+      if (!parsed.promoVideoUrl || parsed.promoVideoUrl.includes('SJFqqNvTeh8')) {
         parsed.promoVideoUrl = DEFAULT_PROMO_URL;
       }
       if (!parsed.timezone) {
@@ -5146,26 +5146,26 @@ export function openSermonShareModal(sermonId) {
 window.openSermonShareModal = openSermonShareModal;
 
 export function sharePromoVideo() {
-  const promoUrl = (typeof getSettings === 'function' ? getSettings()?.promoVideoUrl : '') || 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
-  let ytId = 'SJFqqNvTeh8';
+  const promoUrl = (typeof getSettings === 'function' ? getSettings()?.promoVideoUrl : '') || DEFAULT_PROMO_URL;
+  let ytId = PROMO_VIDEO_ID;
   const m = promoUrl.match(/(?:youtu\.be\/|v=|\/embed\/|\/watch\?v=|\/watch\?.+&v=)([\w-]{11})/i);
   if (m) ytId = m[1];
   const directYt = `https://youtu.be/${ytId}`;
   const url = `${window.location.origin}/`;
 
   openVideoShareModal({
-    badge: 'Official Overview',
-    heading: 'Share Welcome Video',
-    sub: 'Introduce others to 2-Minute Sermon — bite-sized, scripture-rooted encouragement.',
-    title: 'Welcome to 2-Minute Sermon',
-    speaker: 'Ministry Introduction & Vision',
-    topic: 'Scriptural Encouragement Worldwide',
+    badge: 'Official Announcement',
+    heading: 'Share Announcement Video',
+    sub: 'Share this exciting update and vision from the founders of 2-Minute Sermon.',
+    title: '2-Minute Sermon is Back | Announcement from the Founders',
+    speaker: 'Ministry Founders',
+    topic: 'Ministry Update & Vision',
     duration: '2:00',
     thumbnailUrl: `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`,
     youtubeId: ytId,
     url: url,
     directVideoUrl: directYt,
-    formattedMessage: `"Welcome to 2-Minute Sermon" — Short, scripture-rooted messages from ministers worldwide, designed for your busy daily rhythm.\n\n▶️ Watch the welcome video:\n${url}\n\n▶️ Direct Video:\n${directYt}`
+    formattedMessage: `"2-Minute Sermon is Back | Announcement from the Founders" — Watch the exciting new announcement and vision for 2-Minute Sermon!\n\n▶️ Watch the announcement:\n${url}\n\n▶️ Direct Video:\n${directYt}`
   });
 }
 window.sharePromoVideo = sharePromoVideo;

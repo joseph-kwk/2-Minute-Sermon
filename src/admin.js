@@ -3092,7 +3092,7 @@ const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
 const DEFAULT_FB_PAGE    = 'https://www.facebook.com/2minutesermon';
 const DEFAULT_IG_PAGE    = 'https://www.instagram.com/2_minutesermon/';
 const DEFAULT_TIKTOK     = 'https://www.tiktok.com/@2minutesermon';
-const DEFAULT_PROMO_URL  = 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
+const DEFAULT_PROMO_URL  = 'https://www.youtube.com/watch?v=aQ33_rdzdoo';
 
 export function normalizeUrl(url) {
   if (!url) return '';
@@ -3131,7 +3131,7 @@ export function getSettings() {
       if (!parsed.tiktokUrl) {
         parsed.tiktokUrl = DEFAULT_TIKTOK;
       }
-      if (!parsed.promoVideoUrl) {
+      if (!parsed.promoVideoUrl || parsed.promoVideoUrl.includes('SJFqqNvTeh8')) {
         parsed.promoVideoUrl = DEFAULT_PROMO_URL;
       }
       if (!parsed.timezone) {
