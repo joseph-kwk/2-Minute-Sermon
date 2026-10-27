@@ -1,6 +1,6 @@
 const STORAGE_KEY = '2ms_sermons';
 const VERSION_KEY = '2ms_sermons_ver';
-const CURRENT_SEED_VERSION = '2ms_v2.2_real_yt';
+const CURRENT_SEED_VERSION = '2ms_v2.3_accurate_topics';
 
 // ── Seed data (curated real videos from @2MinuteSermonP YouTube channel) ─────
 const seedSermons = [
@@ -41,7 +41,7 @@ const seedSermons = [
     scriptureBook: "Ephesians",
     primarySeason: "Easter",
     secondarySeasons: ["Lent"],
-    topics: ["Grace", "Salvation", "Faith"],
+    topics: ["Grace", "Salvation", "Forgiveness", "Faith"],
     sermonType: "Teaching",
     duration: "2:03",
     durationSec: 123,
@@ -122,7 +122,7 @@ const seedSermons = [
     scriptureBook: "Joel",
     primarySeason: "Lent",
     secondarySeasons: ["Easter"],
-    topics: ["Healing", "Grace", "Hope"],
+    topics: ["Healing", "Grace", "Hope", "Forgiveness"],
     sermonType: "Devotional",
     duration: "2:40",
     durationSec: 160,
@@ -258,7 +258,7 @@ const seedSermons = [
     scriptureBook: "Galatians",
     primarySeason: "Lent",
     secondarySeasons: ["Easter", "Holy Week"],
-    topics: ["Grace", "Salvation", "Faith"],
+    topics: ["Forgiveness", "Grace", "Salvation", "Faith"],
     sermonType: "Teaching",
     duration: "2:35",
     durationSec: 155,
@@ -313,7 +313,7 @@ const seedSermons = [
     scriptureBook: "Matthew",
     primarySeason: "Christmas",
     secondarySeasons: ["Advent"],
-    topics: ["Faith", "Salvation", "Encouragement"],
+    topics: ["Salvation", "Forgiveness", "Faith", "Encouragement"],
     sermonType: "Devotional",
     duration: "2:40",
     durationSec: 160,
@@ -423,7 +423,7 @@ const seedSermons = [
     scriptureBook: "Jeremiah",
     primarySeason: "Ordinary Time",
     secondarySeasons: ["Pentecost"],
-    topics: ["Faith", "Hope", "Prayer"],
+    topics: ["Healing", "Faith", "Hope", "Prayer"],
     sermonType: "Devotional",
     duration: "2:19",
     durationSec: 139,
@@ -444,39 +444,55 @@ const seedSermons = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+// Sermons locally upserted but not yet confirmed by Firestore — kept in sync
+const _pendingUpserts = new Map(); // id → sermon object
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('sermons', seedSermons);
   subscribeCollection('sermons', (remoteSermons) => {
-    if (remoteSermons && remoteSermons.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteSermons));
-        window.dispatchEvent(new CustomEvent('2ms:sermons:updated', { detail: remoteSermons }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+    if (Array.isArray(remoteSermons)) {
+      // Remove deleted items
+      let merged = _pendingDeletes.size > 0
+        ? remoteSermons.filter(s => !_pendingDeletes.has(s.id))
+        : [...remoteSermons];
+
+      // Merge locally-pending upserts: if Firestore doesn't have them yet,
+      // inject them so they aren't lost between optimistic write & Firestore confirm
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((sermon, id) => {
+          const alreadyInRemote = merged.some(s => s.id === id);
+          if (alreadyInRemote) {
+            // Firestore now has it — stop tracking
+            _pendingUpserts.delete(id);
+          } else {
+            // Firestore doesn't have it yet — inject our local copy
+            merged.unshift(sermon);
+          }
+        });
+      }
+
+      saveSermons(merged);
     }
   });
 }
 
 // ── localStorage & Firebase CMS store ────────────────────────────────────────
 
-const LEGACY_PLACEHOLDER_IDS = ['5qap5aO4i9A', '2Vv-BfVoq4g', '3JZ_D3ELwOQ', 'L_LUpnjgPso', 'e-ORhEE9VVg', 'fJ9rUzIMcZQ'];
-
-/** Read sermons from localStorage; seeds from static data on first run or auto-upgrades when new seed sermons are released. */
+/** Read sermons from localStorage; seeds from static data on first run. */
 export function getSermons() {
   try {
-    const currentVer = localStorage.getItem(VERSION_KEY);
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw && currentVer === CURRENT_SEED_VERSION) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      const hasPlaceholders = Array.isArray(parsed) && parsed.some(s => LEGACY_PLACEHOLDER_IDS.includes(s.youtubeEmbedId));
-      if (!hasPlaceholders && Array.isArray(parsed) && parsed.length >= seedSermons.length) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (_) { /* storage unavailable */ }
   saveSermons(seedSermons);
-  try { localStorage.setItem(VERSION_KEY, CURRENT_SEED_VERSION); } catch (_) {}
   return [...seedSermons];
 }
 
@@ -484,6 +500,7 @@ export function getSermons() {
 export function saveSermons(arr) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    localStorage.setItem(VERSION_KEY, CURRENT_SEED_VERSION);
     window.dispatchEvent(new CustomEvent('2ms:sermons:updated', { detail: arr }));
     window.dispatchEvent(new Event('storage'));
   } catch (_) {}
@@ -491,6 +508,12 @@ export function saveSermons(arr) {
 
 /** Add or update a sermon (matched by id). Returns updated array. */
 export function upsertSermon(sermon) {
+  _pendingDeletes.delete(sermon.id);
+  // Track this sermon as pending until Firestore snapshot confirms it has it
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(sermon.id, sermon);
+    setTimeout(() => _pendingUpserts.delete(sermon.id), 30000);
+  }
   const all = getSermons();
   const idx = all.findIndex(s => s.id === sermon.id);
   if (idx >= 0) all[idx] = sermon; else all.unshift(sermon);
@@ -503,12 +526,40 @@ export function upsertSermon(sermon) {
 
 /** Remove a sermon by id. Returns updated array. */
 export function deleteSermon(id) {
+  _pendingDeletes.add(id);
   const all = getSermons().filter(s => s.id !== id);
   saveSermons(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('sermons', id);
+    deleteDocument('sermons', id).then(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    }).catch(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
+}
+
+/** Explicitly mark a specific sermon as the featured Latest Sermon on hero/home */
+export function setLatestSermon(id) {
+  const all = getSermons().map(s => ({
+    ...s,
+    isLatest: s.id === id
+  }));
+  saveSermons(all);
+  if (isFirebaseConfigured()) {
+    all.forEach(s => {
+      saveDocument('sermons', s.id, { isLatest: s.isLatest });
+    });
+  }
+  return all;
+}
+
+/** Retrieve the designated Latest Sermon (or fallback to newest) */
+export function getLatestSermon() {
+  const all = getSermons();
+  return all.find(s => s.isLatest) || all[0] || null;
 }
 
 /** Extract a YouTube video ID from any URL format or bare 11-char ID. */

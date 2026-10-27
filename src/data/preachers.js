@@ -29,7 +29,7 @@ const seedPreachers = [
     country: "Democratic Republic of Congo",
     specialties: ["Grace", "Salvation", "Discipleship"],
     photoUrl: "https://ui-avatars.com/api/?name=Lievin+Nsuka&background=2E7D32&color=fff&size=200",
-    bio: "Senior Preacher's Network Coordinator. Passionate about communicating Christ crucified with clarity and depth."
+    bio: "Senior Ministry Coordinator. Passionate about communicating Christ crucified with clarity and depth."
   },
   {
     id: "p4",
@@ -39,7 +39,7 @@ const seedPreachers = [
     country: "United States",
     specialties: ["Faith", "Hope", "Encouragement"],
     photoUrl: "https://ui-avatars.com/api/?name=Kerith+Meya&background=6A1B9A&color=fff&size=200",
-    bio: "Associate Preacher's Network Coordinator. Dedicated to helping believers trust God through impossible situations."
+    bio: "Associate Ministry Coordinator. Dedicated to helping believers trust God through impossible situations."
   },
   {
     id: "p5",
@@ -145,16 +145,29 @@ const seedPreachers = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+// Preachers locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → preacher object
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('preachers', seedPreachers);
   subscribeCollection('preachers', (remotePreachers) => {
     if (remotePreachers && remotePreachers.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remotePreachers));
-        window.dispatchEvent(new CustomEvent('2ms:preachers:updated', { detail: remotePreachers }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      let merged = _pendingDeletes.size > 0
+        ? remotePreachers.filter(p => !_pendingDeletes.has(p.id))
+        : [...remotePreachers];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((preacher, id) => {
+          if (merged.some(p => p.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.push(preacher);
+          }
+        });
+      }
+      if (merged.length > 0) savePreachers(merged);
     }
   });
 }
@@ -183,6 +196,11 @@ export function savePreachers(arr) {
 
 /** Add or update a preacher profile and sync to Firebase */
 export function upsertPreacher(preacher) {
+  _pendingDeletes.delete(preacher.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(preacher.id, preacher);
+    setTimeout(() => _pendingUpserts.delete(preacher.id), 30000);
+  }
   const all = getPreachers();
   const idx = all.findIndex(p => p.id === preacher.id);
   if (idx >= 0) all[idx] = preacher; else all.push(preacher);
@@ -195,10 +213,17 @@ export function upsertPreacher(preacher) {
 
 /** Delete a preacher profile and sync to Firebase */
 export function deletePreacher(id) {
+  _pendingDeletes.add(id);
   const all = getPreachers().filter(p => p.id !== id);
   savePreachers(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('preachers', id);
+    deleteDocument('preachers', id).then(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    }).catch(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }

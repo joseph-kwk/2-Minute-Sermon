@@ -24,16 +24,29 @@ const seedEvents = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+// Events locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → event object
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('events', seedEvents);
   subscribeCollection('events', (remoteEvents) => {
     if (Array.isArray(remoteEvents)) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteEvents));
-        window.dispatchEvent(new CustomEvent('2ms:events:updated', { detail: remoteEvents }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      let merged = _pendingDeletes.size > 0
+        ? remoteEvents.filter(e => !_pendingDeletes.has(e.id))
+        : [...remoteEvents];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((event, id) => {
+          if (merged.some(e => e.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.unshift(event);
+          }
+        });
+      }
+      saveEvents(merged);
     }
   });
 }
@@ -63,6 +76,11 @@ export function saveEvents(arr) {
 
 /** Add or update an event (matched by id). Returns updated array. */
 export function upsertEvent(event) {
+  _pendingDeletes.delete(event.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(event.id, event);
+    setTimeout(() => _pendingUpserts.delete(event.id), 30000);
+  }
   const all = getEvents();
   const idx = all.findIndex(e => e.id === event.id);
   if (idx >= 0) all[idx] = event; else all.unshift(event);
@@ -75,10 +93,17 @@ export function upsertEvent(event) {
 
 /** Remove an event by id. Returns updated array. */
 export function deleteEvent(id) {
+  _pendingDeletes.add(id);
   const all = getEvents().filter(e => e.id !== id);
   saveEvents(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('events', id);
+    deleteDocument('events', id).then(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    }).catch(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }

@@ -1,7 +1,7 @@
 // Ministry Partners Store
 // Persisted in localStorage ('2ms_partners') and synced via Firestore when configured.
 
-import { isFirebaseConfigured, saveDocument, subscribeCollection, seedCollectionIfEmpty } from '../firebase.js';
+import { isFirebaseConfigured, saveDocument, deleteDocument, subscribeCollection, seedCollectionIfEmpty } from '../firebase.js';
 
 export const INITIAL_PARTNERS = [
   {
@@ -17,16 +17,29 @@ export const INITIAL_PARTNERS = [
 
 const STORAGE_KEY = '2ms_partners';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+// Partners locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → partner object
+
 // ── Real-time Firestore Sync ─────────────────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('partners', INITIAL_PARTNERS);
   subscribeCollection('partners', (remotePartners) => {
-    if (remotePartners && remotePartners.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remotePartners));
-        window.dispatchEvent(new CustomEvent('2ms:partners:updated', { detail: remotePartners }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+    if (Array.isArray(remotePartners)) {
+      let merged = _pendingDeletes.size > 0
+        ? remotePartners.filter(p => !_pendingDeletes.has(p.id))
+        : [...remotePartners];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((partner, id) => {
+          if (merged.some(p => p.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.push(partner);
+          }
+        });
+      }
+      savePartners(merged);
     }
   });
 }
@@ -34,12 +47,12 @@ if (isFirebaseConfigured()) {
 export function getPartners() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (_) {}
-  return INITIAL_PARTNERS;
+  return [...INITIAL_PARTNERS];
 }
 
 export function savePartners(partners) {
@@ -51,6 +64,11 @@ export function savePartners(partners) {
 }
 
 export function upsertPartner(partner) {
+  _pendingDeletes.delete(partner.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(partner.id, partner);
+    setTimeout(() => _pendingUpserts.delete(partner.id), 30000);
+  }
   const partners = getPartners();
   const index = partners.findIndex(p => p.id === partner.id);
   if (index >= 0) {
@@ -65,9 +83,17 @@ export function upsertPartner(partner) {
 }
 
 export function deletePartner(id) {
+  _pendingDeletes.add(id);
   const partners = getPartners().filter(p => p.id !== id);
   savePartners(partners);
   if (isFirebaseConfigured()) {
-    deleteDocument('partners', id);
+    deleteDocument('partners', id).then(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    }).catch(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
 }
+

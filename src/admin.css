@@ -30,6 +30,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: var(--font-body); }
 
+/* Fix for HTML5 hidden attribute across the Admin Portal */
+[hidden] { display: none !important; }
+
 .admin-body {
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -90,11 +93,16 @@ html, body { height: 100%; font-family: var(--font-body); }
 .admin-auth-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+}
+.admin-auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 .admin-auth-input {
   width: 100%;
-  padding: 15px 18px;
+  padding: 15px 46px 15px 18px;
   border-radius: 12px;
   border: 1.5px solid var(--admin-border);
   background: rgba(255, 255, 255, 0.04);
@@ -110,6 +118,93 @@ html, body { height: 100%; font-family: var(--font-body); }
   background: rgba(255, 255, 255, 0.07);
 }
 .admin-auth-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+/* Disable browser's native reveal eye button (Microsoft Edge / Windows Chromium) to prevent duplicate 2nd eye */
+.admin-auth-input::-ms-reveal,
+.admin-auth-input::-ms-clear,
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none;
+}
+
+.admin-auth-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color var(--transition), background var(--transition);
+}
+.admin-auth-eye-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.admin-auth-eye-btn svg {
+  display: block;
+  pointer-events: none;
+}
+
+.admin-caps-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  animation: fadeIn 0.2s ease;
+}
+.admin-caps-warning[hidden] {
+  display: none !important;
+}
+
+.admin-auth-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2px 4px;
+}
+.admin-auth-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition);
+}
+.admin-auth-remember:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+.admin-auth-remember input[type="checkbox"] {
+  accent-color: var(--admin-red);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.admin-auth-error {
+  min-height: 20px;
+  font-size: 0.85rem;
+  color: #ff6b6b;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.4;
+}
+
 .admin-auth-form .admin-btn {
   padding: 15px 24px;
   font-size: 1rem;
@@ -122,7 +217,7 @@ html, body { height: 100%; font-family: var(--font-body); }
   margin-top: 4px;
 }
 .admin-auth-hint {
-  margin-top: 30px;
+  margin-top: 26px;
   font-size: 0.82rem;
   color: rgba(255, 255, 255, 0.40);
   line-height: 1.4;
@@ -310,6 +405,41 @@ html, body { height: 100%; font-family: var(--font-body); }
   background: rgba(211, 47, 47, 0.10);
   border-color: rgba(211, 47, 47, 0.20);
   color: #ff8a80;
+}
+
+/* ── In-Panel Sub-Tabs (e.g. Prayers Inbox vs Written) ── */
+.admin-subtabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: 14px;
+}
+.admin-subtab-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition);
+  font-family: var(--font-body);
+}
+.admin-subtab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.admin-subtab-btn.active {
+  background: var(--admin-red-light);
+  color: #fff;
+  border-color: var(--admin-red);
+  box-shadow: 0 0 14px var(--admin-red-glow);
 }
 
 /* ── Main Content ── */
@@ -1600,5 +1730,115 @@ select.admin-input option { background: #1e1e24; color: #fff; }
   font-size: 0.88rem;
   font-weight: 600;
   justify-content: center;
+}
+
+/* ==========================================================================
+   SERMON MANAGER ENHANCEMENTS (Latest Button, Edit Button, PLUS & Series Tags)
+   ========================================================================== */
+.admin-sermon-actions .latest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--admin-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.admin-sermon-actions .latest-btn:hover {
+  border-color: #10b981;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+.admin-sermon-actions .latest-btn.latest-active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.admin-sermon-actions .edit-btn:hover {
+  color: #60a5fa;
+  border-color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.admin-tag-plus {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  font-weight: 700;
+}
+
+.admin-tag-series {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+  font-weight: 700;
+}
+
+/* Series Manager Cards in Admin */
+.admin-series-card {
+  display: flex;
+  gap: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  transition: border-color var(--transition), transform 0.15s ease;
+}
+.admin-series-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.03);
+}
+.admin-series-banner-preview {
+  width: 120px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #111;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.admin-series-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.admin-series-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fff;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-series-meta {
+  font-size: 0.78rem;
+  color: var(--admin-muted);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-series-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.admin-series-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 

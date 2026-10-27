@@ -105,6 +105,14 @@
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               All Sermons
             </a>
+            <a href="#series" class="dropdown-item" data-view="series">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              Sermon Series
+            </a>
+            <a href="#plus" class="dropdown-item" data-view="plus">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+              2-Minute PLUS (3–50 min)
+            </a>
             <a href="#seasons" class="dropdown-item" data-view="seasons">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Seasons Hub
@@ -136,9 +144,9 @@
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               The Conversation
             </a>
-            <a href="#conversations" class="dropdown-item" data-view="conversations" data-conv-filter="plus">
+            <a href="#plus" class="dropdown-item" data-view="plus">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-              2-Minute PLUS (3–15 min)
+              2-Minute PLUS (3–50 min)
             </a>
             <a href="#prayers" class="dropdown-item" data-view="prayers">
               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -157,7 +165,7 @@
 
         <!-- About Dropdown -->
         <div class="dropdown-wrapper" id="aboutDropdownWrapper">
-          <button class="nav-btn dropdown-toggle" id="aboutNavBtn" data-view="about" aria-expanded="false">
+          <button class="nav-btn dropdown-toggle" id="aboutNavBtn" aria-expanded="false">
             About Us
             <svg class="icon-svg icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
@@ -202,12 +210,13 @@
       <div class="mobile-drawer-content">
         <button class="mobile-nav-btn active" data-view="home">Home</button>
         <button class="mobile-nav-btn" data-view="sermons">All Sermons</button>
+        <button class="mobile-nav-btn" data-view="series">📚 Sermon Series</button>
+        <button class="mobile-nav-btn" data-view="plus">⚡ 2-Minute PLUS (3–50 min)</button>
         <button class="mobile-nav-btn" data-view="seasons">Seasons Hub</button>
         <button class="mobile-nav-btn" data-view="topics">Topics Hub</button>
         <button class="mobile-nav-btn" data-view="preachers">Preachers Directory</button>
         <div class="mobile-divider"></div>
         <button class="mobile-nav-btn" data-view="conversations">🎙️ The Conversation</button>
-        <button class="mobile-nav-btn" data-view="conversations" data-conv-filter="plus">▶ 2-Minute PLUS (3–15 min)</button>
         <button class="mobile-nav-btn" data-view="prayers">🙏 Prayers &amp; Requests</button>
         <button class="mobile-nav-btn" data-view="daily-verse">📖 Daily Verse</button>
         <button class="mobile-nav-btn" data-view="daily-verse" data-scroll-to="communityReflectionsSection">💬 Fellowship Reflections</button>
@@ -278,14 +287,14 @@
         <div class="container" style="position:relative;z-index:2;">
           <div class="section-header text-center" style="text-align:center;margin-bottom:24px;">
             <span class="section-tag-pill promo-tag-pill" style="margin-bottom:10px;"><span class="badge-dot dot-orange"></span>We Are Glad You Are Here</span>
-            <p class="section-desc promo-section-desc">Experience the mission and heartbeat of bite-sized, scripture-rooted encouragement.</p>
+            <p class="section-desc promo-section-desc">Experience the mission and heartbeat of scripture-rooted encouragement.</p>
           </div>
 
           <div class="promo-cinema-frame" id="promoCinemaFrame">
             <!-- Video Thumbnail & Play Trigger -->
             <div class="promo-poster-wrap" id="promoPosterWrap" role="button" tabindex="0" aria-label="Play 2-Minute Sermon Promo Video">
-              <img src="https://img.youtube.com/vi/SJFqqNvTeh8/maxresdefault.jpg" alt="2-Minute Sermon Promo Video" class="promo-poster-img" loading="eager"
-                onerror="this.src='https://img.youtube.com/vi/SJFqqNvTeh8/hqdefault.jpg'">
+              <img src="https://img.youtube.com/vi/aQ33_rdzdoo/maxresdefault.jpg" alt="2-Minute Sermon is Back | Announcement from the Founders" class="promo-poster-img" loading="eager"
+                onerror="this.src='https://img.youtube.com/vi/aQ33_rdzdoo/hqdefault.jpg'">
               <div class="promo-poster-overlay">
                 <div class="promo-top-bar">
                   <div class="promo-badge-top">
@@ -354,8 +363,8 @@
         </div>
       </section>
 
-      <!-- Quick Nav Hub Tiles -->
-      <section class="section section-tiles reveal-on-scroll">
+      <!-- Quick Nav Hub Tiles / Channels Carousel Rail -->
+      <section class="section section-tiles reveal-on-scroll" id="channelsCarouselSection">
         <div class="container">
           <div class="section-header-center">
             <span class="section-tag-pill"><span class="badge-dot dot-red"></span>SPIRITUAL PATHWAYS</span>
@@ -363,54 +372,95 @@
             <p class="section-desc text-center">Explore structured channels tailored to your current spiritual season and questions.</p>
           </div>
 
-          <div class="tiles-grid">
-            <div class="tile-card tile-card-seasons" data-view="seasons">
-              <div class="tile-card-header">
-                <div class="tile-icon-box">
-                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <div class="channels-carousel-wrapper" id="channelsCarouselWrapper">
+            <button class="channels-nav-arrow channels-nav-prev" id="channelsPrevBtn" aria-label="Previous channel" title="Previous channel">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+
+            <div class="tiles-grid tiles-carousel-track" id="tilesCarouselTrack">
+              <div class="tile-card tile-card-series" data-view="series">
+                <div class="tile-card-header">
+                  <div class="tile-icon-box">
+                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                  </div>
+                  <span class="tile-channel-badge badge-series">Multi-Part Studies</span>
                 </div>
-                <span class="tile-channel-badge badge-seasons">14 Seasons</span>
+                <h3 class="tile-title">Sermon Series</h3>
+                <p class="tile-desc">Grouped sequential teachings, topical series, and multi-part scripture studies.</p>
+                <span class="tile-link">Explore Series →</span>
               </div>
-              <h3 class="tile-title">Seasons Hub</h3>
-              <p class="tile-desc">Easter, Advent, Lent, Holy Week, Christmas, Pentecost &amp; seasonal devotionals.</p>
-              <span class="tile-link">Explore Seasons →</span>
+
+              <div class="tile-card tile-card-plus" data-view="plus">
+                <div class="tile-card-header">
+                  <div class="tile-icon-box">
+                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                  </div>
+                  <span class="tile-channel-badge badge-plus">3–50 Min Messages</span>
+                </div>
+                <h3 class="tile-title">2-Minute PLUS</h3>
+                <p class="tile-desc">Extended messages and deep-dive teachings when you have more time to reflect.</p>
+                <span class="tile-link">Watch Extended →</span>
+              </div>
+
+              <div class="tile-card tile-card-seasons" data-view="seasons">
+                <div class="tile-card-header">
+                  <div class="tile-icon-box">
+                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  </div>
+                  <span class="tile-channel-badge badge-seasons">14 Seasons</span>
+                </div>
+                <h3 class="tile-title">Seasons Hub</h3>
+                <p class="tile-desc">Easter, Advent, Lent, Holy Week, Christmas, Pentecost &amp; seasonal devotionals.</p>
+                <span class="tile-link">Explore Seasons →</span>
+              </div>
+
+              <div class="tile-card tile-card-topics" data-view="topics">
+                <div class="tile-card-header">
+                  <div class="tile-icon-box">
+                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                  </div>
+                  <span class="tile-channel-badge badge-topics">8 Core Themes</span>
+                </div>
+                <h3 class="tile-title">Topics &amp; Themes</h3>
+                <p class="tile-desc">Faith, Healing, Encouragement, Forgiveness, Grace, Hope, and Prayer.</p>
+                <span class="tile-link">Explore Topics →</span>
+              </div>
+
+              <div class="tile-card tile-card-preachers" data-view="preachers">
+                <div class="tile-card-header">
+                  <div class="tile-icon-box">
+                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                  </div>
+                  <span class="tile-channel-badge badge-preachers">Global Teachers</span>
+                </div>
+                <h3 class="tile-title">Preachers Directory</h3>
+                <p class="tile-desc">Pastors, teachers, and evangelists from global Christian denominations.</p>
+                <span class="tile-link">Meet Ministers →</span>
+              </div>
+
+              <div class="tile-card tile-card-prayers" data-view="prayers">
+                <div class="tile-card-header">
+                  <div class="tile-icon-box">
+                    <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                  </div>
+                  <span class="tile-channel-badge badge-prayers">24/7 Prayer Circle</span>
+                </div>
+                <h3 class="tile-title">Prayers &amp; Requests</h3>
+                <p class="tile-desc">Submit confidential prayer requests or stand in faith with written prayers.</p>
+                <span class="tile-link">Request Prayer →</span>
+              </div>
             </div>
 
-            <div class="tile-card tile-card-topics" data-view="topics">
-              <div class="tile-card-header">
-                <div class="tile-icon-box">
-                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                </div>
-                <span class="tile-channel-badge badge-topics">8 Core Themes</span>
-              </div>
-              <h3 class="tile-title">Topics &amp; Themes</h3>
-              <p class="tile-desc">Faith, Healing, Encouragement, Forgiveness, Grace, Hope, and Prayer.</p>
-              <span class="tile-link">Explore Topics →</span>
-            </div>
+            <button class="channels-nav-arrow channels-nav-next" id="channelsNextBtn" aria-label="Next channel" title="Next channel">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
 
-            <div class="tile-card tile-card-preachers" data-view="preachers">
-              <div class="tile-card-header">
-                <div class="tile-icon-box">
-                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                </div>
-                <span class="tile-channel-badge badge-preachers">Global Teachers</span>
-              </div>
-              <h3 class="tile-title">Preachers Directory</h3>
-              <p class="tile-desc">Pastors, teachers, and evangelists from global Christian denominations.</p>
-              <span class="tile-link">Meet Ministers →</span>
-            </div>
-
-            <div class="tile-card tile-card-prayers" data-view="prayers">
-              <div class="tile-card-header">
-                <div class="tile-icon-box">
-                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                </div>
-                <span class="tile-channel-badge badge-prayers">24/7 Prayer Circle</span>
-              </div>
-              <h3 class="tile-title">Prayers &amp; Requests</h3>
-              <p class="tile-desc">Submit confidential prayer requests or stand in faith with written prayers.</p>
-              <span class="tile-link">Request Prayer →</span>
-            </div>
+          <!-- Carousel Dots Indicator -->
+          <div class="channels-carousel-dots" id="channelsCarouselDots" aria-label="Channel slider pages">
+            <button class="channel-dot active" data-index="0" aria-label="Slide 1"></button>
+            <button class="channel-dot" data-index="1" aria-label="Slide 2"></button>
+            <button class="channel-dot" data-index="2" aria-label="Slide 3"></button>
           </div>
         </div>
       </section>
@@ -450,6 +500,8 @@
           <p class="page-subtitle">Bite-sized, scripture-rooted 2-minute messages organized by sacred season, theme, and scripture book.</p>
           <div class="sub-header-pills">
             <a href="#sermons" class="sub-pill active" data-view="sermons">All Sermons</a>
+            <a href="#series" class="sub-pill" data-view="series">Sermon Series</a>
+            <a href="#plus" class="sub-pill" data-view="plus">2-Minute PLUS</a>
             <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
             <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
             <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
@@ -468,11 +520,13 @@
 
           <div class="season-chips-container" id="seasonChipsContainer"></div>
 
-          <!-- Quick Filters: Duration & Favorites -->
+          <!-- Quick Filters: Duration, Series, PLUS & Favorites -->
           <div class="quick-filter-chips-row">
-            <span class="quick-filter-label">Length:</span>
+            <span class="quick-filter-label">Filter:</span>
             <button class="chip duration-chip active" data-duration="all">All</button>
-            <button class="chip duration-chip" data-duration="under1">⚡ Under 1 Min</button>
+            <button class="chip duration-chip" data-duration="series">📚 In a Series</button>
+            <button class="chip duration-chip" data-duration="plus">⚡ 2-Min PLUS (3–50 min)</button>
+            <button class="chip duration-chip" data-duration="under1">⚡ &lt; 1 Min</button>
             <button class="chip duration-chip" data-duration="1to2">⏱️ 1–2 Mins</button>
             <button class="chip duration-chip" data-duration="over2">📖 2+ Mins</button>
             <div class="quick-filter-separator"></div>
@@ -495,6 +549,13 @@
           </div>
 
           <div class="filters-row" id="advancedFiltersRow">
+            <div class="filter-group">
+              <label for="filterSeries">Sermon Series</label>
+              <select id="filterSeries" class="select-input">
+                <option value="all">All Series</option>
+              </select>
+            </div>
+
             <div class="filter-group">
               <label for="filterTopic">Topic</label>
               <select id="filterTopic" class="select-input">
@@ -546,6 +607,107 @@
         </div>
 
         <div class="sermons-grid" id="sermonsIndexGrid"></div>
+      </div>
+    </section>
+
+    <!-- View: Sermon Series Hub -->
+    <section class="view-section" id="view-series">
+      <div class="page-header">
+        <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item" data-view="sermons">Sermons</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">Sermon Series</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot" style="background:#3b82f6;"></span>
+              <span>Sequential Multi-Part Studies</span>
+            </div>
+          </div>
+          <h1 class="page-title">Sermon Series Hub</h1>
+          <p class="page-subtitle">Immerse yourself in structured biblical series, consecutive scripture expositions, and thematic journeys curated by global ministers.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#series" class="sub-pill active" data-view="series">Sermon Series</a>
+            <a href="#plus" class="sub-pill" data-view="plus">2-Minute PLUS</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+            <a href="#topics" class="sub-pill" data-view="topics">Topics &amp; Themes</a>
+            <a href="#preachers" class="sub-pill" data-view="preachers">Preachers</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="container section">
+        <!-- Series Filter / Search Bar -->
+        <div class="filter-control-panel" style="margin-bottom:28px;">
+          <div class="search-box">
+            <svg class="search-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="seriesSearchInput" placeholder="Search series by title, preacher, or scripture foundation...">
+            <button class="search-clear-btn" id="seriesSearchClearBtn" hidden>✕</button>
+          </div>
+        </div>
+
+        <div class="results-count-bar">
+          <div class="results-count-left">
+            <span>Showing <strong id="seriesResultsCount">0</strong> series</span>
+          </div>
+        </div>
+
+        <!-- Series Cards Grid -->
+        <div class="series-catalog-grid" id="seriesCatalogGrid"></div>
+      </div>
+    </section>
+
+    <!-- View: 2-Minute PLUS Extended Messages -->
+    <section class="view-section" id="view-plus">
+      <div class="page-header">
+        <div class="container">
+          <div class="sub-header-top">
+            <div class="sub-header-breadcrumb">
+              <span class="breadcrumb-item" data-view="home">Home</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-item" data-view="sermons">Sermons</span>
+              <span class="breadcrumb-sep">›</span>
+              <span class="breadcrumb-current">2-Minute PLUS</span>
+            </div>
+            <div class="sub-header-badge">
+              <span class="sub-badge-dot" style="background:#f59e0b;"></span>
+              <span>Extended Teachings (3–50 min)</span>
+            </div>
+          </div>
+          <h1 class="page-title">2-Minute PLUS Sermons</h1>
+          <p class="page-subtitle">When you have more time to meditate on God's Word: extended messages, in-depth biblical exposition, and deeper pastoral teachings.</p>
+          <div class="sub-header-pills">
+            <a href="#sermons" class="sub-pill" data-view="sermons">All Sermons</a>
+            <a href="#series" class="sub-pill" data-view="series">Sermon Series</a>
+            <a href="#plus" class="sub-pill active" data-view="plus">2-Minute PLUS</a>
+            <a href="#conversations" class="sub-pill" data-view="conversations">The Conversation</a>
+            <a href="#seasons" class="sub-pill" data-view="seasons">Seasons Hub</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="container section">
+        <!-- Search Bar -->
+        <div class="filter-control-panel" style="margin-bottom:28px;">
+          <div class="search-box">
+            <svg class="search-icon icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="plusSearchInput" placeholder="Search extended messages by title, scripture, or preacher...">
+            <button class="search-clear-btn" id="plusSearchClearBtn" hidden>✕</button>
+          </div>
+        </div>
+
+        <div class="results-count-bar">
+          <div class="results-count-left">
+            <span>Showing <strong id="plusResultsCount">0</strong> extended messages</span>
+          </div>
+        </div>
+
+        <!-- Grid of PLUS Sermons -->
+        <div class="sermons-grid" id="plusSermonsGrid"></div>
       </div>
     </section>
 
@@ -791,16 +953,8 @@
 
           <div class="written-prayers-container" id="writtenPrayersSection">
             <h2 class="card-title">Written Prayers for Your Day</h2>
-            <div class="written-prayer-card">
-              <h3>Prayer for Peace in Anxiety</h3>
-              <p>"Lord Jesus, when my heart is overwhelmed, lead me to the Rock that is higher than I. Quiet my racing thoughts with Your divine presence..."</p>
-              <button class="btn btn-sm btn-outline copy-prayer-btn">Copy Prayer</button>
-            </div>
-            <div class="written-prayer-card">
-              <h3>Prayer for Guidance & Wisdom</h3>
-              <p>"Father, grant me discerning eyes and an attentive spirit as I make decisions today. Align my steps with Your holy will..."</p>
-              <button class="btn btn-sm btn-outline copy-prayer-btn">Copy Prayer</button>
-            </div>
+            <!-- Dynamically rendered by renderWrittenPrayers() in app.js -->
+            <div id="writtenPrayersList"></div>
           </div>
         </div>
       </div>
@@ -925,31 +1079,49 @@
         <!-- Tab 2: Ministry Structure -->
         <div class="about-panel" id="aboutPanelStructure">
           <div class="organigram-header" style="margin-bottom: 32px;">
-            <span class="section-tag">Governance &amp; Framework</span>
-            <h2>2-Minute Sermon Structure</h2>
-            <p>Our platform operates through three foundational pillars ensuring faithful governance, pastoral vetting, and creative broadcast excellence.</p>
+            <span class="section-tag" id="structureSectionTag">Governance &amp; Framework</span>
+            <h2 id="structureSectionTitle">2-Minute Sermon Structure</h2>
+            <p id="structureSectionSubtitle">Our platform operates through three foundational pillars ensuring faithful governance, pastoral leadership, and dynamic ministry operations.</p>
           </div>
 
-          <div class="structure-pillars-grid">
-            <div class="structure-card">
-              <div class="structure-card-badge">Governance</div>
-              <div class="structure-card-icon">🏛️</div>
-              <h3>The Board</h3>
-              <p>The platform is governed by its Board, entrusted with the pivotal task of making strategic decisions. The Board comprises the President, Executive Coordinator, Administrative Coordinator, Finance &amp; Fundraising Coordinator, along with Members who serve as Consultants and Advisors.</p>
+          <div class="structure-pillars-grid" id="structurePillarsContainer">
+            <div class="structure-card" id="pillar-board-of-directors">
+              <div class="structure-card-header">
+                <div class="structure-card-icon-box">🏛️</div>
+                <span class="structure-card-num">PILLAR 01</span>
+              </div>
+              <div class="structure-card-badge-wrap">
+                <span class="structure-card-badge">Governance &amp; Oversight</span>
+              </div>
+              <h3 class="structure-card-title">Board of Directors</h3>
+              <p class="structure-card-desc">The platform is governed by the Board of Directors, entrusted with strategic decision-making, spiritual stewardship, and organizational accountability. The Board comprises visionary pastoral leaders and executive trustees who ensure the mission and core values remain biblically rooted and sustainably guided.</p>
+              <div class="structure-card-accent"></div>
             </div>
 
-            <div class="structure-card">
-              <div class="structure-card-badge">Pulpit &amp; Fellowship</div>
-              <div class="structure-card-icon">🎙️</div>
-              <h3>Preachers Network (PN)</h3>
-              <p>The Preachers Network within 2-MS serves as a framework for recruiting individuals who possess a divine calling to preach and teach the Word of God, facilitating their regular participation on the platform. The primary aim of the PN is to foster connection, consultation, and the sharing of faith among preachers affiliated with 2-MS. Network Preachers contribute to each theme and collectively discern semester themes through prayerful consultation.</p>
+            <div class="structure-card" id="pillar-executive-director">
+              <div class="structure-card-header">
+                <div class="structure-card-icon-box">🧭</div>
+                <span class="structure-card-num">PILLAR 02</span>
+              </div>
+              <div class="structure-card-badge-wrap">
+                <span class="structure-card-badge">Executive Leadership</span>
+              </div>
+              <h3 class="structure-card-title">Executive Director</h3>
+              <p class="structure-card-desc">The Executive Director provides visionary leadership and day-to-day administrative oversight for the 2-Minute Sermon global outreach. Working closely with the Board, the Executive Director directs organizational strategies, operational alignment, and partnership development across all broadcast and ministerial avenues.</p>
+              <div class="structure-card-accent"></div>
             </div>
 
-            <div class="structure-card">
-              <div class="structure-card-badge">Creative &amp; Broadcast</div>
-              <div class="structure-card-icon">🎥</div>
-              <h3>Media Branch</h3>
-              <p>The Media branch serves as the creative arm of our online preaching platform, responsible for crafting visually engaging content to promote our messages. This dynamic team designs posters, develops video templates, and ensures our digital broadcast presence effectively captures the essence of our mission and vision.</p>
+            <div class="structure-card" id="pillar-ministry-department">
+              <div class="structure-card-header">
+                <div class="structure-card-icon-box">👥</div>
+                <span class="structure-card-num">PILLAR 03</span>
+              </div>
+              <div class="structure-card-badge-wrap">
+                <span class="structure-card-badge">Ministry &amp; Operations</span>
+              </div>
+              <h3 class="structure-card-title">Ministry Department</h3>
+              <p class="structure-card-desc">The Ministry Department serves as the operational heart of our outreach, encompassing our pastoral contributors, intercessory prayer network, creative media production, and community engagement. This dedicated department facilitates weekly message curation, prayer ministry, digital broadcasting, and platform logistics.</p>
+              <div class="structure-card-accent"></div>
             </div>
           </div>
         </div>
@@ -959,15 +1131,15 @@
           <div class="organigram-header" style="margin-bottom: 24px;">
             <span class="section-tag">Leadership &amp; Ministers</span>
             <h2>Meet the Team</h2>
-            <p>The platform is led by an active Board of Executives followed by the Network Preachers.</p>
+            <p>The platform is led by our Board of Directors, Executive Director, and Ministry Department.</p>
           </div>
 
           <!-- Team Filter Chips -->
           <div class="team-filter-bar" id="aboutTeamFilterBar">
             <button class="chip active" data-team-filter="all">All Members (<span id="teamTotalCount">11</span>)</button>
-            <button class="chip" data-team-filter="Executive Board">Executive Board</button>
-            <button class="chip" data-team-filter="Department Coordinators">Department Coordinators</button>
-            <button class="chip" data-team-filter="Network Preachers">Network Preachers</button>
+            <button class="chip" data-team-filter="Board of Directors">Board of Directors</button>
+            <button class="chip" data-team-filter="Executive Director">Executive Director</button>
+            <button class="chip" data-team-filter="Ministry Department">Ministry Department</button>
           </div>
 
           <div id="aboutTeamRosterContainer" class="team-roster-grid"></div>
@@ -1031,7 +1203,7 @@
         <!-- Filter Chips -->
         <div class="conversation-filter-bar" id="conversationFilterBar">
           <button class="chip active" data-conv-filter="all">All Videos (<span id="convTotalCount">3</span>)</button>
-          <button class="chip" data-conv-filter="plus">2-Minute PLUS (3–15 min)</button>
+          <button class="chip" data-conv-filter="plus">2-Minute PLUS (3–50 min)</button>
           <button class="chip" data-conv-filter="conversation">The Conversation (20+ min)</button>
           <button class="chip" data-conv-filter="Theology &amp; Christian Walk">Theology &amp; Christian Walk</button>
           <button class="chip" data-conv-filter="Prayer &amp; Faith">Prayer &amp; Faith</button>
@@ -1187,7 +1359,10 @@
             🎙️ Preachers Manager
           </button>
           <button class="admin-tab-btn" data-admintab="prayer-inbox">
-            🙏 Prayer Inbox (<span id="adminPendingBadge">2</span>)
+            🙏 Prayer Inbox (<span id="adminPendingBadge">0</span>)
+          </button>
+          <button class="admin-tab-btn" data-admintab="written-prayers">
+            ✍️ Written Prayers
           </button>
           <button class="admin-tab-btn" data-admintab="cms-backup">
             📦 CMS Export / Backup
@@ -1381,6 +1556,30 @@
           </div>
         </div>
 
+        </div>
+
+        <!-- Admin Tab 4b: Written Prayers Manager -->
+        <div class="admin-tab-content" id="admintab-written-prayers">
+          <div class="admin-card" style="max-width:800px; margin:0 auto;">
+            <h2 class="card-title">Written Prayers Manager</h2>
+            <p class="card-subtitle">Publish and manage curated written prayers shown on the public Prayers page.</p>
+
+            <form id="adminWrittenPrayerForm" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+              <div class="form-group">
+                <label for="wpTitle" class="form-label">Prayer Title</label>
+                <input type="text" id="wpTitle" class="input-field" placeholder="e.g. Prayer for Peace in Anxiety" required>
+              </div>
+              <div class="form-group">
+                <label for="wpBody" class="form-label">Prayer Text</label>
+                <textarea id="wpBody" class="input-field" rows="4" placeholder="Write the full prayer here..." required style="resize:vertical;"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">✨ Publish Written Prayer</button>
+            </form>
+
+            <div id="adminWrittenPrayersList" style="display:flex;flex-direction:column;gap:12px;"></div>
+          </div>
+        </div>
+
         <!-- Admin Tab 5: CMS Export & Backup -->
         <div class="admin-tab-content" id="admintab-cms-backup">
           <div class="admin-card" style="max-width:800px; margin:0 auto; text-align:center;">
@@ -1463,7 +1662,7 @@
           <li><a href="#" data-view="home">Home</a></li>
           <li><a href="#sermons" data-view="sermons">All Sermons</a></li>
           <li><a href="#conversations" data-view="conversations" data-conv-filter="all">The Conversation</a></li>
-          <li><a href="#conversations" data-view="conversations" data-conv-filter="plus">2-Minute PLUS (3–15 min)</a></li>
+          <li><a href="#conversations" data-view="conversations" data-conv-filter="plus">2-Minute PLUS (3–50 min)</a></li>
           <li><a href="#seasons" data-view="seasons">Seasons Hub</a></li>
           <li><a href="#topics" data-view="topics">Topics &amp; Themes</a></li>
           <li><a href="#preachers" data-view="preachers">Preachers Directory</a></li>
@@ -1521,23 +1720,31 @@
     </div>
   </div>
 
+  <!-- Series Playlist Modal -->
+  <div class="modal-backdrop" id="seriesPlaylistModal" hidden>
+    <div class="modal-dialog modal-lg series-playlist-dialog">
+      <button class="modal-close-btn" id="closeSeriesModalBtn" aria-label="Close series playlist">✕</button>
+      <div class="series-playlist-body" id="seriesPlaylistBody"></div>
+    </div>
+  </div>
+
   <!-- Sermon Share & Visual Card Modal -->
   <div class="modal-backdrop" id="sermonShareModal" hidden>
     <div class="modal-dialog modal-share-dialog">
-      <button class="modal-close-btn" id="closeSermonShareBtn" aria-label="Close share modal">✕</button>
-      
-      <div class="share-modal-content">
-        <div class="share-modal-header">
-          <h2 class="share-modal-title" id="shareModalHeading">Share Video</h2>
-        </div>
+      <div class="share-modal-header">
+        <h2 class="share-modal-title" id="shareModalHeading">Share</h2>
+        <button class="modal-close-btn" id="closeSermonShareBtn" aria-label="Close share modal">✕</button>
+      </div>
 
-        <!-- Simple, Elegant Media Card -->
+      <div class="share-modal-body">
+        <!-- Modern YouTube-style Video Preview Card -->
         <div class="share-preview-card" id="sharePreviewCard">
           <div class="share-preview-thumb-wrap">
             <img id="shareModalThumb" src="" alt="Video Thumbnail" class="share-preview-thumb">
-            <div class="share-preview-play-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 19 12 7 20 7 4"></polygon></svg>
-            </div>
+            <span class="share-preview-yt-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>YouTube</span>
+            </span>
             <span class="share-preview-duration" id="shareModalDuration">2:00</span>
           </div>
           <div class="share-preview-info">
@@ -1550,37 +1757,58 @@
           </div>
         </div>
 
-        <!-- Social Share App Row -->
-        <div class="share-social-grid">
-          <button type="button" class="share-platform-btn btn-share-whatsapp" id="btnShareWhatsapp" title="Share via WhatsApp">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.47c-.16 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.17 1.77 2.7 4.28 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.11-.23-.17-.48-.3z"/></svg>
-            <span>WhatsApp</span>
+        <!-- Link Type Selector: YouTube vs Web -->
+        <div class="share-link-type-row">
+          <button type="button" class="share-type-pill active" id="btnShareTypeYoutube" data-type="youtube">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <span>YouTube Link</span>
           </button>
-          <button type="button" class="share-platform-btn btn-share-facebook" id="btnShareFacebook" title="Share on Facebook">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            <span>Facebook</span>
-          </button>
-          <button type="button" class="share-platform-btn btn-share-instagram" id="btnShareInstagram" title="Share on Instagram">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-            <span>Instagram</span>
-          </button>
-          <button type="button" class="share-platform-btn btn-share-native" id="btnShareNative" title="Device Share Options">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-            <span>More</span>
+          <button type="button" class="share-type-pill" id="btnShareTypeWeb" data-type="web">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>Website Link</span>
           </button>
         </div>
 
-        <!-- 1-Click Link Copy -->
+        <!-- 1-Click Link Copy Bar -->
         <div class="share-link-box">
           <input type="text" id="shareModalLinkInput" class="share-link-input" readonly spellcheck="false">
-          <button type="button" class="btn btn-primary btn-sm btn-copy-link" id="btnCopyShareLink">Copy Link</button>
+          <button type="button" class="btn btn-primary btn-copy-link" id="btnCopyShareLink">
+            <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span class="copy-text">Copy</span>
+          </button>
         </div>
 
-        <!-- Secondary Action: Copy Full Message for Chat / SMS -->
-        <div class="share-actions-row">
-          <button type="button" class="share-action-pill" id="btnCopyFormattedMsg" title="Copy text with emoji & link for chat">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>Copy Formatted Message</span>
+        <!-- Social Share App Row -->
+        <div class="share-social-grid">
+          <button type="button" class="share-app-btn share-app-whatsapp" id="btnShareWhatsapp" title="Share via WhatsApp">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.41-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.47c-.16 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.17 1.77 2.7 4.28 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.11-.23-.17-.48-.3z"/></svg>
+            </div>
+            <span>WhatsApp</span>
+          </button>
+          <button type="button" class="share-app-btn share-app-x" id="btnShareX" title="Post on X">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </div>
+            <span>X</span>
+          </button>
+          <button type="button" class="share-app-btn share-app-facebook" id="btnShareFacebook" title="Share on Facebook">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </div>
+            <span>Facebook</span>
+          </button>
+          <button type="button" class="share-app-btn share-app-email" id="btnShareEmail" title="Send via Email">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </div>
+            <span>Email</span>
+          </button>
+          <button type="button" class="share-app-btn share-app-native" id="btnShareNative" title="Device Share Options">
+            <div class="share-app-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </div>
+            <span>More</span>
           </button>
         </div>
       </div>

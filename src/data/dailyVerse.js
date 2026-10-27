@@ -321,16 +321,29 @@ export const seedDailyVerses = [
 
 import { isFirebaseConfigured, subscribeCollection, saveDocument, deleteDocument, seedCollectionIfEmpty } from '../firebase.js';
 
+// IDs pending deletion — filter from incoming Firestore snapshots until confirmed
+const _pendingDeletes = new Set();
+// Verses locally upserted but not yet confirmed by Firestore
+const _pendingUpserts = new Map(); // id → verse object
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('dailyVerses', seedDailyVerses);
   subscribeCollection('dailyVerses', (remoteVerses) => {
     if (remoteVerses && Array.isArray(remoteVerses)) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteVerses));
-        window.dispatchEvent(new CustomEvent('2ms:verses:updated', { detail: remoteVerses }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+      let merged = _pendingDeletes.size > 0
+        ? remoteVerses.filter(v => !_pendingDeletes.has(v.id))
+        : [...remoteVerses];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((verse, id) => {
+          if (merged.some(v => v.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.push(verse);
+          }
+        });
+      }
+      saveDailyVerses(merged);
     }
   });
 }
@@ -358,6 +371,11 @@ export function saveDailyVerses(arr) {
 
 /** Add or update a scheduled daily verse */
 export function upsertDailyVerse(verse) {
+  _pendingDeletes.delete(verse.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(verse.id, verse);
+    setTimeout(() => _pendingUpserts.delete(verse.id), 30000);
+  }
   const all = getDailyVerses();
   const idx = all.findIndex(v => v.id === verse.id || v.publishDate === verse.publishDate);
   if (idx >= 0) all[idx] = verse; else all.push(verse);
@@ -370,10 +388,17 @@ export function upsertDailyVerse(verse) {
 
 /** Delete a daily verse from localStorage and Firebase */
 export function deleteDailyVerse(id) {
+  _pendingDeletes.add(id);
   const all = getDailyVerses().filter(v => v.id !== id);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(all)); } catch (_) {}
+  saveDailyVerses(all);
   if (isFirebaseConfigured()) {
-    deleteDocument('dailyVerses', id);
+    deleteDocument('dailyVerses', id).then(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    }).catch(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
   return all;
 }

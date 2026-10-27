@@ -73,16 +73,27 @@ export const INITIAL_CONVERSATIONS = [
 
 const STORAGE_KEY = '2ms_conversations';
 
+const _pendingDeletes = new Set();
+const _pendingUpserts = new Map();
+
 // ── Real-time Firebase Firestore Sync ───────────────────────────────────────
 if (isFirebaseConfigured()) {
   seedCollectionIfEmpty('conversations', INITIAL_CONVERSATIONS);
   subscribeCollection('conversations', (remoteConversations) => {
-    if (remoteConversations && remoteConversations.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteConversations));
-        window.dispatchEvent(new CustomEvent('2ms:conversations:updated', { detail: remoteConversations }));
-        window.dispatchEvent(new Event('storage'));
-      } catch (_) {}
+    if (Array.isArray(remoteConversations)) {
+      let merged = _pendingDeletes.size > 0
+        ? remoteConversations.filter(c => !_pendingDeletes.has(c.id))
+        : [...remoteConversations];
+      if (_pendingUpserts.size > 0) {
+        _pendingUpserts.forEach((item, id) => {
+          if (merged.some(c => c.id === id)) {
+            _pendingUpserts.delete(id);
+          } else {
+            merged.unshift(item);
+          }
+        });
+      }
+      saveConversations(merged);
     }
   });
 }
@@ -108,6 +119,11 @@ export function saveConversations(list) {
 }
 
 export function upsertConversation(item) {
+  _pendingDeletes.delete(item.id);
+  if (isFirebaseConfigured()) {
+    _pendingUpserts.set(item.id, item);
+    setTimeout(() => _pendingUpserts.delete(item.id), 30000);
+  }
   const list = getConversations();
   const index = list.findIndex(c => c.id === item.id);
   if (index >= 0) {
@@ -122,9 +138,16 @@ export function upsertConversation(item) {
 }
 
 export function deleteConversation(id) {
+  _pendingDeletes.add(id);
   const list = getConversations().filter(c => c.id !== id);
   saveConversations(list);
   if (isFirebaseConfigured()) {
-    deleteDocument('conversations', id);
+    deleteDocument('conversations', id).then(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    }).catch(() => {
+      setTimeout(() => _pendingDeletes.delete(id), 5000);
+    });
+  } else {
+    _pendingDeletes.delete(id);
   }
 }

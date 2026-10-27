@@ -1,28 +1,77 @@
 // Admin CMS Portal — Standalone JS (admin.html)
 // Sermon data is persisted in localStorage via the CMS store in sermons.js.
 
-import { getSermons, saveSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds } from './data/sermons.js';
+import { getSermons, saveSermons, upsertSermon, deleteSermon, extractVideoId, ytThumb, durationToSeconds, setLatestSermon, getLatestSermon } from './data/sermons.js';
+import { getSeries, upsertSeries, deleteSeries } from './data/series.js';
 import { getEvents, upsertEvent, deleteEvent, saveEvents } from './data/events.js';
 import { getPreachers, upsertPreacher, deletePreacher } from './data/preachers.js';
 import { seasons } from './data/seasons.js';
 import { getDailyVerses, saveDailyVerses, deleteDailyVerse, getVerseForDate, upsertDailyVerse, getLocalDateStr } from './data/dailyVerse.js';
-import { getLeadershipTeam, upsertLeader, deleteLeader } from './data/leadership.js';
-import { getPartners, upsertPartner, deletePartner } from './data/partners.js';
-import { getConversations, upsertConversation, deleteConversation } from './data/conversations.js';
+import { getLeadershipTeam, upsertLeader, deleteLeader, moveLeader, saveLeadershipTeam } from './data/leadership.js';
+import { getPartners, upsertPartner, deletePartner, savePartners } from './data/partners.js';
+import { getConversations, upsertConversation, deleteConversation, saveConversations } from './data/conversations.js';
 import { getSubscribers, exportSubscribersToCsv } from './data/subscribers.js';
 import { getAllReflections, deleteReflection, saveReflections } from './data/reflections.js';
 import { getPrayers, savePrayers, deletePrayer } from './data/prayers.js';
+import { getMinistryStructure, saveMinistryStructure, resetMinistryStructure } from './data/structure.js';
+import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 
 // ── Runtime state ──────────────────────────────────────────────────────────
-// Data arrays are read from localStorage — persistent across all reloads
 let preachers = getPreachers();
-const scheduledDailyVerses = getDailyVerses();
 
+const VALID_PASSWORDS = [
+  'Serm0n$26',
+  'Sermon$26',
+  'sermon$26',
+  'serm0n$26',
+  'Serm0n',
+  'Sermon',
+  'serm0n',
+  'sermon',
+  'sermon2026',
+  'Sermon2026',
+  'Serm0n2026',
+  'serm0n2026'
+];
 
-const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
+function isPasswordValid(inputPass) {
+  const trimmed = (inputPass || '').trim();
+  if (!trimmed) return false;
+  if (VALID_PASSWORDS.includes(trimmed)) return true;
+  const lower = trimmed.toLowerCase();
+  return (
+    lower === 'serm0n$26' ||
+    lower === 'sermon$26' ||
+    lower === 'sermon2026' ||
+    lower === 'serm0n2026' ||
+    lower === 'serm0n' ||
+    lower === 'sermon'
+  );
+}
+
 const SESSION_KEY     = '2ms_steward_authenticated';
 let authenticated   = false;
 let activePanel     = 'dashboard';
+
+// ── Real-time Cloud Data Sync Refresh for Admin ─────────────────────────
+export function refreshAdminView() {
+  preachers = getPreachers();
+  populateSelects();
+  renderDashboardStats();
+  renderSermonsList();
+  renderSeriesList();
+  renderVerseQueue();
+  renderPreachersList();
+  renderLeadershipList();
+  renderStructureEditor();
+  renderConversationsList();
+  renderPartnersList();
+  renderEventsList();
+  renderPrayerInbox();
+  renderAdminWrittenPrayers();
+  renderReflectionsList();
+  renderSubscribersList();
+}
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,12 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setupQuickActions();
   setupVerseScheduler();
   setupSermonPublisher();
+  setupEditSermonModal();
+  setupSeriesManager();
   setupPreachersManager();
   setupLeadershipManager();
+  setupStructureManager();
   setupConversationsManager();
   setupPartnersManager();
   setupEventsManager();
   setupReflectionsManager();
+  setupWrittenPrayersAdmin();
   setupSettingsPanel();
   setupBackupPanel();
   setupSubscribersManager();
@@ -46,31 +99,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore authenticated session if active in current browser tab
   checkExistingSession();
 
-  // ── Real-time Cloud Data Sync Listeners for Admin ─────────────────────────
-  const refreshAdminView = () => {
-    preachers = getPreachers();
-    populateSelects();
-    renderDashboardStats();
-    renderSermonsList();
-    renderVerseQueue();
-    renderPreachersList();
-    renderLeadershipList();
-    renderConversationsList();
-    renderPartnersList();
-    renderEventsList();
-    renderPrayerInbox();
-    renderReflectionsList();
-  };
-
   window.addEventListener('storage', refreshAdminView);
   window.addEventListener('2ms:sermons:updated', refreshAdminView);
+  window.addEventListener('2ms:series:updated', refreshAdminView);
   window.addEventListener('2ms:preachers:updated', refreshAdminView);
   window.addEventListener('2ms:conversations:updated', refreshAdminView);
   window.addEventListener('2ms:verses:updated', refreshAdminView);
   window.addEventListener('2ms:events:updated', refreshAdminView);
   window.addEventListener('2ms:leadership:updated', refreshAdminView);
+  window.addEventListener('2ms:structure:updated', refreshAdminView);
+  window.addEventListener('2ms:partners:updated', refreshAdminView);
   window.addEventListener('2ms:reflections:updated', refreshAdminView);
   window.addEventListener('2ms:prayers:updated', refreshAdminView);
+  window.addEventListener('2ms:subscribers:updated', refreshAdminView);
+  window.addEventListener('2ms:written_prayers:updated', refreshAdminView);
 });
 
 // ── Topbar date ──────────────────────────────────────────────────────────
@@ -81,33 +123,66 @@ function updateTopbarDate() {
 
 // ── Check Existing Session on Load ───────────────────────────────────────
 function checkExistingSession() {
-  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+  const isSessionAuth = sessionStorage.getItem(SESSION_KEY) === 'true';
+  const isLocalAuth   = localStorage.getItem(SESSION_KEY) === 'true';
+
+  if (isSessionAuth || isLocalAuth) {
     authenticated = true;
+    if (isLocalAuth) {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+    }
     const overlay = document.getElementById('adminAuthOverlay');
     const dash    = document.getElementById('adminDashboard');
     if (overlay && dash) {
       overlay.hidden = true;
       dash.hidden    = false;
-      renderDashboardStats();
-      renderSermonsList();
-      renderVerseQueue();
-      renderPreachersList();
-      renderEventsList();
-      renderPrayerInbox();
-      renderReflectionsList();
+      refreshAdminView();
     }
   }
 }
 
 // ── AUTH ─────────────────────────────────────────────────────────────────
 function setupAuth() {
-  const form      = document.getElementById('adminAuthForm');
-  const overlay   = document.getElementById('adminAuthOverlay');
-  const dash      = document.getElementById('adminDashboard');
-  const passInput = document.getElementById('adminAuthPass');
-  const errEl     = document.getElementById('adminAuthError');
-  const noticeEl  = document.getElementById('adminLogoutNotice');
+  const form        = document.getElementById('adminAuthForm');
+  const overlay     = document.getElementById('adminAuthOverlay');
+  const dash        = document.getElementById('adminDashboard');
+  const passInput   = document.getElementById('adminAuthPass');
+  const errEl       = document.getElementById('adminAuthError');
+  const noticeEl    = document.getElementById('adminLogoutNotice');
+  const eyeBtn      = document.getElementById('adminAuthEyeBtn');
+  const capsWarning = document.getElementById('adminCapsWarning');
+  const rememberChk = document.getElementById('adminRememberMe');
+  const submitBtn   = document.getElementById('adminAuthSubmitBtn');
+  const submitText  = document.getElementById('adminAuthSubmitText');
 
+  const EYE_OPEN_SVG = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  const EYE_CLOSED_SVG = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+
+  // Eye toggle for password visibility (single SVG swapped dynamically)
+  eyeBtn?.addEventListener('click', () => {
+    if (!passInput) return;
+    const isPass = passInput.type === 'password';
+    passInput.type = isPass ? 'text' : 'password';
+    const svg = eyeBtn.querySelector('svg');
+    if (svg) {
+      svg.innerHTML = isPass ? EYE_CLOSED_SVG : EYE_OPEN_SVG;
+    }
+    const label = isPass ? 'Hide password' : 'Show password';
+    eyeBtn.setAttribute('title', label);
+    eyeBtn.setAttribute('aria-label', label);
+    passInput.focus();
+  });
+
+  // Caps lock detection
+  const handleCapsCheck = (e) => {
+    if (e && typeof e.getModifierState === 'function' && capsWarning) {
+      capsWarning.hidden = !e.getModifierState('CapsLock');
+    }
+  };
+  passInput?.addEventListener('keydown', handleCapsCheck);
+  passInput?.addEventListener('keyup', handleCapsCheck);
+
+  // Clear notice & error when user starts typing
   passInput?.addEventListener('input', () => {
     if (noticeEl) {
       noticeEl.hidden = true;
@@ -120,29 +195,37 @@ function setupAuth() {
     e.preventDefault();
     const pass = (passInput?.value || '').trim();
 
-    if (VALID_PASSWORDS.includes(pass)) {
+    if (isPasswordValid(pass)) {
       authenticated = true;
       sessionStorage.setItem(SESSION_KEY, 'true');
+      if (rememberChk && rememberChk.checked) {
+        localStorage.setItem(SESSION_KEY, 'true');
+      } else {
+        localStorage.removeItem(SESSION_KEY);
+      }
 
       if (noticeEl) {
         noticeEl.hidden = true;
         noticeEl.classList.remove('visible');
       }
+      if (capsWarning) capsWarning.hidden = true;
+
+      // Visual feedback on button
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.textContent = 'Entering The Steward...';
+
       overlay.style.animation = 'fadeOut 0.3s ease forwards';
       setTimeout(() => {
         overlay.hidden = true;
         dash.hidden    = false;
         dash.style.animation = 'fadeIn 0.3s ease';
-        renderDashboardStats();
-        renderSermonsList();
-        renderVerseQueue();
-        renderPreachersList();
-        renderEventsList();
-        renderPrayerInbox();
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.textContent = 'Enter The Steward';
+        refreshAdminView();
         toast('✅ Welcome to The Steward');
       }, 280);
     } else {
-      if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
+      if (errEl) errEl.textContent = 'Incorrect password. Please verify spelling or Caps Lock and try again.';
       if (passInput) {
         passInput.value = '';
         passInput.focus();
@@ -155,9 +238,16 @@ function setupAuth() {
     }
   });
 
-  // Inject fadeOut keyframe
+  // Inject fadeOut and shake keyframes if missing
   const st = document.createElement('style');
-  st.textContent = `@keyframes fadeOut { to { opacity:0; transform:scale(0.97); } }`;
+  st.textContent = `
+    @keyframes fadeOut { to { opacity:0; transform:scale(0.97); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+  `;
   document.head.appendChild(st);
 }
 
@@ -165,18 +255,25 @@ function setupAuth() {
 function handleSignOut() {
   authenticated = false;
   sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
 
   // Unconditionally close mobile drawer and backdrop if open
-  const sidebar  = document.querySelector('.admin-sidebar');
-  const backdrop = document.getElementById('adminSidebarBackdrop');
-  if (sidebar)  sidebar.classList.remove('open');
-  if (backdrop) backdrop.classList.remove('open');
+  closeMobileSidebar();
 
-  const dash      = document.getElementById('adminDashboard');
-  const overlay   = document.getElementById('adminAuthOverlay');
-  const passInput = document.getElementById('adminAuthPass');
-  const errEl     = document.getElementById('adminAuthError');
-  const noticeEl  = document.getElementById('adminLogoutNotice');
+  // Close any open modals
+  const editModal = document.getElementById('adminEditSermonModal');
+  if (editModal) editModal.hidden = true;
+  const cropModal = document.getElementById('adminCropModal');
+  if (cropModal) cropModal.hidden = true;
+
+  const dash        = document.getElementById('adminDashboard');
+  const overlay     = document.getElementById('adminAuthOverlay');
+  const passInput   = document.getElementById('adminAuthPass');
+  const errEl       = document.getElementById('adminAuthError');
+  const noticeEl    = document.getElementById('adminLogoutNotice');
+  const capsWarning = document.getElementById('adminCapsWarning');
+
+  if (capsWarning) capsWarning.hidden = true;
 
   dash.style.animation = 'fadeOut 0.25s ease forwards';
   setTimeout(() => {
@@ -186,6 +283,14 @@ function handleSignOut() {
     if (errEl) errEl.textContent = '';
     if (passInput) {
       passInput.value = '';
+      passInput.type = 'password';
+      const eyeBtn = document.getElementById('adminAuthEyeBtn');
+      const svg = eyeBtn?.querySelector('svg');
+      if (svg) svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+      if (eyeBtn) {
+        eyeBtn.setAttribute('title', 'Show password');
+        eyeBtn.setAttribute('aria-label', 'Show password');
+      }
       passInput.focus();
     }
 
@@ -271,19 +376,21 @@ function setupQuickActions() {
 }
 
 const PANEL_TITLES = {
-  dashboard:     'Dashboard',
-  'daily-verse': 'Daily Verse Queue',
-  reflections:   'Community Reflections Moderation',
-  sermons:       'Sermon Publisher',
-  preachers:     'Preachers Manager',
-  events:        'Events Manager',
-  leadership:    'Leadership & Team',
-  conversations: 'The Conversation',
-  partners:      'Ministry Partners',
-  subscribers:   'Newsletter Subscribers',
-  prayers:       'Prayer Inbox',
-  settings:      'Ministry Settings',
-  backup:        'Export & Backup'
+  dashboard:           'Dashboard',
+  'daily-verse':       'Daily Verse Queue',
+  reflections:         'Community Reflections Moderation',
+  sermons:             'Sermon Publisher',
+  series:              'Sermon Series Manager',
+  preachers:           'Preachers Manager',
+  events:              'Events Manager',
+  leadership:          'Leadership & Team',
+  structure:           'Ministry Structure & Pillars',
+  conversations:       'The Conversation',
+  partners:            'Ministry Partners',
+  subscribers:         'Newsletter Subscribers',
+  prayers:             'Prayers & Requests',
+  settings:            'Ministry Settings',
+  backup:              'Export & Backup'
 };
 
 function switchPanel(panelId) {
@@ -295,10 +402,23 @@ function switchPanel(panelId) {
   const titleEl = document.getElementById('adminTopbarTitle');
   if (titleEl) titleEl.textContent = PANEL_TITLES[panelId] || panelId;
 
-  if (panelId === 'reflections') {
-    renderReflectionsList();
-  } else if (panelId === 'dashboard') {
-    renderDashboardStats();
+  const PANEL_RENDERERS = {
+    dashboard: () => renderDashboardStats(),
+    'daily-verse': () => renderVerseQueue(),
+    reflections: () => renderReflectionsList(),
+    sermons: () => { populateSelects(); renderSermonsList(); },
+    series: () => { populateSelects(); renderSeriesList(); },
+    preachers: () => renderPreachersList(),
+    events: () => renderEventsList(),
+    leadership: () => renderLeadershipList(),
+    structure: () => renderStructureEditor(),
+    conversations: () => renderConversationsList(),
+    partners: () => renderPartnersList(),
+    subscribers: () => renderSubscribersList(),
+    prayers: () => { renderPrayerInbox(); renderAdminWrittenPrayers(); }
+  };
+  if (PANEL_RENDERERS[panelId]) {
+    PANEL_RENDERERS[panelId]();
   }
 }
 
@@ -306,8 +426,8 @@ function switchPanel(panelId) {
 function renderDashboardStats() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('statSermons',   getSermons().length);
-  set('statVerses',    scheduledDailyVerses.length);
-  set('statPreachers', preachers.length);
+  set('statVerses',    getDailyVerses().length);
+  set('statPreachers', getPreachers().length);
   set('statEvents',    getEvents().length);
   const allPrayers = getPrayers();
   set('statPrayers',   allPrayers.length);
@@ -319,8 +439,11 @@ function renderDashboardStats() {
 }
 
 function updatePrayerBadge() {
+  const count = getPrayers().length;
   const b = document.getElementById('prayerBadge');
-  if (b) b.textContent = getPrayers().length;
+  if (b) b.textContent = count;
+  const sub = document.getElementById('prayerInboxSubBadge');
+  if (sub) sub.textContent = count;
 }
 
 // ── DAILY VERSE SCHEDULER ─────────────────────────────────────────────────
@@ -343,12 +466,6 @@ function setupVerseScheduler() {
     const book     = parts.join(' ') || bookChap;
 
     const entry = { id:`dv-${dateStr}`, publishDate:dateStr, verseText, book, chapter, verse, reflection, tags:['Scheduled'] };
-    const idx   = scheduledDailyVerses.findIndex(v => v.publishDate === dateStr);
-    if (idx >= 0) scheduledDailyVerses[idx] = entry;
-    else {
-      scheduledDailyVerses.push(entry);
-      scheduledDailyVerses.sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate));
-    }
     upsertDailyVerse(entry);
 
     e.target.reset();
@@ -359,15 +476,18 @@ function setupVerseScheduler() {
   });
 
   document.getElementById('clearQueueBtn')?.addEventListener('click', async () => {
+    const queue = getDailyVerses();
+    if (!queue.length) {
+      toast('Queue is already empty.');
+      return;
+    }
     const confirmed = await showAdminConfirm({
       title: 'Clear Scheduled Verses',
-      message: 'Are you sure you want to clear all scheduled daily verses from the queue?',
+      message: `Are you sure you want to clear all ${queue.length} scheduled daily verses from the queue?`,
       confirmText: 'Clear All'
     });
     if (!confirmed) return;
-    scheduledDailyVerses.forEach(v => deleteDailyVerse(v.id));
-    scheduledDailyVerses.length = 0;
-    saveDailyVerses(scheduledDailyVerses);
+    queue.forEach(v => deleteDailyVerse(v.id));
     renderVerseQueue();
     renderDashboardStats();
     toast('Queue cleared.');
@@ -377,7 +497,8 @@ function setupVerseScheduler() {
 function renderVerseQueue() {
   const c = document.getElementById('adminVerseQueueList');
   const countEl = document.getElementById('verseQueueCount');
-  if (countEl) countEl.textContent = scheduledDailyVerses.length;
+  const queue = getDailyVerses();
+  if (countEl) countEl.textContent = queue.length;
 
   // Update live status banner
   const statusEl = document.getElementById('adminTodayVerseStatus');
@@ -395,31 +516,36 @@ function renderVerseQueue() {
 
   if (!c) return;
 
-  if (!scheduledDailyVerses.length) {
+  if (!queue.length) {
     c.innerHTML = `<p style="color:rgba(255,255,255,0.3);text-align:center;padding:32px 0;">No custom verses scheduled yet.<br><small style="color:rgba(255,255,255,0.2);">Live site is automatically serving the daily evergreen devotional rotation.</small></p>`;
     return;
   }
 
-  c.innerHTML = scheduledDailyVerses.map((v, idx) => `
+  c.innerHTML = queue.map(v => `
     <div class="admin-list-item">
       <div class="admin-list-item-header">
         <strong style="color:var(--admin-gold);">${v.publishDate}</strong>
         <span class="admin-tag admin-tag-blue">${v.book} ${v.chapter}:${v.verse}</span>
       </div>
-      <p style="margin:4px 0;">"${v.verseText}"</p>
+      <p style="margin:4px 0;">"${escapeAdminHtml(v.verseText)}"</p>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${v.reflection.substring(0,55)}…</span>
-        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removeVerse(${idx})">✕ Remove</button>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${escapeAdminHtml((v.reflection || '').substring(0,55))}…</span>
+        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removeVerse('${v.id}')">✕ Remove</button>
       </div>
     </div>`).join('');
 }
 
-window.removeVerse = idx => {
-  const removed = scheduledDailyVerses.splice(idx, 1)[0];
-  if (removed && removed.id) {
-    deleteDailyVerse(removed.id);
-  }
-  saveDailyVerses(scheduledDailyVerses);
+window.removeVerse = async id => {
+  const all = getDailyVerses();
+  const target = all.find(v => v.id === id);
+  if (!target) return;
+  const confirmed = await showAdminConfirm({
+    title: 'Remove Scheduled Verse',
+    message: `Remove verse scheduled for ${target.publishDate} (${target.book} ${target.chapter}:${target.verse})?`,
+    confirmText: 'Remove Verse'
+  });
+  if (!confirmed) return;
+  deleteDailyVerse(id);
   renderVerseQueue();
   renderDashboardStats();
   toast('Verse removed from queue.');
@@ -445,26 +571,47 @@ function setupSermonPublisher() {
   }
 
   ytPreviewBtn?.addEventListener('click', loadPreview);
-  // Also auto-preview when user stops typing
   let ytDebounce;
   ytUrlInput?.addEventListener('input', () => {
     clearTimeout(ytDebounce);
     ytDebounce = setTimeout(loadPreview, 500);
   });
 
+  // Toggle series fields
+  const partOfSeriesToggle = document.getElementById('adminPartOfSeries');
+  const seriesFields = document.getElementById('adminSeriesFields');
+  partOfSeriesToggle?.addEventListener('change', () => {
+    if (seriesFields) seriesFields.style.display = partOfSeriesToggle.checked ? 'block' : 'none';
+  });
+
+  // Auto-detect 2-Minute PLUS if duration >= 3 minutes
+  const durationInput = document.getElementById('adminDuration');
+  const isPlusToggle = document.getElementById('adminIsPlus');
+  durationInput?.addEventListener('input', () => {
+    const val = durationInput.value.trim();
+    const sec = durationToSeconds(val);
+    if (sec >= 180 && isPlusToggle && !isPlusToggle.checked) {
+      isPlusToggle.checked = true;
+    }
+  });
+
   // ── Publish form submit ──
   document.getElementById('adminQuickPublishForm')?.addEventListener('submit', e => {
     e.preventDefault();
 
-    const title      = document.getElementById('adminSermonTitle').value.trim();
-    const preacher   = document.getElementById('adminPreacher').value;
-    const scripture  = document.getElementById('adminScripture').value.trim();
-    const season     = document.getElementById('adminSeason').value;
-    const duration   = document.getElementById('adminDuration').value.trim();
-    const summary    = document.getElementById('adminSummary').value.trim();
-    const featured   = document.getElementById('adminFeatured').checked;
-    const sermonType = document.querySelector('input[name="sermonType"]:checked')?.value || 'Devotional';
-    const topics     = [...document.querySelectorAll('.admin-checkbox-group input:checked')].map(c => c.value);
+    const title        = document.getElementById('adminSermonTitle').value.trim();
+    const preacher     = document.getElementById('adminPreacher').value.trim();
+    const scripture    = document.getElementById('adminScripture').value.trim();
+    const season       = document.getElementById('adminSeason').value;
+    const duration     = document.getElementById('adminDuration').value.trim();
+    const summary      = document.getElementById('adminSummary').value.trim();
+    const featured     = document.getElementById('adminFeatured').checked;
+    const isPlus       = isPlusToggle ? isPlusToggle.checked : false;
+    const partOfSeries = partOfSeriesToggle ? partOfSeriesToggle.checked : false;
+    const seriesName   = document.getElementById('adminSeriesName')?.value.trim() || '';
+    const seriesPart   = parseInt(document.getElementById('adminSeriesPart')?.value, 10) || 1;
+    const sermonType   = document.querySelector('input[name="sermonType"]:checked')?.value || 'Devotional';
+    const topics       = [...document.querySelectorAll('.admin-checkbox-group input:checked')].map(c => c.value);
 
     const rawUrl = ytUrlInput.value.trim();
     const embedId = videoIdInput.value || extractVideoId(rawUrl);
@@ -472,6 +619,8 @@ function setupSermonPublisher() {
     if (topics.length === 0) { toast('⚠️ Please select at least one topic.'); return; }
 
     const matchedPreacher = preachers.find(p => p.name.toLowerCase() === preacher.toLowerCase());
+    const durSec = durationToSeconds(duration);
+
     const sermon = {
       id: `sermon-${Date.now()}`,
       title,
@@ -486,7 +635,10 @@ function setupSermonPublisher() {
       category: topics[0] || 'Faith',
       sermonType,
       duration,
-      durationSec: durationToSeconds(duration),
+      durationSec: durSec,
+      isPlus: isPlus || durSec >= 180,
+      seriesName: (partOfSeries && seriesName) ? seriesName : '',
+      seriesPart: (partOfSeries && seriesName) ? seriesPart : null,
       youtubeUrl: `https://www.youtube.com/watch?v=${embedId}`,
       youtubeEmbedId: embedId,
       thumbnailUrl: ytThumb(embedId),
@@ -494,15 +646,38 @@ function setupSermonPublisher() {
       publishDate: new Date().toISOString().split('T')[0],
       views: 0,
       featured,
+      isLatest: false,
       transcript: []
     };
+
+    // If assigned to a series that doesn't yet exist in the store, auto-create it
+    if (partOfSeries && seriesName) {
+      const existingSeries = getSeries();
+      if (!existingSeries.some(s => s.title.toLowerCase() === seriesName.toLowerCase())) {
+        upsertSeries({
+          id: `series-${Date.now()}`,
+          title: seriesName,
+          preacherName: preacher,
+          scripture,
+          bannerUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=1200&q=80',
+          description: `Sermon series exploring ${seriesName}.`
+        });
+      }
+    }
 
     upsertSermon(sermon);
     renderDashboardStats();
     renderSermonsList();
+    renderSeriesList();
+    populateSelects();
+
     e.target.reset();
     ytPreviewBox.style.display = 'none';
     videoIdInput.value = '';
+    if (seriesFields) seriesFields.style.display = 'none';
+    if (partOfSeriesToggle) partOfSeriesToggle.checked = false;
+    if (isPlusToggle) isPlusToggle.checked = false;
+
     // Reset checkboxes — re-check Faith as default
     document.querySelectorAll('.admin-checkbox-group input').forEach((c, i) => c.checked = i === 0);
     document.querySelector('input[name="sermonType"][value="Devotional"]').checked = true;
@@ -531,17 +706,23 @@ function renderSermonsList() {
       <img class="admin-sermon-thumb"
         src="${s.thumbnailUrl}"
         onerror="this.src='https://img.youtube.com/vi/${s.youtubeEmbedId}/hqdefault.jpg'"
-        alt="${s.title}">
+        alt="${escapeAdminHtml(s.title)}">
       <div class="admin-sermon-info">
-        <div class="admin-sermon-title" title="${s.title}">${s.title}</div>
+        <div class="admin-sermon-title" title="${escapeAdminHtml(s.title)}">${escapeAdminHtml(s.title)}</div>
         <div class="admin-sermon-meta">
-          <span>${s.preacherName}</span>
+          <span>${escapeAdminHtml(s.preacherName)}</span>
           <span>${s.duration}</span>
           <span class="admin-sermon-type-badge">${s.sermonType || 'Devotional'}</span>
-          ${(s.topics && s.topics.length ? s.topics : [s.category]).filter(Boolean).map(t => `<span class="admin-tag admin-tag-blue" style="font-size:0.68rem;padding:2px 6px;">${t}</span>`).join(' ')}
+          ${s.isPlus ? '<span class="admin-tag admin-tag-plus" style="font-size:0.68rem;padding:2px 6px;">⚡ PLUS</span>' : ''}
+          ${s.seriesName ? `<span class="admin-tag admin-tag-series" style="font-size:0.68rem;padding:2px 6px;">📚 ${escapeAdminHtml(s.seriesName)}${s.seriesPart ? ' · Pt ' + s.seriesPart : ''}</span>` : ''}
+          ${(s.topics && s.topics.length ? s.topics : [s.category]).filter(Boolean).map(t => `<span class="admin-tag admin-tag-blue" style="font-size:0.68rem;padding:2px 6px;">${escapeAdminHtml(t)}</span>`).join(' ')}
         </div>
       </div>
       <div class="admin-sermon-actions">
+        <button class="latest-btn ${s.isLatest ? 'latest-active' : ''}" data-id="${s.id}" title="${s.isLatest ? 'Current Homepage Latest Sermon' : 'Set as Homepage Latest Sermon'}">
+          ${s.isLatest ? '📍 Latest' : 'Set Latest'}
+        </button>
+        <button class="edit-btn" data-id="${s.id}" title="Edit Sermon">✏️</button>
         <button class="feat-btn ${s.featured ? 'featured-on' : ''}" data-id="${s.id}" title="${s.featured ? 'Unfeature' : 'Feature'}">
           ${s.featured ? '★' : '☆'}
         </button>
@@ -549,6 +730,24 @@ function renderSermonsList() {
       </div>
     </div>
   `).join('');
+
+  // Latest sermon toggle
+  list.querySelectorAll('.latest-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const target = getSermons().find(x => x.id === id);
+      setLatestSermon(id);
+      renderSermonsList();
+      toast(`📍 "${target ? target.title : 'Sermon'}" set as Homepage Latest!`);
+    });
+  });
+
+  // Edit sermon
+  list.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openEditSermonModal(btn.dataset.id);
+    });
+  });
 
   // Feature toggle
   list.querySelectorAll('.feat-btn').forEach(btn => {
@@ -584,10 +783,363 @@ function renderSermonsList() {
   });
 }
 
+// ── EDIT SERMON MODAL ─────────────────────────────────────────────────────
+function setupEditSermonModal() {
+  const modal = document.getElementById('adminEditSermonModal');
+  if (!modal) return;
+
+  const closeModal = () => { modal.style.display = 'none'; };
+  document.getElementById('btnCancelEditSermon')?.addEventListener('click', closeModal);
+  document.getElementById('btnCancelEditSermonTop')?.addEventListener('click', closeModal);
+
+  // Close modal when clicking the dark backdrop
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Close on Escape key
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display !== 'none') {
+      closeModal();
+    }
+  });
+
+  // Live YouTube URL preview in Edit Modal
+  const editYtUrlInput = document.getElementById('editSermonYoutubeUrl');
+  const editYtPreviewBtn = document.getElementById('btnEditSermonPreviewYt');
+  const editThumbImg = document.getElementById('editSermonThumbPreview');
+  const editEmbedIdInput = document.getElementById('editSermonEmbedId');
+  const editEmbedIdBadge = document.getElementById('editSermonEmbedIdBadge');
+
+  function updateEditVideoPreview() {
+    const raw = (editYtUrlInput?.value || '').trim();
+    const vid = extractVideoId(raw);
+    if (vid) {
+      if (editEmbedIdInput) editEmbedIdInput.value = vid;
+      if (editEmbedIdBadge) editEmbedIdBadge.textContent = vid;
+      if (editThumbImg) editThumbImg.src = ytThumb(vid);
+    }
+  }
+
+  editYtPreviewBtn?.addEventListener('click', updateEditVideoPreview);
+  let editYtDebounce;
+  editYtUrlInput?.addEventListener('input', () => {
+    clearTimeout(editYtDebounce);
+    editYtDebounce = setTimeout(updateEditVideoPreview, 400);
+  });
+
+  // Auto-detect 2-Minute PLUS if duration >= 3 minutes (180s)
+  const editDurationInput = document.getElementById('editSermonDuration');
+  const editIsPlusCheck = document.getElementById('editSermonIsPlus');
+  editDurationInput?.addEventListener('input', () => {
+    const val = editDurationInput.value.trim();
+    const sec = durationToSeconds(val);
+    if (sec >= 180 && editIsPlusCheck && !editIsPlusCheck.checked) {
+      editIsPlusCheck.checked = true;
+    }
+  });
+
+  // Series toggle
+  const seriesCheck = document.getElementById('editSermonPartOfSeries');
+  const seriesFields = document.getElementById('editSermonSeriesFields');
+  seriesCheck?.addEventListener('change', () => {
+    if (seriesFields) seriesFields.style.display = seriesCheck.checked ? 'block' : 'none';
+  });
+
+  document.getElementById('adminEditSermonForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editSermonId').value;
+    const all = getSermons();
+    const s = all.find(item => item.id === id);
+    if (!s) return;
+
+    const newTitle = document.getElementById('editSermonTitle').value.trim();
+    const newPreacher = document.getElementById('editSermonPreacher').value.trim();
+    const newDuration = document.getElementById('editSermonDuration').value.trim();
+    const durSec = durationToSeconds(newDuration);
+    const newScripture = document.getElementById('editSermonScripture').value.trim();
+    const newSeason = document.getElementById('editSermonSeason').value;
+    const newType = document.querySelector('input[name="editSermonType"]:checked')?.value || 'Devotional';
+    const newSummary = document.getElementById('editSermonSummary').value.trim();
+    const newIsPlus = editIsPlusCheck ? editIsPlusCheck.checked : (durSec >= 180);
+    const newFeatured = document.getElementById('editSermonFeatured').checked;
+
+    // Check YouTube link update
+    const rawUrl = (editYtUrlInput?.value || '').trim();
+    const updatedEmbedId = extractVideoId(rawUrl) || editEmbedIdInput?.value || s.youtubeEmbedId;
+
+    // Selected Topics
+    const selectedTopics = [...document.querySelectorAll('#editSermonTopicsGroup input:checked')].map(c => c.value);
+    const finalTopics = selectedTopics.length > 0 ? selectedTopics : (s.topics && s.topics.length ? s.topics : ['Faith']);
+
+    // Match preacher from directory
+    const matchedPreacher = preachers.find(p => p.name.toLowerCase() === newPreacher.toLowerCase());
+    if (matchedPreacher) {
+      s.preacherId = matchedPreacher.id;
+    }
+
+    s.title = newTitle;
+    s.slug = newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    s.preacherName = newPreacher;
+    s.duration = newDuration;
+    s.durationSec = durSec;
+    s.scripture = newScripture;
+    s.scriptureBook = newScripture.split(' ')[0] || '';
+    s.primarySeason = newSeason;
+    s.sermonType = newType;
+    s.topics = finalTopics;
+    s.category = finalTopics[0] || 'Faith';
+    s.summary = newSummary;
+    s.isPlus = newIsPlus;
+    s.featured = newFeatured;
+
+    if (updatedEmbedId) {
+      s.youtubeEmbedId = updatedEmbedId;
+      s.youtubeUrl = `https://www.youtube.com/watch?v=${updatedEmbedId}`;
+      s.thumbnailUrl = ytThumb(updatedEmbedId);
+    }
+
+    const partOfSeries = document.getElementById('editSermonPartOfSeries').checked;
+    if (partOfSeries) {
+      s.seriesName = document.getElementById('editSermonSeriesName').value.trim();
+      s.seriesPart = parseInt(document.getElementById('editSermonSeriesPart').value, 10) || 1;
+      if (s.seriesName && !getSeries().some(sr => sr.title.toLowerCase() === s.seriesName.toLowerCase())) {
+        upsertSeries({
+          id: `series-${Date.now()}`,
+          title: s.seriesName,
+          preacherName: s.preacherName,
+          scripture: s.scripture,
+          bannerUrl: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=1200&q=80',
+          description: `Sermon series exploring ${s.seriesName}.`
+        });
+      }
+    } else {
+      delete s.seriesName;
+      delete s.seriesPart;
+    }
+
+    const isLatest = document.getElementById('editSermonIsLatest').checked;
+    if (isLatest) {
+      setLatestSermon(s.id);
+    } else {
+      s.isLatest = false;
+      upsertSermon(s);
+    }
+
+    closeModal();
+    renderSermonsList();
+    renderSeriesList();
+    populateSelects();
+    renderDashboardStats();
+    toast(`💾 Changes saved for "${s.title}"!`);
+  });
+}
+
+function openEditSermonModal(id) {
+  const sermon = getSermons().find(s => s.id === id);
+  if (!sermon) return;
+
+  const modal = document.getElementById('adminEditSermonModal');
+  if (!modal) return;
+
+  document.getElementById('editSermonId').value = sermon.id;
+  document.getElementById('editSermonTitle').value = sermon.title;
+  document.getElementById('editSermonPreacher').value = sermon.preacherName || '';
+  document.getElementById('editSermonDuration').value = sermon.duration || '2:00';
+  document.getElementById('editSermonScripture').value = sermon.scripture || '';
+  document.getElementById('editSermonSummary').value = sermon.summary || '';
+
+  // YouTube fields
+  const embedId = sermon.youtubeEmbedId || extractVideoId(sermon.youtubeUrl || '');
+  const editEmbedIdInput = document.getElementById('editSermonEmbedId');
+  const editEmbedIdBadge = document.getElementById('editSermonEmbedIdBadge');
+  const editYtUrlInput = document.getElementById('editSermonYoutubeUrl');
+  const editThumbImg = document.getElementById('editSermonThumbPreview');
+
+  if (editEmbedIdInput) editEmbedIdInput.value = embedId || '';
+  if (editEmbedIdBadge) editEmbedIdBadge.textContent = embedId || 'No ID';
+  if (editYtUrlInput) editYtUrlInput.value = sermon.youtubeUrl || (embedId ? `https://www.youtube.com/watch?v=${embedId}` : '');
+  if (editThumbImg) editThumbImg.src = sermon.thumbnailUrl || (embedId ? ytThumb(embedId) : '');
+
+  // Season dropdown
+  const seasonSel = document.getElementById('editSermonSeason');
+  if (seasonSel) {
+    seasonSel.innerHTML = seasons.filter(s => s.slug !== 'all')
+      .map(s => `<option value="${s.name}" ${s.name === sermon.primarySeason ? 'selected' : ''}>${s.name}</option>`).join('');
+  }
+
+  // Sermon type radio
+  const typeRadios = document.querySelectorAll('input[name="editSermonType"]');
+  typeRadios.forEach(r => {
+    r.checked = (r.value === (sermon.sermonType || 'Devotional'));
+  });
+
+  // Topics checklist
+  const topicCheckboxes = document.querySelectorAll('#editSermonTopicsGroup input[type="checkbox"]');
+  const activeTopics = (sermon.topics && sermon.topics.length) ? sermon.topics : (sermon.category ? [sermon.category] : []);
+  topicCheckboxes.forEach(cb => {
+    cb.checked = activeTopics.some(t => t.toLowerCase() === cb.value.toLowerCase());
+  });
+
+  // Plus toggle
+  const isPlusCheck = document.getElementById('editSermonIsPlus');
+  if (isPlusCheck) isPlusCheck.checked = !!sermon.isPlus;
+
+  // Series
+  const seriesCheck = document.getElementById('editSermonPartOfSeries');
+  const seriesFields = document.getElementById('editSermonSeriesFields');
+  if (seriesCheck) {
+    seriesCheck.checked = !!sermon.seriesName;
+    if (seriesFields) seriesFields.style.display = sermon.seriesName ? 'block' : 'none';
+  }
+  document.getElementById('editSermonSeriesName').value = sermon.seriesName || '';
+  document.getElementById('editSermonSeriesPart').value = sermon.seriesPart || '';
+
+  // Featured & Latest
+  const featuredCheck = document.getElementById('editSermonFeatured');
+  if (featuredCheck) featuredCheck.checked = !!sermon.featured;
+
+  const latestCheck = document.getElementById('editSermonIsLatest');
+  if (latestCheck) latestCheck.checked = !!sermon.isLatest;
+
+  modal.style.display = 'flex';
+}
+
+// ── SERMON SERIES MANAGER ─────────────────────────────────────────────────
+function setupSeriesManager() {
+  const form = document.getElementById('adminSeriesForm');
+  const cancelBtn = document.getElementById('btnSeriesCancelEdit');
+  const titleInput = document.getElementById('seriesTitleInput');
+  const preacherInput = document.getElementById('seriesPreacherInput');
+  const scriptureInput = document.getElementById('seriesScriptureInput');
+  const bannerInput = document.getElementById('seriesBannerUrlInput');
+  const descInput = document.getElementById('seriesDescInput');
+  const editIdInput = document.getElementById('editSeriesId');
+  const formTitle = document.getElementById('seriesFormTitle');
+  const submitBtn = document.getElementById('btnSeriesSubmit');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = editIdInput.value || `series-${Date.now()}`;
+    const seriesData = {
+      id,
+      title: titleInput.value.trim(),
+      preacherName: preacherInput.value.trim(),
+      scripture: scriptureInput.value.trim(),
+      bannerUrl: bannerInput.value.trim(),
+      description: descInput.value.trim(),
+      updatedAt: new Date().toISOString()
+    };
+
+    upsertSeries(seriesData);
+    form.reset();
+    editIdInput.value = '';
+    if (formTitle) formTitle.textContent = 'Create Sermon Series';
+    if (submitBtn) submitBtn.textContent = '📚 Save Sermon Series';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+
+    populateSelects();
+    renderSeriesList();
+    toast(`📚 Series "${seriesData.title}" saved!`);
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    form.reset();
+    editIdInput.value = '';
+    if (formTitle) formTitle.textContent = 'Create Sermon Series';
+    if (submitBtn) submitBtn.textContent = '📚 Save Sermon Series';
+    cancelBtn.style.display = 'none';
+  });
+
+  renderSeriesList();
+}
+
+function renderSeriesList() {
+  const container = document.getElementById('adminSeriesListContainer');
+  const counter = document.getElementById('seriesCount');
+  if (!container) return;
+
+  const seriesList = getSeries();
+  const sermons = getSermons();
+  if (counter) counter.textContent = seriesList.length;
+
+  if (seriesList.length === 0) {
+    container.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No series created yet. Start one on the left!</p>';
+    return;
+  }
+
+  container.innerHTML = seriesList.map(item => {
+    const linkedCount = sermons.filter(s => s.seriesName && s.seriesName.toLowerCase() === item.title.toLowerCase()).length;
+    return `
+      <div class="admin-series-card" id="scard-${item.id}">
+        <img class="admin-series-banner-preview" src="${escapeAdminHtml(item.bannerUrl)}" alt="${escapeAdminHtml(item.title)}" onerror="this.src='https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&w=600&q=80'">
+        <div class="admin-series-details">
+          <h4 class="admin-series-title">${escapeAdminHtml(item.title)}</h4>
+          <div class="admin-series-meta">
+            <span>🎙️ ${escapeAdminHtml(item.preacherName)}</span>
+            <span>📖 ${escapeAdminHtml(item.scripture)}</span>
+            <span class="admin-tag admin-tag-blue" style="font-size:0.7rem;padding:2px 7px;">${linkedCount} ${linkedCount === 1 ? 'Part' : 'Parts'}</span>
+          </div>
+        </div>
+        <div class="admin-series-actions">
+          <button class="admin-btn admin-btn-outline admin-btn-sm edit-series-btn" data-id="${item.id}" style="padding:4px 8px;">✏️ Edit</button>
+          <button class="admin-btn admin-btn-danger admin-btn-sm del-series-btn" data-id="${item.id}" style="padding:4px 8px;">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire Edit Series
+  container.querySelectorAll('.edit-series-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const item = getSeries().find(s => s.id === id);
+      if (!item) return;
+
+      document.getElementById('editSeriesId').value = item.id;
+      document.getElementById('seriesTitleInput').value = item.title || '';
+      document.getElementById('seriesPreacherInput').value = item.preacherName || '';
+      document.getElementById('seriesScriptureInput').value = item.scripture || '';
+      document.getElementById('seriesBannerUrlInput').value = item.bannerUrl || '';
+      document.getElementById('seriesDescInput').value = item.description || '';
+
+      const formTitle = document.getElementById('seriesFormTitle');
+      const submitBtn = document.getElementById('btnSeriesSubmit');
+      const cancelBtn = document.getElementById('btnSeriesCancelEdit');
+      if (formTitle) formTitle.textContent = 'Edit Sermon Series';
+      if (submitBtn) submitBtn.textContent = '💾 Update Series';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+      document.getElementById('seriesTitleInput').focus();
+    });
+  });
+
+  // Wire Delete Series
+  container.querySelectorAll('.del-series-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const item = getSeries().find(s => s.id === id);
+      if (!item) return;
+
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Sermon Series',
+        message: `Are you sure you want to delete the series "${item.title}"? Sermons assigned to this series will remain in the catalog.`,
+        confirmText: 'Delete Series'
+      });
+      if (!confirmed) return;
+
+      deleteSeries(item.id);
+      populateSelects();
+      renderSeriesList();
+      toast(`🗑️ Series "${item.title}" deleted.`);
+    });
+  });
+}
+
 function populateSelects() {
   const preacherDataList = document.getElementById('adminPreacherList');
   const preacherSel = document.getElementById('adminPreacher');
   const seasonSel   = document.getElementById('adminSeason');
+  const seriesDatalist = document.getElementById('adminSeriesListDatalist');
 
   if (preacherDataList) {
     const list = getPreachers();
@@ -595,6 +1147,11 @@ function populateSelects() {
   } else if (preacherSel && preacherSel.tagName === 'SELECT') {
     const list = getPreachers();
     preacherSel.innerHTML = list.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
+
+  if (seriesDatalist) {
+    const sList = getSeries();
+    seriesDatalist.innerHTML = sList.map(s => `<option value="${escapeAdminHtml(s.title)}"></option>`).join('');
   }
 
   if (seasonSel)
@@ -986,20 +1543,21 @@ function setupPreachersManager() {
 function renderPreachersList() {
   const c = document.getElementById('adminPreachersList');
   const countEl = document.getElementById('preachersCount');
-  if (countEl) countEl.textContent = preachers.length;
+  const allPreachers = getPreachers();
+  if (countEl) countEl.textContent = allPreachers.length;
   if (!c) return;
 
-  c.innerHTML = preachers.map((p, idx) => `
+  c.innerHTML = allPreachers.map(p => `
     <div class="admin-list-item admin-preacher-item">
-      <img src="${p.photoUrl}" alt="${p.name}"
+      <img src="${p.photoUrl}" alt="${escapeAdminHtml(p.name)}"
            onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=C62828&color=fff&size=88'">
       <div class="admin-preacher-info">
-        <strong>${p.name}</strong>
-        <span>${p.denomination} · ${p.country}</span>
+        <strong>${escapeAdminHtml(p.name)}</strong>
+        <span>${escapeAdminHtml(p.denomination || '')} · ${escapeAdminHtml(p.country || '')}</span>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
         <button class="admin-btn admin-btn-sm admin-btn-outline edit-preacher-btn" data-id="${p.id}" title="Edit minister details & photo">✏️ Edit</button>
-        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher(${idx})" title="Remove minister">✕</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger" onclick="removePreacher('${p.id}')" title="Remove minister">✕</button>
       </div>
     </div>`).join('');
 
@@ -1007,7 +1565,7 @@ function renderPreachersList() {
   c.querySelectorAll('.edit-preacher-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      const p = preachers.find(item => item.id === id);
+      const p = getPreachers().find(item => item.id === id);
       if (!p) return;
 
       const editIdInput = document.getElementById('editPreacherId');
@@ -1044,8 +1602,8 @@ function renderPreachersList() {
   });
 }
 
-window.removePreacher = async idx => {
-  const p = preachers[idx];
+window.removePreacher = async id => {
+  const p = getPreachers().find(item => item.id === id);
   if (!p) return;
   const name = p.name;
   const confirmed = await showAdminConfirm({
@@ -1055,7 +1613,6 @@ window.removePreacher = async idx => {
   });
   if (!confirmed) return;
   deletePreacher(p.id);
-  preachers = getPreachers();
   populateSelects();
   renderPreachersList();
   renderDashboardStats();
@@ -1150,6 +1707,7 @@ function setupLeadershipManager() {
   const nameInput = document.getElementById('newLeaderName');
   const roleInput = document.getElementById('newLeaderRole');
   const tierInput = document.getElementById('newLeaderTier');
+  const orderInput = document.getElementById('newLeaderOrder');
   const photoUrlInput = document.getElementById('newLeaderPhoto');
   const photoFileInput = document.getElementById('newLeaderPhotoFile');
   const bioInput = document.getElementById('newLeaderBio');
@@ -1162,6 +1720,11 @@ function setupLeadershipManager() {
   bioInput?.addEventListener('input', refreshLeaderBioCount);
   bioInput?.addEventListener('paste', () => setTimeout(refreshLeaderBioCount, 50));
   refreshLeaderBioCount();
+
+  document.getElementById('btnGoToStructureFromLeadership')?.addEventListener('click', () => {
+    switchPanel('structure');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 
   // Populate Preachers quick-import dropdown
   function populateLeaderPreacherImport() {
@@ -1213,6 +1776,7 @@ function setupLeadershipManager() {
     if (submitBtn) submitBtn.textContent = '➕ Add to Who is Who (Team)';
     if (cancelBtn) cancelBtn.style.display = 'none';
     if (importSelect) importSelect.value = '';
+    if (orderInput) orderInput.value = getLeadershipTeam().length + 1;
     updateLeaderAvatarPreview();
     refreshLeaderBioCount();
   }
@@ -1252,9 +1816,11 @@ function setupLeadershipManager() {
     const editId   = editIdInput?.value;
     const name     = nameInput?.value.trim() || '';
     const role     = roleInput?.value.trim() || '';
-    const tier     = tierInput?.value || 'Executive Board';
+    const tier     = tierInput?.value || 'Board of Directors';
     let photoUrl   = photoUrlInput?.value.trim();
     const bio      = bioInput?.value.trim() || '';
+    const orderVal = orderInput?.value ? parseInt(orderInput.value, 10) : NaN;
+    const order    = !isNaN(orderVal) ? orderVal : (editId ? undefined : getLeadershipTeam().length + 1);
 
     const bioWords = countWords(bio);
     if (bioWords > 150) {
@@ -1264,8 +1830,8 @@ function setupLeadershipManager() {
     }
 
     let tierOrder = 1;
-    if (tier === 'Department Coordinators' || tier.includes('Department')) tierOrder = 2;
-    if (tier === 'Network Preachers' || tier.includes('Network') || tier.includes('Preacher')) tierOrder = 3;
+    if (tier === 'Executive Director') tierOrder = 2;
+    if (tier === 'Ministry Department' || tier.includes('Department') || tier.includes('Minister')) tierOrder = 3;
 
     if (!photoUrl) {
       photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=C62828&color=fff&size=160`;
@@ -1277,6 +1843,7 @@ function setupLeadershipManager() {
       role,
       tier,
       tierOrder,
+      order,
       photoUrl,
       bio,
       email: ''
@@ -1304,23 +1871,53 @@ function renderLeadershipList() {
     return;
   }
 
-  c.innerHTML = team.map((m) => `
-    <div class="admin-list-item" style="display:flex;align-items:center;gap:14px;padding:12px 14px;">
-      <img src="${m.photoUrl}" alt="${m.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--admin-red);"
-           onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=88'">
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-          <strong style="color:#fff;font-size:0.92rem;">${m.name}</strong>
-          <span class="admin-tag" style="font-size:0.68rem;">${m.tier || 'Team'}</span>
+  c.innerHTML = team.map((m, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === team.length - 1;
+    const rank = m.order || (idx + 1);
+    return `
+      <div class="admin-list-item" style="display:flex;align-items:center;gap:12px;padding:12px 14px;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 6px;border:1px solid rgba(255,255,255,0.08);" title="Display Rank #${rank}">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--admin-red);">#${rank}</span>
         </div>
-        <span style="font-size:0.78rem;color:var(--admin-muted);">${m.role}</span>
+        <img src="${m.photoUrl}" alt="${m.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--admin-red);"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=C62828&color=fff&size=88'">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap;">
+            <strong style="color:#fff;font-size:0.92rem;">${m.name}</strong>
+            <span class="admin-tag" style="font-size:0.68rem;">${m.tier || 'Team'}</span>
+          </div>
+          <span style="font-size:0.78rem;color:var(--admin-muted);">${m.role}</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-leader-up" data-id="${m.id}" ${isFirst ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} title="Move Up (Rank Higher)">↑</button>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-leader-down" data-id="${m.id}" ${isLast ? 'disabled style="opacity:0.35;cursor:not-allowed;"' : ''} title="Move Down (Rank Lower)">↓</button>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-outline edit-leader-btn" data-id="${m.id}" title="Edit leader details">✏️</button>
+          <button type="button" class="admin-btn admin-btn-sm admin-btn-danger del-leader-btn" data-id="${m.id}" title="Remove from leadership">✕</button>
+        </div>
       </div>
-      <div style="display:flex;gap:6px;">
-        <button class="admin-btn admin-btn-sm admin-btn-outline edit-leader-btn" data-id="${m.id}" title="Edit leader details">✏️</button>
-        <button class="admin-btn admin-btn-sm admin-btn-danger del-leader-btn" data-id="${m.id}" title="Remove from leadership">✕</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+
+  // Hook Move Up buttons
+  c.querySelectorAll('.move-leader-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      moveLeader(id, 'up');
+      renderLeadershipList();
+      toast('⬆️ Position moved up');
+    });
+  });
+
+  // Hook Move Down buttons
+  c.querySelectorAll('.move-leader-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      moveLeader(id, 'down');
+      renderLeadershipList();
+      toast('⬇️ Position moved down');
+    });
+  });
 
   // Hook Edit buttons
   c.querySelectorAll('.edit-leader-btn').forEach(btn => {
@@ -1329,21 +1926,23 @@ function renderLeadershipList() {
       const target = getLeadershipTeam().find(x => x.id === id);
       if (!target) return;
 
-      const editIdInput = document.getElementById('editLeaderId');
-      const nameInput   = document.getElementById('newLeaderName');
-      const roleInput   = document.getElementById('newLeaderRole');
-      const tierInput   = document.getElementById('newLeaderTier');
+      const editIdInput   = document.getElementById('editLeaderId');
+      const nameInput     = document.getElementById('newLeaderName');
+      const roleInput     = document.getElementById('newLeaderRole');
+      const tierInput     = document.getElementById('newLeaderTier');
+      const orderInput    = document.getElementById('newLeaderOrder');
       const photoUrlInput = document.getElementById('newLeaderPhoto');
-      const bioInput    = document.getElementById('newLeaderBio');
-      const previewImg  = document.getElementById('adminLeaderPhotoPreview');
-      const heading     = document.getElementById('leaderFormHeading');
-      const submitBtn   = document.getElementById('btnSubmitLeader');
-      const cancelBtn   = document.getElementById('btnCancelLeaderEdit');
+      const bioInput      = document.getElementById('newLeaderBio');
+      const previewImg    = document.getElementById('adminLeaderPhotoPreview');
+      const heading       = document.getElementById('leaderFormHeading');
+      const submitBtn     = document.getElementById('btnSubmitLeader');
+      const cancelBtn     = document.getElementById('btnCancelLeaderEdit');
 
       if (editIdInput) editIdInput.value = target.id;
       if (nameInput) nameInput.value = target.name || '';
       if (roleInput) roleInput.value = target.role || '';
-      if (tierInput) tierInput.value = target.tier || 'Executive Board';
+      if (tierInput) tierInput.value = target.tier || 'Board of Directors';
+      if (orderInput) orderInput.value = target.order || 1;
       if (photoUrlInput) photoUrlInput.value = target.photoUrl || '';
       if (previewImg) previewImg.src = target.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(target.name)}&background=C62828&color=fff&size=160`;
       if (bioInput) {
@@ -1376,6 +1975,238 @@ function renderLeadershipList() {
       toast(`🗑️ "${target.name}" removed from leadership.`);
     });
   });
+}
+
+// ── MINISTRY STRUCTURE & PILLARS MANAGER ─────────────────────────────────────
+let activeStructureData = null;
+
+function setupStructureManager() {
+  const form = document.getElementById('adminMinistryStructureForm');
+  const btnReset = document.getElementById('btnResetStructureDefaults');
+  const btnAddPillar = document.getElementById('btnAddStructurePillar');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const tag = document.getElementById('structureHeaderTag')?.value.trim() || '';
+    const title = document.getElementById('structureHeaderTitle')?.value.trim() || '';
+    const subtitle = document.getElementById('structureHeaderSubtitle')?.value.trim() || '';
+
+    // Collect pillars from container
+    const container = document.getElementById('structurePillarsListContainer');
+    const pillarCards = container ? container.querySelectorAll('.structure-pillar-card') : [];
+    const pillars = [];
+
+    pillarCards.forEach((card, idx) => {
+      const id = card.dataset.pillarId || `pillar-${idx + 1}`;
+      const pillarTitle = card.querySelector('.pillar-input-title')?.value.trim() || `Pillar ${idx + 1}`;
+      const pillarBadge = card.querySelector('.pillar-input-badge')?.value.trim() || 'Ministry Pillar';
+      const pillarIcon = card.querySelector('.pillar-input-icon')?.value.trim() || '🏛️';
+      const pillarDesc = card.querySelector('.pillar-input-desc')?.value.trim() || '';
+
+      pillars.push({
+        id,
+        title: pillarTitle,
+        badge: pillarBadge,
+        icon: pillarIcon,
+        description: pillarDesc
+      });
+    });
+
+    const updatedData = {
+      header: { tag, title, subtitle },
+      pillars
+    };
+
+    activeStructureData = saveMinistryStructure(updatedData, true);
+    renderStructureEditor();
+    toast('✅ Ministry Structure & Pillars saved and synced!');
+  });
+
+  btnReset?.addEventListener('click', async () => {
+    const confirmed = await showAdminConfirm({
+      title: 'Reset Ministry Structure',
+      message: 'Restore the standard Ministry Structure texts (Board of Directors, Executive Director, Ministry Department) to default?',
+      confirmText: 'Reset to Defaults'
+    });
+    if (!confirmed) return;
+    activeStructureData = resetMinistryStructure();
+    renderStructureEditor();
+    toast('↺ Ministry Structure restored to defaults.');
+  });
+
+  btnAddPillar?.addEventListener('click', () => {
+    if (!activeStructureData) activeStructureData = getMinistryStructure();
+    syncDomPillarsToState();
+    const newId = `pillar-${Date.now()}`;
+    activeStructureData.pillars.push({
+      id: newId,
+      badge: 'Ministry Pillar',
+      icon: '✨',
+      title: 'New Pillar Title',
+      description: 'Describe the purpose, function, and ministers involved in this pillar.'
+    });
+    renderStructureEditor();
+    setTimeout(() => {
+      const newCard = document.querySelector(`[data-pillar-id="${newId}"]`);
+      if (newCard) {
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        newCard.querySelector('.pillar-input-title')?.focus();
+      }
+    }, 100);
+  });
+}
+
+function renderStructureEditor() {
+  const structure = activeStructureData || getMinistryStructure();
+  activeStructureData = structure;
+
+  const tagInput = document.getElementById('structureHeaderTag');
+  const titleInput = document.getElementById('structureHeaderTitle');
+  const subInput = document.getElementById('structureHeaderSubtitle');
+  const countEl = document.getElementById('structurePillarsCount');
+  const container = document.getElementById('structurePillarsListContainer');
+
+  if (tagInput) tagInput.value = structure.header?.tag || '';
+  if (titleInput) titleInput.value = structure.header?.title || '';
+  if (subInput) subInput.value = structure.header?.subtitle || '';
+  if (countEl) countEl.textContent = structure.pillars?.length || 0;
+
+  if (!container) return;
+
+  if (!structure.pillars || !structure.pillars.length) {
+    container.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No structure pillars defined. Click "Add Another Pillar" or "Reset Defaults".</p>';
+    return;
+  }
+
+  container.innerHTML = structure.pillars.map((p, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === structure.pillars.length - 1;
+    return `
+      <div class="structure-pillar-card" data-pillar-id="${escapeAdminHtml(p.id)}" style="background:rgba(255,255,255,0.02);border:1px solid var(--admin-border);border-radius:var(--radius);padding:18px;position:relative;transition:var(--transition);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.6rem;line-height:1;" class="pillar-display-icon">${escapeAdminHtml(p.icon || '🏛️')}</span>
+            <div>
+              <strong style="color:#fff;font-size:0.95rem;" class="pillar-display-title">${escapeAdminHtml(p.title || `Pillar ${idx + 1}`)}</strong>
+              <span class="admin-tag" style="margin-left:8px;font-size:0.68rem;">${escapeAdminHtml(p.badge || 'Pillar')}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-pillar-up" data-index="${idx}" ${isFirst ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} title="Move Up">↑</button>
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-outline move-pillar-down" data-index="${idx}" ${isLast ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} title="Move Down">↓</button>
+            <button type="button" class="admin-btn admin-btn-sm admin-btn-danger del-pillar-btn" data-index="${idx}" title="Remove this pillar">✕</button>
+          </div>
+        </div>
+
+        <div class="admin-form-row" style="margin-bottom:12px;">
+          <div class="admin-form-group" style="flex:2;">
+            <label class="admin-form-label">Pillar Title</label>
+            <input type="text" class="admin-input pillar-input-title" value="${escapeAdminHtml(p.title || '')}" placeholder="e.g. The Board" required>
+          </div>
+          <div class="admin-form-group" style="flex:1.5;">
+            <label class="admin-form-label">Eyebrow / Badge Tag</label>
+            <input type="text" class="admin-input pillar-input-badge" value="${escapeAdminHtml(p.badge || '')}" placeholder="e.g. Governance" required>
+          </div>
+          <div class="admin-form-group" style="flex:1;">
+            <label class="admin-form-label">Icon (Emoji)</label>
+            <input type="text" class="admin-input pillar-input-icon" value="${escapeAdminHtml(p.icon || '🏛️')}" placeholder="🏛️" style="text-align:center;font-size:1.1rem;" required>
+          </div>
+        </div>
+
+        <div class="admin-form-group" style="margin-bottom:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label class="admin-form-label" style="margin:0;">Description Text (Describe the role, authority, or purpose of this pillar)</label>
+            <span class="pillar-word-count" style="font-size:0.75rem;color:var(--admin-muted);font-weight:600;">${countWords(p.description || '')} words</span>
+          </div>
+          <textarea class="admin-input pillar-input-desc" rows="4" placeholder="Detailed description of this pillar, its ministers, and its role in 2-Minute Sermon..." required style="line-height:1.6;">${escapeAdminHtml(p.description || '')}</textarea>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire up live title/icon preview & word counters
+  container.querySelectorAll('.structure-pillar-card').forEach(card => {
+    const titleIn = card.querySelector('.pillar-input-title');
+    const iconIn = card.querySelector('.pillar-input-icon');
+    const descIn = card.querySelector('.pillar-input-desc');
+    const displayTitle = card.querySelector('.pillar-display-title');
+    const displayIcon = card.querySelector('.pillar-display-icon');
+    const wordCountEl = card.querySelector('.pillar-word-count');
+
+    titleIn?.addEventListener('input', () => {
+      if (displayTitle) displayTitle.textContent = titleIn.value.trim() || 'Untitled Pillar';
+    });
+    iconIn?.addEventListener('input', () => {
+      if (displayIcon) displayIcon.textContent = iconIn.value.trim() || '🏛️';
+    });
+    descIn?.addEventListener('input', () => {
+      if (wordCountEl) wordCountEl.textContent = `${countWords(descIn.value || '')} words`;
+    });
+  });
+
+  // Wire up Move Up buttons
+  container.querySelectorAll('.move-pillar-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      if (idx > 0 && activeStructureData?.pillars) {
+        syncDomPillarsToState();
+        const temp = activeStructureData.pillars[idx];
+        activeStructureData.pillars[idx] = activeStructureData.pillars[idx - 1];
+        activeStructureData.pillars[idx - 1] = temp;
+        renderStructureEditor();
+      }
+    });
+  });
+
+  // Wire up Move Down buttons
+  container.querySelectorAll('.move-pillar-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      if (activeStructureData?.pillars && idx < activeStructureData.pillars.length - 1) {
+        syncDomPillarsToState();
+        const temp = activeStructureData.pillars[idx];
+        activeStructureData.pillars[idx] = activeStructureData.pillars[idx + 1];
+        activeStructureData.pillars[idx + 1] = temp;
+        renderStructureEditor();
+      }
+    });
+  });
+
+  // Wire up Delete buttons
+  container.querySelectorAll('.del-pillar-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      syncDomPillarsToState();
+      const target = activeStructureData?.pillars[idx];
+      if (!target) return;
+      const confirmed = await showAdminConfirm({
+        title: 'Delete Pillar',
+        message: `Remove "${target.title || 'this pillar'}" from the Ministry Structure?`,
+        confirmText: 'Remove'
+      });
+      if (!confirmed) return;
+      activeStructureData.pillars.splice(idx, 1);
+      renderStructureEditor();
+      toast('🗑️ Pillar removed (remember to click Save to apply).');
+    });
+  });
+}
+
+function syncDomPillarsToState() {
+  if (!activeStructureData) activeStructureData = getMinistryStructure();
+  const container = document.getElementById('structurePillarsListContainer');
+  if (!container) return;
+  const cards = container.querySelectorAll('.structure-pillar-card');
+  const pillars = [];
+  cards.forEach((card, idx) => {
+    const id = card.dataset.pillarId || `pillar-${idx + 1}`;
+    const title = card.querySelector('.pillar-input-title')?.value.trim() || `Pillar ${idx + 1}`;
+    const badge = card.querySelector('.pillar-input-badge')?.value.trim() || 'Ministry Pillar';
+    const icon = card.querySelector('.pillar-input-icon')?.value.trim() || '🏛️';
+    const description = card.querySelector('.pillar-input-desc')?.value.trim() || '';
+    pillars.push({ id, title, badge, icon, description });
+  });
+  activeStructureData.pillars = pillars;
 }
 
 // ── THE CONVERSATION MANAGER ──────────────────────────────────────────────
@@ -1618,7 +2449,115 @@ function setupPartnersManager() {
     toast(`🤝 "${name}" added to Ministry Partners!`);
   });
 
+  setupEditPartnerModal();
   renderPartnersList();
+}
+
+function openEditPartnerModal(id) {
+  const partner = getPartners().find(p => p.id === id);
+  if (!partner) return;
+
+  const modal = document.getElementById('adminEditPartnerModal');
+  if (!modal) return;
+
+  const idInput = document.getElementById('editPartnerId');
+  const nameInput = document.getElementById('editPartnerName');
+  const categoryInput = document.getElementById('editPartnerCategory');
+  const scriptureInput = document.getElementById('editPartnerScripture');
+  const websiteInput = document.getElementById('editPartnerWebsite');
+  const descInput = document.getElementById('editPartnerDesc');
+  const logoPreview = document.getElementById('editPartnerLogoPreview');
+  const logoUrlInput = document.getElementById('editPartnerLogoUrl');
+
+  if (idInput) idInput.value = partner.id;
+  if (nameInput) nameInput.value = partner.name || '';
+  if (categoryInput) categoryInput.value = partner.category || '';
+  if (scriptureInput) scriptureInput.value = partner.scriptureAnchor || '';
+  if (websiteInput) websiteInput.value = partner.websiteUrl || '';
+  if (descInput) descInput.value = partner.description || '';
+
+  const defaultLogo = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80';
+  if (logoPreview) logoPreview.src = partner.logoUrl || defaultLogo;
+  if (logoUrlInput) logoUrlInput.value = partner.logoUrl || '';
+
+  modal.style.display = 'flex';
+}
+
+function closeEditPartnerModal() {
+  const modal = document.getElementById('adminEditPartnerModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function setupEditPartnerModal() {
+  const modal = document.getElementById('adminEditPartnerModal');
+  const form = document.getElementById('adminEditPartnerForm');
+  const closeTopBtn = document.getElementById('btnCancelEditPartnerTop');
+  const cancelBtn = document.getElementById('btnCancelEditPartner');
+  const fileInput = document.getElementById('editPartnerLogoFile');
+  const uploadBtn = document.getElementById('btnTriggerEditPartnerLogo');
+  const previewImg = document.getElementById('editPartnerLogoPreview');
+  const logoUrlInput = document.getElementById('editPartnerLogoUrl');
+
+  uploadBtn?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      toast('⏳ Optimizing logo...');
+      const compressedDataUrl = await compressImageFile(file, 480, 0.85);
+      if (previewImg) previewImg.src = compressedDataUrl;
+      if (logoUrlInput) logoUrlInput.value = compressedDataUrl;
+      toast('🖼️ Partner logo optimized & ready!');
+    } catch (err) {
+      console.warn('Edit partner logo compression error:', err);
+      toast('⚠️ Could not process image. Please try another file or paste a URL.');
+    }
+  });
+
+  logoUrlInput?.addEventListener('input', () => {
+    if (logoUrlInput.value.trim() && previewImg) {
+      previewImg.src = logoUrlInput.value.trim();
+    }
+  });
+
+  closeTopBtn?.addEventListener('click', closeEditPartnerModal);
+  cancelBtn?.addEventListener('click', closeEditPartnerModal);
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeEditPartnerModal();
+  });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editPartnerId')?.value;
+    const name = document.getElementById('editPartnerName')?.value.trim();
+    const category = document.getElementById('editPartnerCategory')?.value.trim() || 'Ministry Partner';
+    const scriptureAnchor = document.getElementById('editPartnerScripture')?.value.trim() || '';
+    const websiteUrl = document.getElementById('editPartnerWebsite')?.value.trim() || '';
+    const description = document.getElementById('editPartnerDesc')?.value.trim();
+    let logoUrl = logoUrlInput?.value.trim() || previewImg?.src || '';
+
+    if (!name || !description) {
+      toast('⚠️ Please provide the partner name and description.');
+      return;
+    }
+
+    const updated = {
+      id,
+      name,
+      category,
+      scriptureAnchor,
+      websiteUrl,
+      description,
+      logoUrl
+    };
+
+    upsertPartner(updated);
+    renderPartnersList();
+    closeEditPartnerModal();
+    toast(`🤝 Partner "${name}" updated successfully!`);
+  });
 }
 
 function renderPartnersList() {
@@ -1647,11 +2586,22 @@ function renderPartnersList() {
         <p style="font-size:0.82rem;color:var(--admin-muted);line-height:1.5;margin:0 0 6px 0;">${p.description.substring(0, 110)}...</p>
         ${p.websiteUrl ? `<a href="${p.websiteUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--admin-gold);text-decoration:none;">🌐 ${p.websiteUrl}</a>` : ''}
       </div>
-      <button class="admin-btn admin-btn-sm admin-btn-danger" data-id="${p.id}" title="Remove partner">✕</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button class="admin-btn admin-btn-sm admin-btn-outline admin-btn-edit-partner" data-id="${p.id}" title="Edit partner details">✏️ Edit</button>
+        <button class="admin-btn admin-btn-sm admin-btn-danger admin-btn-delete-partner" data-id="${p.id}" title="Remove partner">✕</button>
+      </div>
     </div>
   `).join('');
 
-  c.querySelectorAll('.admin-btn-danger').forEach(btn => {
+  // Edit partner
+  c.querySelectorAll('.admin-btn-edit-partner').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openEditPartnerModal(btn.dataset.id);
+    });
+  });
+
+  // Delete partner
+  c.querySelectorAll('.admin-btn-delete-partner').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const target = getPartners().find(x => x.id === id);
@@ -1716,7 +2666,90 @@ window.markPrayed = (id) => {
   toast('✓ Prayer marked as prayed for!');
 };
 
-// ── COMMUNITY REFLECTIONS MODERATION ─────────────────────────────────────────
+// ── WRITTEN PRAYERS (shared store with public site) ───────────────────────────
+const WP_KEY_ADMIN = '2ms_written_prayers';
+const WP_DEFAULT_ADMIN = [
+  { id: 'wp-default-1', title: 'Prayer for Peace in Anxiety', body: 'Lord Jesus, when my heart is overwhelmed, lead me to the Rock that is higher than I. Quiet my racing thoughts with Your divine peace that surpasses all understanding. Let Your presence be my anchor today. Amen.' },
+  { id: 'wp-default-2', title: 'Prayer for Guidance & Wisdom', body: 'Father, grant me discerning eyes and an attentive spirit as I make decisions today. Align my steps with Your holy will and let Your Word be a lamp to my feet and a light to my path. Amen.' }
+];
+
+function getWrittenPrayersAdmin() {
+  try {
+    const raw = localStorage.getItem(WP_KEY_ADMIN);
+    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length) return p; }
+  } catch (_) {}
+  return [...WP_DEFAULT_ADMIN];
+}
+function saveWrittenPrayersAdmin(list) {
+  try {
+    localStorage.setItem(WP_KEY_ADMIN, JSON.stringify(list));
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('2ms:written_prayers:updated', { detail: list }));
+  } catch (_) {}
+}
+
+window.switchPrayerSubtab = (tab) => {
+  const inboxEl = document.getElementById('subtab-prayer-inbox');
+  const writtenEl = document.getElementById('subtab-written-prayers');
+  const btnInbox = document.getElementById('btnSubtabPrayerInbox');
+  const btnWritten = document.getElementById('btnSubtabWrittenPrayers');
+  if (tab === 'inbox') {
+    if (inboxEl) inboxEl.style.display = 'block';
+    if (writtenEl) writtenEl.style.display = 'none';
+    btnInbox?.classList.add('active');
+    btnWritten?.classList.remove('active');
+    renderPrayerInbox();
+  } else {
+    if (inboxEl) inboxEl.style.display = 'none';
+    if (writtenEl) writtenEl.style.display = 'block';
+    btnInbox?.classList.remove('active');
+    btnWritten?.classList.add('active');
+    renderAdminWrittenPrayers();
+  }
+};
+
+function setupWrittenPrayersAdmin() {
+  renderAdminWrittenPrayers();
+  document.getElementById('adminWrittenPrayerForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = (document.getElementById('wpAdminTitle')?.value || '').trim();
+    const body  = (document.getElementById('wpAdminBody')?.value  || '').trim();
+    if (!title || !body) { toast('⚠️ Fill in both fields.'); return; }
+    const list = getWrittenPrayersAdmin();
+    list.unshift({ id: `wp-${Date.now()}`, title, body });
+    saveWrittenPrayersAdmin(list);
+    e.target.reset();
+    renderAdminWrittenPrayers();
+    toast('✅ Written prayer published!');
+  });
+}
+
+function renderAdminWrittenPrayers() {
+  const c = document.getElementById('adminWrittenPrayersList');
+  if (!c) return;
+  const list = getWrittenPrayersAdmin();
+  if (!list.length) {
+    c.innerHTML = `<p style="color:var(--admin-muted);text-align:center;padding:20px 0;">No written prayers yet. Add one above.</p>`;
+    return;
+  }
+  c.innerHTML = list.map(p => `
+    <div class="admin-prayer-item" data-wp-id="${p.id}" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;">
+      <div class="admin-prayer-header">
+        <strong style="color:#fff;font-size:0.92rem;">${escapeAdminHtml(p.title)}</strong>
+        <button class="admin-btn admin-btn-sm" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);" onclick="deleteWrittenPrayerAdmin('${p.id}')">🗑 Remove</button>
+      </div>
+      <p style="font-size:0.84rem;color:rgba(255,255,255,0.75);line-height:1.6;margin:8px 0 0;">${escapeAdminHtml(p.body)}</p>
+    </div>`).join('');
+}
+
+window.deleteWrittenPrayerAdmin = (id) => {
+  const list = getWrittenPrayersAdmin().filter(p => p.id !== id);
+  saveWrittenPrayersAdmin(list);
+  renderAdminWrittenPrayers();
+  toast('Written prayer removed.');
+};
+
+
 function setupReflectionsManager() {
   const searchInput = document.getElementById('adminReflectionsSearch');
   const dateFilter = document.getElementById('adminReflectionsDateFilter');
@@ -1922,12 +2955,17 @@ function setupBackupPanel() {
     try {
       const data = {
         exportedAt: new Date().toISOString(),
-        version: '1.0',
-        scheduledDailyVerses,
+        version: '1.2',
+        scheduledDailyVerses: getDailyVerses(),
         sermons: getSermons(),
-        preachers,
+        preachers: getPreachers(),
         events: getEvents(),
-        pendingPrayers,
+        leadership: getLeadershipTeam(),
+        structure: getMinistryStructure(),
+        conversations: getConversations(),
+        partners: getPartners(),
+        subscribers: getSubscribers(),
+        pendingPrayers: getPrayers(),
         reflections: getAllReflections()
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1944,6 +2982,7 @@ function setupBackupPanel() {
       if (label) label.textContent = `Last exported: ${new Date().toLocaleTimeString()}`;
       toast('📥 CMS backup downloaded!');
     } catch (err) {
+      console.error('Backup export error:', err);
       toast('⚠️ Failed to export backup. Please check browser permissions.');
     }
   });
@@ -1976,21 +3015,38 @@ function setupBackupPanel() {
         }
 
         if (Array.isArray(parsed.preachers) && parsed.preachers.length) {
-          // Persist each preacher individually so storage + event bus stays in sync
           parsed.preachers.forEach(p => upsertPreacher(p));
-          preachers = getPreachers();
           restoredItems.push(`${parsed.preachers.length} ministers`);
         }
 
         if (Array.isArray(parsed.scheduledDailyVerses) && parsed.scheduledDailyVerses.length) {
-          scheduledDailyVerses.length = 0;
-          scheduledDailyVerses.push(...parsed.scheduledDailyVerses);
+          saveDailyVerses(parsed.scheduledDailyVerses);
           restoredItems.push(`${parsed.scheduledDailyVerses.length} verses`);
         }
 
         if (Array.isArray(parsed.events) && parsed.events.length) {
           saveEvents(parsed.events);
           restoredItems.push(`${parsed.events.length} events`);
+        }
+
+        if (Array.isArray(parsed.leadership) && parsed.leadership.length) {
+          saveLeadershipTeam(parsed.leadership);
+          restoredItems.push(`${parsed.leadership.length} leaders`);
+        }
+
+        if (parsed.structure && typeof parsed.structure === 'object') {
+          saveMinistryStructure(parsed.structure);
+          restoredItems.push('ministry structure');
+        }
+
+        if (Array.isArray(parsed.conversations) && parsed.conversations.length) {
+          saveConversations(parsed.conversations);
+          restoredItems.push(`${parsed.conversations.length} episodes`);
+        }
+
+        if (Array.isArray(parsed.partners) && parsed.partners.length) {
+          savePartners(parsed.partners);
+          restoredItems.push(`${parsed.partners.length} partners`);
         }
 
         if (Array.isArray(parsed.pendingPrayers) && parsed.pendingPrayers.length) {
@@ -2008,14 +3064,8 @@ function setupBackupPanel() {
           return;
         }
 
-        // Re-render all views
-        renderDashboardStats();
-        renderSermonsList();
-        renderPreachersList();
-        renderEventsList();
-        renderVerseQueue();
-        renderPrayerInbox();
-        populateSelects();
+        // Re-render all views cleanly
+        refreshAdminView();
 
         toast(`✅ Successfully restored: ${restoredItems.join(', ')}!`);
       } catch (err) {
@@ -2032,7 +3082,7 @@ function setupBackupPanel() {
   });
 }
 
-import { isFirebaseConfigured, saveDocument, seedCollectionIfEmpty } from './firebase.js';
+import { saveDocument, seedCollectionIfEmpty } from './firebase.js';
 
 // ── MINISTRY SETTINGS ─────────────────────────────────────────────────────
 const SETTINGS_KEY = '2ms_settings';
@@ -2042,7 +3092,7 @@ const DEFAULT_YT_CHANNEL = 'https://www.youtube.com/c/2MinuteSermonP';
 const DEFAULT_FB_PAGE    = 'https://www.facebook.com/2minutesermon';
 const DEFAULT_IG_PAGE    = 'https://www.instagram.com/2_minutesermon/';
 const DEFAULT_TIKTOK     = 'https://www.tiktok.com/@2minutesermon';
-const DEFAULT_PROMO_URL  = 'https://www.youtube.com/watch?v=SJFqqNvTeh8';
+const DEFAULT_PROMO_URL  = 'https://www.youtube.com/watch?v=aQ33_rdzdoo';
 
 export function normalizeUrl(url) {
   if (!url) return '';
@@ -2081,7 +3131,7 @@ export function getSettings() {
       if (!parsed.tiktokUrl) {
         parsed.tiktokUrl = DEFAULT_TIKTOK;
       }
-      if (!parsed.promoVideoUrl) {
+      if (!parsed.promoVideoUrl || parsed.promoVideoUrl.includes('SJFqqNvTeh8')) {
         parsed.promoVideoUrl = DEFAULT_PROMO_URL;
       }
       if (!parsed.timezone) {
@@ -2185,42 +3235,42 @@ function setupSettingsPanel() {
 }
 
 // ── NEWSLETTER SUBSCRIBERS MANAGER ────────────────────────────────────────
-function setupSubscribersManager() {
+export function renderSubscribersList() {
   const c = document.getElementById('adminSubscribersList');
   const countEl = document.getElementById('subscribersCount');
-  const exportBtn = document.getElementById('btnExportSubscribersCsv');
+  const list = getSubscribers();
+  if (countEl) countEl.textContent = list.length;
+  if (!c) return;
 
-  const render = () => {
-    const list = getSubscribers();
-    if (countEl) countEl.textContent = list.length;
-    if (!c) return;
+  if (!list.length) {
+    c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No subscribers recorded yet.</p>';
+    return;
+  }
 
-    if (!list.length) {
-      c.innerHTML = '<p style="color:var(--admin-muted);font-size:0.85rem;text-align:center;padding:24px;">No subscribers recorded yet.</p>';
-      return;
-    }
-
-    c.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-        <thead>
-          <tr style="text-align:left;border-bottom:1px solid var(--admin-border);color:var(--admin-muted);">
-            <th style="padding:8px 6px;">Email</th>
-            <th style="padding:8px 6px;">Subscribed</th>
-            <th style="padding:8px 6px;">Source</th>
+  c.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+      <thead>
+        <tr style="text-align:left;border-bottom:1px solid var(--admin-border);color:var(--admin-muted);">
+          <th style="padding:8px 6px;">Email</th>
+          <th style="padding:8px 6px;">Subscribed</th>
+          <th style="padding:8px 6px;">Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${list.map(s => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:8px 6px;color:#fff;font-weight:600;">${escapeAdminHtml(s.email)}</td>
+            <td style="padding:8px 6px;color:var(--admin-muted);font-size:0.78rem;">${s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : 'Active'}</td>
+            <td style="padding:8px 6px;"><span class="admin-tag" style="font-size:0.68rem;">${escapeAdminHtml(s.source || 'Website')}</span></td>
           </tr>
-        </thead>
-        <tbody>
-          ${list.map(s => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-              <td style="padding:8px 6px;color:#fff;font-weight:600;">${s.email}</td>
-              <td style="padding:8px 6px;color:var(--admin-muted);font-size:0.78rem;">${s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString() : 'Active'}</td>
-              <td style="padding:8px 6px;"><span class="admin-tag" style="font-size:0.68rem;">${s.source || 'Website'}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-  };
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function setupSubscribersManager() {
+  const exportBtn = document.getElementById('btnExportSubscribersCsv');
 
   exportBtn?.addEventListener('click', () => {
     const csvContent = exportSubscribersToCsv();
@@ -2234,12 +3284,12 @@ function setupSubscribersManager() {
     a.href = url;
     a.download = `2ms_newsletter_subscribers_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    a.remove();
     URL.revokeObjectURL(url);
     toast('📥 Subscriber CSV exported successfully!');
   });
 
-  render();
-  window.addEventListener('2ms:subscribers:updated', render);
+  renderSubscribersList();
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────

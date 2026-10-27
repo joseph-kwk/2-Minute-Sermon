@@ -78,8 +78,13 @@ export async function fetchCollection(collectionName) {
 export async function saveDocument(collectionName, docId, data) {
   if (!db) return false;
   try {
+    // Sanitize data: Firestore throws an error if any field is `undefined`.
+    // Convert undefined to null or omit to ensure bulletproof persistence.
+    const cleanData = JSON.parse(JSON.stringify(data, (_, value) => {
+      return value === undefined ? null : value;
+    }));
     const docRef = doc(db, collectionName, String(docId));
-    await setDoc(docRef, data, { merge: true });
+    await setDoc(docRef, cleanData, { merge: true });
     return true;
   } catch (err) {
     console.warn(`Firestore save failed for ${collectionName}/${docId}:`, err);
