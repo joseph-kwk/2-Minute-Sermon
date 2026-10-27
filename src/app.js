@@ -3633,7 +3633,13 @@ if (isFirebaseConfigured()) {
     if (ministryDoc) {
       try {
         localStorage.setItem('2ms_settings', JSON.stringify(ministryDoc));
+        if (ministryDoc.seasonalMode) {
+          localStorage.setItem('sermon_seasonal_global', ministryDoc.seasonalMode);
+        }
         updateFooterSocialLinks();
+        if (window.seasonalManager && typeof window.seasonalManager.init === 'function') {
+          window.seasonalManager.init();
+        }
       } catch (_) {}
     }
   });

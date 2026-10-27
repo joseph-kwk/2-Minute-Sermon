@@ -3213,6 +3213,15 @@ function setupSettingsPanel() {
   if (promoInput)      promoInput.value      = current.promoVideoUrl || DEFAULT_PROMO_URL;
   if (seasonalSelect)  seasonalSelect.value  = current.seasonalMode || 'auto';
 
+  seasonalSelect?.addEventListener('change', () => {
+    const chosen = seasonalSelect.value;
+    try {
+      localStorage.setItem('sermon_seasonal_global', chosen);
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('2ms:settings:updated', { detail: { seasonalMode: chosen } }));
+    } catch (_) {}
+  });
+
   form?.addEventListener('submit', e => {
     e.preventDefault();
     const updated = {

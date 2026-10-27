@@ -16,6 +16,7 @@ class SeasonalManager {
     this.height = 0;
     this.lastFireworkTime = 0;
     this.godRayAngle = 0;
+    this.isListening = false;
   }
 
   init() {
@@ -55,12 +56,23 @@ class SeasonalManager {
     this.newYearCeremony = new NewYearCeremony(this);
     this.newYearCeremony.init();
 
-    // Resize listener
-    window.addEventListener('resize', () => this.handleResize());
+    // Attach listeners once
+    if (!this.isListening) {
+      this.isListening = true;
+      window.addEventListener('resize', () => this.handleResize());
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'sermon_seasonal_global' || e.key === '2ms_settings') {
+          this.init();
+        }
+      });
+      window.addEventListener('2ms:settings:updated', () => {
+        this.init();
+      });
+    }
   }
 
   /**
-   * Calculates season dates: Admin global control takes priority, then automatic calendar (~10 days before holiday)
+   * Calculates season dates: Admin global control takes priority, then automatic calendar
    */
   determineSeason() {
     // 1. Check URL override ?season=christmas|newyear|easter|passion|off (for quick preview/testing)
@@ -95,13 +107,13 @@ class SeasonalManager {
     const month = now.getMonth() + 1; // 1 - 12
     const day = now.getDate();
 
-    // Christmas Window: Dec 15 to Dec 27 (Starts 10 days before Dec 25)
+    // Christmas Window: Dec 15 to Dec 27 (Starts 10 days before Dec 25, extends through Dec 27)
     if (month === 12 && day >= 15 && day <= 27) {
       return 'christmas';
     }
 
-    // New Year Window: Dec 22 to Jan 3 (Starts 10 days before Jan 1)
-    if ((month === 12 && day >= 22) || (month === 1 && day <= 3)) {
+    // New Year Window: Dec 28 to Jan 5 (Smoothly takes over after Christmas through the first week of the new year)
+    if ((month === 12 && day >= 28) || (month === 1 && day <= 5)) {
       return 'newyear';
     }
 
@@ -121,15 +133,15 @@ class SeasonalManager {
       return 'passion';
     }
 
-    // Easter Sunday Window: Easter Sunday through Easter Tuesday (+3 days)
+    // Easter Resurrection Season Window: Easter Sunday through the following Sunday (Full Easter Octave / Week)
     const easterStart = new Date(easterSunday);
     easterStart.setHours(0, 0, 0, 0);
 
-    const threeDaysAfterEaster = new Date(easterSunday);
-    threeDaysAfterEaster.setDate(easterSunday.getDate() + 3);
-    threeDaysAfterEaster.setHours(23, 59, 59, 999);
+    const sevenDaysAfterEaster = new Date(easterSunday);
+    sevenDaysAfterEaster.setDate(easterSunday.getDate() + 7);
+    sevenDaysAfterEaster.setHours(23, 59, 59, 999);
 
-    if (now >= easterStart && now <= threeDaysAfterEaster) {
+    if (now >= easterStart && now <= sevenDaysAfterEaster) {
       return 'easter';
     }
 
@@ -470,11 +482,16 @@ class SeasonalManager {
   }
 
   updateHeaderBadge() {
-    const navLogo = document.querySelector('.navbar .nav-logo') || document.querySelector('.navbar .container');
+    const navLogo = document.querySelector('.brand-logo') || document.querySelector('.header-container');
     if (!navLogo) return;
 
     let badge = document.getElementById('seasonalHeaderBadge');
-    if (!badge && this.activeSeason !== 'off') {
+    if (this.activeSeason === 'off') {
+      if (badge) badge.remove();
+      return;
+    }
+
+    if (!badge) {
       badge = document.createElement('span');
       badge.id = 'seasonalHeaderBadge';
       badge.className = 'seasonal-badge';
@@ -823,6 +840,10 @@ class SeasonalManager {
     const banner = document.getElementById('seasonalScriptureBanner');
     if (banner) {
       banner.remove();
+    }
+    const badge = document.getElementById('seasonalHeaderBadge');
+    if (badge) {
+      badge.remove();
     }
     if (this.newYearCeremony) {
       this.newYearCeremony.dismiss();
