@@ -1372,3 +1372,15 @@ if (document.readyState === 'loading') {
   window.seasonalManager = new SeasonalManager();
   window.seasonalManager.init();
 }
+
+// Quick helper for live preview in DevTools console: setSeason('christmas' | 'newyear' | 'passion' | 'easter' | 'off')
+window.setSeason = (season) => {
+  const normalized = season?.toLowerCase();
+  if (['christmas', 'newyear', 'easter', 'passion', 'off'].includes(normalized)) {
+    localStorage.setItem('sermon_seasonal_global', normalized);
+    window.seasonalManager?.init();
+    console.log(`%c[Seasonal] Switched to: ${normalized.toUpperCase()}`, 'color: #D4AF37; font-weight: bold;');
+  } else {
+    console.warn(`[Seasonal] Unknown season "${season}". Use: 'christmas', 'newyear', 'passion', 'easter', 'off'`);
+  }
+};
