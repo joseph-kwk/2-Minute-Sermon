@@ -111,14 +111,14 @@ class SeasonalManager {
     const day = now.getDate();
 
     // Christmas Window (Dec 25 ± 5 days):
-    // Starts Dec 20 (5 days before Dec 25) through Dec 26 (hands over to New Year on Dec 27)
-    if (month === 12 && day >= 20 && day <= 26) {
+    // Starts Dec 20 (5 days before Dec 25) through Dec 30 (5 days after Dec 25)
+    if (month === 12 && day >= 20 && day <= 30) {
       return 'christmas';
     }
 
-    // New Year Window (Jan 1 ± 5 days):
-    // Starts Dec 27 (exactly 5 days before Jan 1) through Jan 6 (exactly 5 days after Jan 1)
-    if ((month === 12 && day >= 27) || (month === 1 && day <= 6)) {
+    // New Year Window (Day before Jan 1 through 5 days after Jan 1):
+    // Starts Dec 31 (day before Jan 1) through Jan 6 (5 days after Jan 1)
+    if ((month === 12 && day === 31) || (month === 1 && day <= 6)) {
       return 'newyear';
     }
 
