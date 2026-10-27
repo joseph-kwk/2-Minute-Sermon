@@ -104,47 +104,49 @@ class SeasonalManager {
       }
     } catch (_) {}
 
-    // 3. Automatic date calculation (Auto mode)
+    // 3. Automatic date calculation (Auto mode: 5 days before and 5 days after)
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1; // 1 - 12
     const day = now.getDate();
 
-    // Christmas Window: Dec 15 to Dec 27 (Starts 10 days before Dec 25, extends through Dec 27)
-    if (month === 12 && day >= 15 && day <= 27) {
+    // Christmas Window (Dec 25 ± 5 days):
+    // Starts Dec 20 (5 days before Dec 25) through Dec 26 (hands over to New Year on Dec 27)
+    if (month === 12 && day >= 20 && day <= 26) {
       return 'christmas';
     }
 
-    // New Year Window: Dec 28 to Jan 5 (Smoothly takes over after Christmas through the first week of the new year)
-    if ((month === 12 && day >= 28) || (month === 1 && day <= 5)) {
+    // New Year Window (Jan 1 ± 5 days):
+    // Starts Dec 27 (exactly 5 days before Jan 1) through Jan 6 (exactly 5 days after Jan 1)
+    if ((month === 12 && day >= 27) || (month === 1 && day <= 6)) {
       return 'newyear';
     }
 
     // Easter & Passion Holy Week Window
     const easterSunday = this.getEasterSunday(year);
 
-    // Holy Week & Passion: Palm Sunday (7 days before Easter) through Holy Saturday (1 day before)
-    const sevenDaysBeforeEaster = new Date(easterSunday);
-    sevenDaysBeforeEaster.setDate(easterSunday.getDate() - 7);
-    sevenDaysBeforeEaster.setHours(0, 0, 0, 0);
+    // Passion / Holy Week Window: exactly 5 days leading up to Easter Sunday
+    const fiveDaysBeforeEaster = new Date(easterSunday);
+    fiveDaysBeforeEaster.setDate(easterSunday.getDate() - 5);
+    fiveDaysBeforeEaster.setHours(0, 0, 0, 0);
 
     const oneDayBeforeEaster = new Date(easterSunday);
     oneDayBeforeEaster.setDate(easterSunday.getDate() - 1);
     oneDayBeforeEaster.setHours(23, 59, 59, 999);
 
-    if (now >= sevenDaysBeforeEaster && now <= oneDayBeforeEaster) {
+    if (now >= fiveDaysBeforeEaster && now <= oneDayBeforeEaster) {
       return 'passion';
     }
 
-    // Easter Resurrection Season Window: Easter Sunday through the following Sunday (Full Easter Octave / Week)
+    // Easter Resurrection Season Window: Easter Sunday through 5 days after Easter
     const easterStart = new Date(easterSunday);
     easterStart.setHours(0, 0, 0, 0);
 
-    const sevenDaysAfterEaster = new Date(easterSunday);
-    sevenDaysAfterEaster.setDate(easterSunday.getDate() + 7);
-    sevenDaysAfterEaster.setHours(23, 59, 59, 999);
+    const fiveDaysAfterEaster = new Date(easterSunday);
+    fiveDaysAfterEaster.setDate(easterSunday.getDate() + 5);
+    fiveDaysAfterEaster.setHours(23, 59, 59, 999);
 
-    if (now >= easterStart && now <= sevenDaysAfterEaster) {
+    if (now >= easterStart && now <= fiveDaysAfterEaster) {
       return 'easter';
     }
 
@@ -931,12 +933,18 @@ class SeasonalManager {
         </g>
 
         <!-- Stone Floor Track & Rolled-Away Stone -->
-        <g transform="translate(200, 0)">
-          <!-- Ground Shadow -->
-          <ellipse cx="300" cy="668" rx="145" ry="16" fill="#000000" opacity="0.75" />
-          <!-- Massive Natural Sealing Stone Rolled Away -->
-          <circle cx="300" cy="520" r="140" fill="url(#stoneSurfaceFull)" stroke="#1F1C23" stroke-width="3" />
-          <circle cx="298" cy="518" r="137" stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.8" fill="none" />
+        <g id="easterStoneAssembly" transform="translate(200, 0)">
+          <!-- Ground Shadow (follows the roll) -->
+          <ellipse class="anim-easter-stone-shadow" cx="300" cy="668" rx="145" ry="16" fill="#000000" opacity="0.75" />
+          <!-- Massive Natural Sealing Stone (Rolls subtly into resting position when section is active) -->
+          <g class="anim-easter-stone" style="transform-origin: 300px 520px;">
+            <circle cx="300" cy="520" r="140" fill="url(#stoneSurfaceFull)" stroke="#1F1C23" stroke-width="3" />
+            <circle cx="298" cy="518" r="137" stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.8" fill="none" />
+            <!-- Organic strata contours and fissures so the roll rotation is visually distinct -->
+            <path d="M235 480 Q270 515 255 575 M315 445 Q345 510 325 585 M275 435 Q295 485 285 535" stroke="rgba(255, 255, 255, 0.2)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+            <circle cx="265" cy="495" r="3.5" fill="#2E2838" opacity="0.75" />
+            <circle cx="330" cy="535" r="4" fill="#2E2838" opacity="0.75" />
+          </g>
         </g>
 
         <!-- Ascending Golden Dawn Sparks -->

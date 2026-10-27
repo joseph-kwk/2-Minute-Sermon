@@ -496,9 +496,65 @@ body.seasonal-disabled .seasonal-footer-scrim {
   100% { transform: translateY(-18px); opacity: 1; }
 }
 
+/* Easter Rolled Stone: Rolls just a bit away when section becomes active */
+.anim-easter-stone {
+  transform-origin: 300px 520px;
+  transform: translateX(-48px) rotate(-18deg);
+  will-change: transform;
+}
+
+.anim-easter-stone-shadow {
+  transform-origin: 300px 668px;
+  transform: translateX(-48px) scaleX(0.92);
+  opacity: 0.55;
+  will-change: transform, opacity;
+}
+
+.app-footer.in-view .anim-easter-stone {
+  animation: easterStoneRollOut 2.4s cubic-bezier(0.2, 0.85, 0.35, 1) forwards;
+}
+
+.app-footer.in-view .anim-easter-stone-shadow {
+  animation: easterStoneShadowRoll 2.4s cubic-bezier(0.2, 0.85, 0.35, 1) forwards;
+}
+
+@keyframes easterStoneRollOut {
+  0% {
+    transform: translateX(-48px) rotate(-18deg);
+  }
+  68% {
+    transform: translateX(5px) rotate(1.8deg);
+  }
+  86% {
+    transform: translateX(-1px) rotate(-0.5deg);
+  }
+  100% {
+    transform: translateX(0px) rotate(0deg);
+  }
+}
+
+@keyframes easterStoneShadowRoll {
+  0% {
+    transform: translateX(-48px) scaleX(0.92);
+    opacity: 0.55;
+  }
+  68% {
+    transform: translateX(5px) scaleX(1.02);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0px) scaleX(1);
+    opacity: 0.75;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-footer.in-view * {
     animation: none !important;
+  }
+  .anim-easter-stone,
+  .anim-easter-stone-shadow {
+    transform: none !important;
   }
 }
 
