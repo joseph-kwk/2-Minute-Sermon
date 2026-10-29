@@ -30,7 +30,7 @@ let currentCarouselIndex = 0;
 
 
 // Admin Auth
-const VALID_PASSWORDS = ['Serm0n$26', 'Serm0n', 'sermon2026'];
+const VALID_PASSWORDS = ['2-MS@s!nce2019', '2-Ms@since2019', 'Serm0n$26', 'Serm0n', 'sermon2026'];
 let adminAuthenticated = false;
 
 // SVG helpers
@@ -161,10 +161,18 @@ document.addEventListener('DOMContentLoaded', () => {
         missionSermonsEl.textContent = `${count}+`;
       }
     }
+    const libraryCountEl = document.getElementById('sermonLibraryCountBadge');
+    if (libraryCountEl) {
+      const list = sermons();
+      if (list && list.length) {
+        libraryCountEl.textContent = `${list.length}+ Verified Videos`;
+      }
+    }
   };
   updateHeroStats();
 
   window.addEventListener('storage', refreshAllUI);
+
   window.addEventListener('2ms:sermons:updated', refreshAllUI);
   window.addEventListener('2ms:series:updated', refreshAllUI);
   window.addEventListener('2ms:preachers:updated', refreshAllUI);
@@ -4935,7 +4943,14 @@ export function openVideoShareModal(video) {
     thumbEl.src = video.thumbnailUrl || (video.youtubeId ? `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg` : '/assets/logo.png');
   }
   const durEl = document.getElementById('shareModalDuration');
-  if (durEl) durEl.textContent = video.duration || '2:00';
+  if (durEl) {
+    if (video.duration) {
+      durEl.textContent = video.duration;
+      durEl.style.display = '';
+    } else {
+      durEl.style.display = 'none';
+    }
+  }
   const preacherEl = document.getElementById('shareModalPreacher');
   if (preacherEl) preacherEl.textContent = video.speaker || video.preacher || '2-Minute Sermon';
   const titleEl = document.getElementById('shareModalTitle');
@@ -5166,7 +5181,7 @@ export function sharePromoVideo() {
     title: '2-Minute Sermon is Back | Announcement from the Founders',
     speaker: 'Ministry Founders',
     topic: 'Ministry Update & Vision',
-    duration: '2:00',
+    duration: '',
     thumbnailUrl: `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`,
     youtubeId: ytId,
     url: url,

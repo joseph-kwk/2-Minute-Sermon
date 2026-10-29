@@ -20,6 +20,9 @@ import { isFirebaseConfigured, subscribeCollection } from './firebase.js';
 let preachers = getPreachers();
 
 const VALID_PASSWORDS = [
+  '2-MS@s!nce2019',
+  '2-Ms@since2019',
+  '2-ms@since2019',
   'Serm0n$26',
   'Sermon$26',
   'sermon$26',
@@ -37,9 +40,13 @@ const VALID_PASSWORDS = [
 function isPasswordValid(inputPass) {
   const trimmed = (inputPass || '').trim();
   if (!trimmed) return false;
+  const envPass = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADMIN_PASSWORD ? import.meta.env.VITE_ADMIN_PASSWORD : '').trim();
+  if (envPass && trimmed === envPass) return true;
   if (VALID_PASSWORDS.includes(trimmed)) return true;
   const lower = trimmed.toLowerCase();
   return (
+    lower === '2-ms@s!nce2019' ||
+    lower === '2-ms@since2019' ||
     lower === 'serm0n$26' ||
     lower === 'sermon$26' ||
     lower === 'sermon2026' ||
